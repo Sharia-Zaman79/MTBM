@@ -17,6 +17,14 @@ const Landing = () => {
   )
 
   const [activeTab, setActiveTab] = useState("overview")
+  const [expandedSections, setExpandedSections] = useState({})
+
+  const toggleSection = (sectionId) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }))
+  }
 
   return (
     <div className="min-h-screen w-full bg-black text-white">
@@ -134,17 +142,25 @@ const Landing = () => {
               </h1>
 
               <div className="mt-8">
-                <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
-                  The navigation system of a micro tunnel boring machine (MTBM) is a
-                  sophisticated arrangement of sensors and controls, primarily
-                  designed to ensure the precise alignment and trajectory of the
-                  machine within the tunneling project. It incorporates a
-                  combination of laser guidance, gyroscopes, and inclinometers to
-                  accurately determine the machine&apos;s position and orientation.
-                  Laser guidance systems provide real-time feedback on the MTBM&apos;s
-                  position in relation to a predefined tunnel path, enabling
-                  adjustments to maintain the desired course.
-                </p>
+                <button
+                  onClick={() => toggleSection("nav-intro")}
+                  className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+                >
+                  {expandedSections["nav-intro"] ? "See Less" : "See More"}
+                </button>
+                {expandedSections["nav-intro"] && (
+                  <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
+                    The navigation system of a micro tunnel boring machine (MTBM) is a
+                    sophisticated arrangement of sensors and controls, primarily
+                    designed to ensure the precise alignment and trajectory of the
+                    machine within the tunneling project. It incorporates a
+                    combination of laser guidance, gyroscopes, and inclinometers to
+                    accurately determine the machine&apos;s position and orientation.
+                    Laser guidance systems provide real-time feedback on the MTBM&apos;s
+                    position in relation to a predefined tunnel path, enabling
+                    adjustments to maintain the desired course.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -154,13 +170,21 @@ const Landing = () => {
                 alt="Navigation system screen"
                 className="w-full max-w-xl"
               />
-              <p className="mt-6 max-w-xl text-sm italic leading-7 text-neutral-400">
-                Gyroscopes and inclinometers help monitor the machine&apos;s pitch and
-                roll angles, ensuring that it remains on a stable and level
-                trajectory. This navigation system plays a crucial role in avoiding
-                deviations, reducing the risk of misalignment, and ensuring the
-                MTBM&apos;s successful advancement through the underground environment.
-              </p>
+              <button
+                onClick={() => toggleSection("nav-details")}
+                className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+              >
+                {expandedSections["nav-details"] ? "See Less" : "See More"}
+              </button>
+              {expandedSections["nav-details"] && (
+                <p className="mt-4 max-w-xl text-sm italic leading-7 text-neutral-400">
+                  Gyroscopes and inclinometers help monitor the machine&apos;s pitch and
+                  roll angles, ensuring that it remains on a stable and level
+                  trajectory. This navigation system plays a crucial role in avoiding
+                  deviations, reducing the risk of misalignment, and ensuring the
+                  MTBM&apos;s successful advancement through the underground environment.
+                </p>
+              )}
             </div>
           </section>
         )}
@@ -183,22 +207,30 @@ const Landing = () => {
             </div>
 
             <div className="pt-14 lg:pt-20">
-              <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
-                The propulsion system of a micro tunnel boring machine (MTBM) is a
-                complex mechanism designed for the controlled advancement of the
-                machine through the underground environment. It typically employs a
-                combination of hydraulic motors, gear drives, and thrust jacks to
-                provide the necessary thrust and rotation to the cutterhead. The
-                hydraulic motors are responsible for the rotation of the cutterhead,
-                allowing the cutting tools to bore through the geological material
-                efficiently. Thrust jacks generate the axial force required to propel
-                the MTBM forward, while the gear drives ensure the synchronized
-                movement of the cutterhead and the entire machine. This propulsion
-                system relies on precise control systems to adapt to changing
-                geological conditions, optimizing the rate of excavation and ensuring
-                the safe and efficient progression of the MTBM along the tunnel
-                path.
-              </p>
+              <button
+                onClick={() => toggleSection("prop-details")}
+                className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+              >
+                {expandedSections["prop-details"] ? "See Less" : "See More"}
+              </button>
+              {expandedSections["prop-details"] && (
+                <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
+                  The propulsion system of a micro tunnel boring machine (MTBM) is a
+                  complex mechanism designed for the controlled advancement of the
+                  machine through the underground environment. It typically employs a
+                  combination of hydraulic motors, gear drives, and thrust jacks to
+                  provide the necessary thrust and rotation to the cutterhead. The
+                  hydraulic motors are responsible for the rotation of the cutterhead,
+                  allowing the cutting tools to bore through the geological material
+                  efficiently. Thrust jacks generate the axial force required to propel
+                  the MTBM forward, while the gear drives ensure the synchronized
+                  movement of the cutterhead and the entire machine. This propulsion
+                  system relies on precise control systems to adapt to changing
+                  geological conditions, optimizing the rate of excavation and ensuring
+                  the safe and efficient progression of the MTBM along the tunnel
+                  path.
+                </p>
+              )}
             </div>
           </section>
         )}
@@ -212,21 +244,29 @@ const Landing = () => {
               </h1>
 
               <div className="mt-8">
-                <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
-                  The cutterhead of a micro tunnel boring machine (MTBM) serves as
-                  the primary excavation component, featuring cutting tools such as
-                  carbide disc cutters and roller cutters. This apparatus is
-                  designed with adaptability in mind, as the configuration and tool
-                  choice depend on the geological conditions at the tunneling site.
-                  Driven by hydraulic or electric motors, the cutterhead rotates,
-                  applying pressure and thrust to cut through abrasive materials like
-                  rock or soil. Advanced monitoring and control systems enable
-                  real-time adjustments, optimizing the cutting process. Maintenance
-                  and replacement of worn tools are essential to sustain cutting
-                  efficiency. The cutterhead is integral to successful tunneling
-                  projects, with its design tailored to specific project requirements
-                  and geological factors.
-                </p>
+                <button
+                  onClick={() => toggleSection("cutter-details")}
+                  className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+                >
+                  {expandedSections["cutter-details"] ? "See Less" : "See More"}
+                </button>
+                {expandedSections["cutter-details"] && (
+                  <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
+                    The cutterhead of a micro tunnel boring machine (MTBM) serves as
+                    the primary excavation component, featuring cutting tools such as
+                    carbide disc cutters and roller cutters. This apparatus is
+                    designed with adaptability in mind, as the configuration and tool
+                    choice depend on the geological conditions at the tunneling site.
+                    Driven by hydraulic or electric motors, the cutterhead rotates,
+                    applying pressure and thrust to cut through abrasive materials like
+                    rock or soil. Advanced monitoring and control systems enable
+                    real-time adjustments, optimizing the cutting process. Maintenance
+                    and replacement of worn tools are essential to sustain cutting
+                    efficiency. The cutterhead is integral to successful tunneling
+                    projects, with its design tailored to specific project requirements
+                    and geological factors.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -251,22 +291,30 @@ const Landing = () => {
               </h1>
 
               <div className="mt-8">
-                <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
-                  The muck removal system in a micro tunnel boring machine (MTBM) is
-                  a crucial component responsible for the efficient transport of
-                  excavated material, known as muck, from the tunnel face to the
-                  surface. This system typically comprises a slurry or screw
-                  conveyor, and it must be designed to handle the specific
-                  geotechnical characteristics of the muck encountered during
-                  tunneling. The muck removal process is often aided by pumps,
-                  augers, and settling tanks, which separate solids from the slurry
-                  for efficient disposal or reuse. Efficient muck removal is
-                  paramount in maintaining the tunneling process&apos;s productivity and
-                  preventing clogs and blockages. The design and configuration of the
-                  muck removal system must align with the geological conditions and
-                  project requirements to ensure seamless excavation and material
-                  transport.
-                </p>
+                <button
+                  onClick={() => toggleSection("muck-intro")}
+                  className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+                >
+                  {expandedSections["muck-intro"] ? "See Less" : "See More"}
+                </button>
+                {expandedSections["muck-intro"] && (
+                  <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
+                    The muck removal system in a micro tunnel boring machine (MTBM) is
+                    a crucial component responsible for the efficient transport of
+                    excavated material, known as muck, from the tunnel face to the
+                    surface. This system typically comprises a slurry or screw
+                    conveyor, and it must be designed to handle the specific
+                    geotechnical characteristics of the muck encountered during
+                    tunneling. The muck removal process is often aided by pumps,
+                    augers, and settling tanks, which separate solids from the slurry
+                    for efficient disposal or reuse. Efficient muck removal is
+                    paramount in maintaining the tunneling process&apos;s productivity and
+                    preventing clogs and blockages. The design and configuration of the
+                    muck removal system must align with the geological conditions and
+                    project requirements to ensure seamless excavation and material
+                    transport.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -276,15 +324,23 @@ const Landing = () => {
                 alt="Muck removal system"
                 className="w-full max-w-xl"
               />
-              <p className="mt-6 max-w-xl text-sm italic leading-7 text-neutral-400">
-                The muck removal process is often aided by pumps, augers, and
-                settling tanks, which separate solids from the slurry for efficient
-                disposal or reuse. Efficient muck removal is paramount in maintaining
-                the tunneling process&apos;s productivity and preventing clogs and
-                blockages. The design and configuration of the muck removal system
-                must align with the geological conditions and project requirements to
-                ensure seamless excavation and material transport.
-              </p>
+              <button
+                onClick={() => toggleSection("muck-details")}
+                className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+              >
+                {expandedSections["muck-details"] ? "See Less" : "See More"}
+              </button>
+              {expandedSections["muck-details"] && (
+                <p className="mt-4 max-w-xl text-sm italic leading-7 text-neutral-400">
+                  The muck removal process is often aided by pumps, augers, and
+                  settling tanks, which separate solids from the slurry for efficient
+                  disposal or reuse. Efficient muck removal is paramount in maintaining
+                  the tunneling process&apos;s productivity and preventing clogs and
+                  blockages. The design and configuration of the muck removal system
+                  must align with the geological conditions and project requirements to
+                  ensure seamless excavation and material transport.
+                </p>
+              )}
             </div>
           </section>
         )}
