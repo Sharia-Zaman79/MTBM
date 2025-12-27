@@ -102,16 +102,24 @@ const Landing = () => {
                     <br />
                     Machine (MTBM)
                   </h2>
-                  <p className="mt-4 max-w-sm text-xs leading-5 text-neutral-600">
-                    A Micro Tunnel Boring Machine (MTBM) is a stack,
-                    remotely operated machine that works deep
-                    underground for utilities water, sewer, gas, comms
-                    without disturbing the surface, using laser guidance
-                    for precision, making it safer, for urban areas,
-                    crossings under railways and environmentally
-                    sensitive spots by excavating soil and installing pipe
-                    sections simultaneously.
-                  </p>
+                  <button
+                    onClick={() => toggleSection("overview-intro")}
+                    className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+                  >
+                    {expandedSections["overview-intro"] ? "See Less" : "See More"}
+                  </button>
+                  {expandedSections["overview-intro"] && (
+                    <p className="mt-4 max-w-sm text-xs leading-5 text-neutral-600">
+                      A Micro Tunnel Boring Machine (MTBM) is a stack,
+                      remotely operated machine that works deep
+                      underground for utilities water, sewer, gas, comms
+                      without disturbing the surface, using laser guidance
+                      for precision, making it safer, for urban areas,
+                      crossings under railways and environmentally
+                      sensitive spots by excavating soil and installing pipe
+                      sections simultaneously.
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex justify-center md:justify-end">
