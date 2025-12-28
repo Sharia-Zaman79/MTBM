@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link } from "react-router-dom"
 import { Building2, Lock, Mail, User, Wrench } from "lucide-react"
 import { useMemo, useState } from "react"
+import { useNavigate } from 'react-router-dom'
 
 const Signup = () => {
 	const [accountType, setAccountType] = useState("engineer")
@@ -19,6 +20,8 @@ const Signup = () => {
 				return "Engineer"
 		}
 	}, [accountType])
+
+	const navigate = useNavigate()
 
 	return (
 		<div className="min-h-screen w-full bg-white text-neutral-900">
@@ -97,7 +100,7 @@ const Signup = () => {
 					</CardHeader>
 
 					<CardContent className="px-10 py-8">
-						<form className="space-y-5">
+										<form className="space-y-5">
 							<div className="space-y-2">
 								<label className="text-xs font-semibold text-neutral-800">Full Name</label>
 								<div className="relative">
@@ -160,7 +163,9 @@ const Signup = () => {
 
 							<Button
 								type="button"
-								className="mt-2 h-11 w-full rounded-md bg-[#5B89B1] text-white hover:bg-[#4a7294]">
+								className="mt-2 h-11 w-full rounded-md bg-[#5B89B1] text-white hover:bg-[#4a7294]"
+								onClick={() => navigate('/login', { state: { message: 'Successfully signed up' } })}
+							>
 								Create {accountLabel} Account
 							</Button>
 

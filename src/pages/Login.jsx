@@ -1,10 +1,15 @@
 import { Button } from "@/components/ui/button"
+import { useState } from 'react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Link } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
+import Toast from "@/components/ui/toast"
 
 const Login = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [toastMessage, setToastMessage] = useState(location.state?.message || '')
   return (
     <div className="min-h-screen w-full bg-neutral-950 text-foreground">
       <header className="w-full bg-neutral-900/80">
@@ -80,9 +85,11 @@ const Login = () => {
                   </label>
                 </div>
 
-                <Button className="w-full bg-slate-600 hover:bg-slate-700 text-white" type="button">
+                <Button className="w-full bg-slate-600 hover:bg-slate-700 text-white" type="button" onClick={() => navigate('/', { state: { message: 'Successfully logged in' } })}>
                   Log in
                 </Button>
+
+                <Toast message={toastMessage} onClose={() => setToastMessage('')} />
 
                 <p className="text-center text-sm text-neutral-800">
                   Don&apos;t have an account?{" "}

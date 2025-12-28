@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
+import Toast from "@/components/ui/toast"
 
 const Landing = () => {
   const tabs = useMemo(
@@ -18,6 +19,8 @@ const Landing = () => {
 
   const [activeTab, setActiveTab] = useState("overview")
   const [expandedSections, setExpandedSections] = useState({})
+  const location = useLocation()
+  const [toastMessage, setToastMessage] = useState(location.state?.message || '')
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
@@ -28,6 +31,7 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen w-full bg-black text-white">
+      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
       <header className="w-full bg-neutral-900/80">
         <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-6 py-4">
           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-800">
@@ -79,7 +83,17 @@ const Landing = () => {
                   grown Micro Tunnel Boring
                   <br />
                   Machine (MTBM)
-                  <span className="ml-2">🇧🇩</span>
+                  <svg
+                    className="ml-2 inline-block h-5 w-6"
+                    viewBox="0 0 300 200"
+                    xmlns="http://www.w3.org/2000/svg"
+                    role="img"
+                    aria-label="Bangladesh flag"
+                  >
+                    <title>Bangladesh</title>
+                    <rect width="300" height="200" fill="#006A4E" />
+                    <circle cx="140" cy="100" r="48" fill="#F42A41" />
+                  </svg>
                 </h1>
               </div>
 
