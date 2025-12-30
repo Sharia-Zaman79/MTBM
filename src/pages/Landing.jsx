@@ -294,7 +294,7 @@ const Landing = () => {
 
             <div className="flex justify-end pt-8 lg:pt-10">
               <img
-                src="/assets/mtbm/landing/cutterhead.png"
+                src="/assets/mtbm/landing/cutterhead.png.jpeg"
                 alt="Cutterhead"
                 className="w-full max-w-xl"
               />
@@ -342,7 +342,7 @@ const Landing = () => {
 
             <div className="pt-8 lg:pt-10">
               <img
-                src="/assets/mtbm/landing/muck-removal.png"
+                src="/assets/mtbm/landing/muck-removal.png.jpeg"
                 alt="Muck removal system"
                 className="w-full max-w-xl"
               />
