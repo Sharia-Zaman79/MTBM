@@ -99,7 +99,7 @@ const Landing = () => {
 
               <div className="flex justify-end">
                 <img
-                  src="/assets/mtbm/landing/overview-hero.png"
+                  src="/assets/mtbm/landing/overview-hero.png.jpeg"
                   alt="MTBM"
                   className="w-full max-w-xl"
                 />
