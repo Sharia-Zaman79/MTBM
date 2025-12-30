@@ -147,7 +147,7 @@ const Landing = () => {
         {activeTab === "exploded" && (
           <section className="w-full">
             <img
-              src="/assets/mtbm/landing/exploded.png"
+              src="/assets/mtbm/landing/exploded.png.jpeg"
               alt="Exploded view"
               className="w-full"
             />
