@@ -188,7 +188,7 @@ const Landing = () => {
 
             <div className="pt-10 lg:pt-14">
               <img
-                src="/assets/mtbm/landing/navigation.png"
+                src="/assets/mtbm/landing/navigation.png.jpeg"
                 alt="Navigation system screen"
                 className="w-full max-w-xl"
               />
@@ -221,7 +221,7 @@ const Landing = () => {
 
               <div className="mt-6">
                 <img
-                  src="/assets/mtbm/landing/propulsion.png"
+                  src="/assets/mtbm/landing/propulsion.png.jpeg"
                   alt="Propulsion system"
                   className="w-full max-w-2xl"
                 />
