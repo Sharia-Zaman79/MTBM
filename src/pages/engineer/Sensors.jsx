@@ -371,6 +371,9 @@ export default function SensorsPage() {
           >
             Sensors
           </Button>
+          <Link to="/engineer/logbook">
+            <Button variant="ghost">Log Book</Button>
+          </Link>
           <AlertsPopover />
           <Button
             variant="destructive"

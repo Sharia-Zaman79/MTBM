@@ -368,6 +368,9 @@ function DashboardContent() {
           <Link to="/engineer/sensors">
             <Button variant="ghost">Sensors</Button>
           </Link>
+          <Link to="/engineer/logbook">
+            <Button variant="ghost">Log Book</Button>
+          </Link>
           <AlertsPopover />
           <Button
             variant="destructive"
