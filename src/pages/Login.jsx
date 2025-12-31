@@ -85,7 +85,7 @@ const Login = () => {
                   </label>
                 </div>
 
-                <Button className="w-full bg-slate-600 hover:bg-slate-700 text-white" type="button" onClick={() => navigate('/', { state: { message: 'Successfully logged in' } })}>
+                <Button className="w-full bg-slate-600 hover:bg-slate-700 text-white" type="button" onClick={() => navigate('/engineer', { state: { message: 'Successfully logged in' } })}>
                   Log in
                 </Button>
 
