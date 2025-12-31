@@ -14,17 +14,19 @@ const Login = () => {
     <div className="min-h-screen w-full bg-neutral-950 text-foreground">
       <header className="w-full bg-neutral-900/80">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-6 py-4">
-          <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800">
-            <img
-              src="/assets/mtbm/logo.png"
-              alt="MTBM logo"
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <div className="leading-tight">
-            <div className="text-lg font-semibold text-white">MTBM</div>
-            <div className="text-xs text-neutral-300">Dashboard System</div>
-          </div>
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800">
+              <img
+                src="/assets/mtbm/logo.png"
+                alt="MTBM logo"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="leading-tight">
+              <div className="text-lg font-semibold text-white">MTBM</div>
+              <div className="text-xs text-neutral-300">Dashboard System</div>
+            </div>
+          </Link>
         </div>
       </header>
 
