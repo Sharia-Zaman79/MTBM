@@ -10,6 +10,7 @@ const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [toastMessage, setToastMessage] = useState(location.state?.message || '')
+  const [selectedRole, setSelectedRole] = useState(null)
   return (
     <div className="min-h-screen w-full bg-neutral-950 text-foreground">
       <header className="w-full bg-neutral-900/80">
@@ -77,6 +78,45 @@ const Login = () => {
                   <div className="h-px flex-1 bg-neutral-400" />
                 </div>
 
+                <div className="pb-4">
+                  <p className="text-sm font-semibold text-neutral-800 mb-3">Select Your Role:</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => setSelectedRole('engineer')}
+                      className={`flex-1 h-9 rounded-md px-4 ${
+                        selectedRole === 'engineer'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-neutral-300 text-neutral-900 hover:bg-neutral-400'
+                      }`}
+                    >
+                      Engineer
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setSelectedRole('technician')}
+                      className={`flex-1 h-9 rounded-md px-4 ${
+                        selectedRole === 'technician'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-neutral-300 text-neutral-900 hover:bg-neutral-400'
+                      }`}
+                    >
+                      Technician
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setSelectedRole('admin')}
+                      className={`flex-1 h-9 rounded-md px-4 ${
+                        selectedRole === 'admin'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-neutral-300 text-neutral-900 hover:bg-neutral-400'
+                      }`}
+                    >
+                      Admin
+                    </Button>
+                  </div>
+                </div>
+
                 <Input type="email" placeholder="Email" className="bg-neutral-100" />
                 <Input type="password" placeholder="Password" className="bg-neutral-100" />
 
@@ -87,7 +127,18 @@ const Login = () => {
                   </label>
                 </div>
 
-                <Button className="w-full bg-slate-600 hover:bg-slate-700 text-white" type="button" onClick={() => navigate('/engineer', { state: { message: 'Successfully logged in' } })}>
+                <Button className="w-full bg-slate-600 hover:bg-slate-700 text-white" type="button" onClick={() => {
+                  if (!selectedRole) {
+                    alert('Please select a role to continue');
+                    return;
+                  }
+                  const dashboardRoutes = {
+                    engineer: '/engineer',
+                    technician: '/technician',
+                    admin: '/admin'
+                  };
+                  navigate(dashboardRoutes[selectedRole], { state: { message: 'Successfully logged in' } });
+                }}>
                   Log in
                 </Button>
 
