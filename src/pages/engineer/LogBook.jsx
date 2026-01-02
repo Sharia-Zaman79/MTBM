@@ -15,6 +15,20 @@ const dummyLogData = [
   { id: 8, issue: "27 JUL", return: "27 FEB", duration: "7 Month", company: "Strabag", location: "Khulna" },
   { id: 9, issue: "27 FEB", return: "27 APR", duration: "2 Month", company: "Salini Impregilo", location: "Rangpur" },
   { id: 10, issue: "27 APR", return: "27 AUG", duration: "4 Month", company: "Skanska", location: "Barishal" },
+  { id: 11, issue: "15 JAN", return: "20 MAY", duration: "4 Month", company: "Kiewit", location: "Sylhet" },
+  { id: 12, issue: "10 FEB", return: "15 JUN", duration: "4 Month", company: "Turner Construction", location: "Mymensingh" },
+  { id: 13, issue: "05 MAR", return: "10 AUG", duration: "5 Month", company: "Bechtel", location: "Rajshahi" },
+  { id: 14, issue: "20 MAR", return: "25 JUL", duration: "4 Month", company: "Laing O'Rourke", location: "Cox's Bazar" },
+  { id: 15, issue: "01 APR", return: "15 SEP", duration: "5 Month", company: "Dragados", location: "Comilla" },
+  { id: 16, issue: "12 APR", return: "20 OCT", duration: "6 Month", company: "Sacyr", location: "Gazipur" },
+  { id: 17, issue: "25 APR", return: "30 NOV", duration: "7 Month", company: "Herrenknecht", location: "Narayanganj" },
+  { id: 18, issue: "08 MAY", return: "15 DEC", duration: "7 Month", company: "Seli Thiess", location: "Tangail" },
+  { id: 19, issue: "18 MAY", return: "20 JAN", duration: "8 Month", company: "Acciona", location: "Jashore" },
+  { id: 20, issue: "30 MAY", return: "25 FEB", duration: "9 Month", company: "PORR", location: "Dinajpur" },
+  { id: 21, issue: "10 JUN", return: "15 MAR", duration: "9 Month", company: "Doosan", location: "Bogra" },
+  { id: 22, issue: "22 JUN", return: "18 APR", duration: "10 Month", company: "Hyundai", location: "Pabna" },
+  { id: 23, issue: "05 JUL", return: "02 MAY", duration: "10 Month", company: "Samsung", location: "Noakhali" },
+  { id: 24, issue: "17 JUL", return: "12 JUN", duration: "11 Month", company: "Hitachi", location: "Feni" },
 ];
 
 const LOCATIONS = [
@@ -418,6 +432,14 @@ export default function LogBookPage() {
   const navigate = useNavigate();
   const [entries, setEntries] = useState(dummyLogData);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(entries.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentEntries = entries.slice(startIndex, endIndex);
 
   const handleAddEntry = (formData) => {
     const newEntry = {
@@ -430,6 +452,12 @@ export default function LogBookPage() {
 
   const handleLogout = () => {
     navigate("/login");
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
   return (
@@ -523,7 +551,7 @@ export default function LogBookPage() {
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry) => (
+              {currentEntries.map((entry) => (
                 <tr key={entry.id} className="border-b border-gray-700 hover:bg-gray-900/50">
                   <td className="px-4 py-3 text-sm text-gray-300">{entry.issue}</td>
                   <td className="px-4 py-3 text-sm text-gray-300">{entry.return}</td>
@@ -538,14 +566,49 @@ export default function LogBookPage() {
 
         {/* Pagination */}
         <div className="flex items-center justify-center gap-2 text-sm">
-          <button className="px-2 py-1 text-gray-400 hover:text-white">❮❮</button>
-          <button className="px-3 py-2 bg-blue-600 text-white rounded">1</button>
-          {[2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-            <button key={num} className="px-3 py-2 text-gray-400 hover:text-white">
+          <button 
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ❮❮
+          </button>
+          <button 
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ❮
+          </button>
+          
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+            <button 
+              key={num}
+              onClick={() => handlePageChange(num)}
+              className={`px-3 py-2 rounded ${
+                currentPage === num 
+                  ? "bg-blue-600 text-white" 
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
               {num}
             </button>
           ))}
-          <button className="px-2 py-1 text-gray-400 hover:text-white">❯❯</button>
+
+          <button 
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ❯
+          </button>
+          <button 
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ❯❯
+          </button>
         </div>
       </div>
 
