@@ -464,7 +464,7 @@ export default function LogBookPage() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
       <header className="flex items-center justify-between px-4 lg:px-8 py-3 lg:py-4 border-b border-gray-800">
-        <div className="flex items-center gap-3 lg:gap-4">
+        <Link to="/" className="flex items-center gap-3 lg:gap-4 hover:opacity-80 transition-opacity">
           <div className="flex items-center gap-3 lg:gap-4">
             <img
               src="/assets/mtbm/logo.png"
@@ -476,7 +476,7 @@ export default function LogBookPage() {
               <span className="text-xs lg:text-sm text-gray-400">MTU Navigation System</span>
             </div>
           </div>
-        </div>
+        </Link>
         <nav className="flex items-center gap-2 lg:gap-4">
           <Link to="/engineer">
             <Button variant="ghost" className="text-gray-400 hover:text-white text-xs lg:text-sm">
