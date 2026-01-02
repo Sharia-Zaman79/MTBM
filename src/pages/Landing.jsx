@@ -219,11 +219,11 @@ const Landing = () => {
                 <span className="text-orange-500">PULSION</span>
               </h1>
 
-              <div className="mt-6">
+              <div className="mt-6 group cursor-pointer overflow-hidden">
                 <img
                   src="/assets/mtbm/landing/propulsion.png.jpeg"
                   alt="Propulsion system"
-                  className="w-full max-w-2xl"
+                  className="w-full max-w-2xl transition-transform duration-300 group-hover:scale-150 origin-left"
                 />
               </div>
             </div>
