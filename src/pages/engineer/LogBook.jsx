@@ -182,11 +182,71 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     issue: "",
     return: "",
-    duration: "Auto Calculated",
+    duration: "",
     company: "",
     location: "Dhaka",
   });
   const [errors, setErrors] = useState({});
+
+  // Calculate duration between two dates
+  const calculateDuration = (issueDate, returnDate) => {
+    if (!issueDate || !returnDate) return "";
+
+    try {
+      // Parse dates in DD/MM/YYYY format
+      const [issueDay, issueMonth, issueYear] = issueDate.split("/").map(Number);
+      const [returnDay, returnMonth, returnYear] = returnDate.split("/").map(Number);
+
+      const issue = new Date(issueYear, issueMonth - 1, issueDay);
+      const returns = new Date(returnYear, returnMonth - 1, returnDay);
+
+      if (issue >= returns) {
+        return "Invalid (Return must be after Issue)";
+      }
+
+      // Calculate difference
+      let months = returnMonth - issueMonth;
+      let years = returnYear - issueYear;
+
+      if (returnDay < issueDay) {
+        months--;
+      }
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      // Format result
+      if (years === 0 && months === 0) {
+        const days = Math.floor((returns - issue) / (1000 * 60 * 60 * 24));
+        return `${days} Day${days !== 1 ? "s" : ""}`;
+      } else if (years === 0) {
+        return `${months} Month${months !== 1 ? "s" : ""}`;
+      } else {
+        return `${years} Year${years !== 1 ? "s" : ""} ${months} Month${months !== 1 ? "s" : ""}`;
+      }
+    } catch (error) {
+      return "";
+    }
+  };
+
+  // Update duration when dates change
+  const handleDateChange = (field, value) => {
+    const newFormData = { ...formData, [field]: value };
+    
+    // Calculate duration if both dates are present
+    if (newFormData.issue && newFormData.return) {
+      newFormData.duration = calculateDuration(newFormData.issue, newFormData.return);
+    } else {
+      newFormData.duration = "";
+    }
+
+    setFormData(newFormData);
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: "" });
+    }
+  };
 
   // Check if all required fields are filled
   const isFormValid = () => {
@@ -224,7 +284,7 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
     
     if (validateForm()) {
       onSubmit(formData);
-      setFormData({ issue: "", return: "", duration: "Auto Calculated", company: "", location: "Dhaka" });
+      setFormData({ issue: "", return: "", duration: "", company: "", location: "Dhaka" });
       setErrors({});
     }
   };
@@ -249,10 +309,7 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
             </label>
             <DatePicker
               value={formData.issue}
-              onChange={(value) => {
-                setFormData({ ...formData, issue: value });
-                if (errors.issue) setErrors({ ...errors, issue: "" });
-              }}
+              onChange={(value) => handleDateChange("issue", value)}
               placeholder="mm/dd/yyyy"
             />
             {errors.issue && <p className="text-red-500 text-xs mt-1">{errors.issue}</p>}
@@ -265,10 +322,7 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
             </label>
             <DatePicker
               value={formData.return}
-              onChange={(value) => {
-                setFormData({ ...formData, return: value });
-                if (errors.return) setErrors({ ...errors, return: "" });
-              }}
+              onChange={(value) => handleDateChange("return", value)}
               placeholder="mm/dd/yyyy"
             />
             {errors.return && <p className="text-red-500 text-xs mt-1">{errors.return}</p>}
@@ -283,7 +337,8 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
               type="text"
               value={formData.duration}
               disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 bg-gray-50 text-sm"
+              placeholder="Auto calculated"
+              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 bg-gray-50 text-sm font-medium"
             />
           </div>
 
