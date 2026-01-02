@@ -371,6 +371,7 @@ function DashboardContent() {
           <Link to="/engineer/logbook">
             <Button variant="ghost">Log Book</Button>
           </Link>
+          <Button variant="ghost" className="text-orange-400 hover:text-orange-300">Call Technician</Button>
           <AlertsPopover />
           <Button
             variant="destructive"
