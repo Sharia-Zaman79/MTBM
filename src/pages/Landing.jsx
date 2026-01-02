@@ -76,8 +76,8 @@ const Landing = () => {
         {activeTab === "overview" && (
           <div className="w-full">
             <section className="grid gap-8 md:grid-cols-2 md:items-center">
-              <div className="pt-8">
-                <h1 className="text-2xl font-semibold text-neutral-400 md:text-3xl">
+              <div className="pt-8 group cursor-pointer">
+                <h1 className="text-2xl font-semibold text-neutral-400 md:text-3xl transition-transform duration-300 group-hover:scale-150 origin-left">
                   Bangladesh&apos;s 1st home-
                   <br />
                   grown Micro Tunnel Boring
