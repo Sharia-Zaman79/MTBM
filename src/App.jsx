@@ -8,6 +8,7 @@ import Signup from './pages/Signup';
 import EngineerDashboard from './pages/engineer/Dashboard';
 import EngineerNavigation from './pages/engineer/Navigation';
 import EngineerSensors from './pages/engineer/Sensors';
+import LogBook from './pages/engineer/LogBook';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ function App() {
             <Route path="/engineer" element={<EngineerDashboard />} />
             <Route path="/engineer/navigation" element={<EngineerNavigation />} />
             <Route path="/engineer/sensors" element={<EngineerSensors />} />
+            <Route path="/engineer/logbook" element={<LogBook />} />
           </Routes>
         </Router>
         <Toaster position="top-center" />
