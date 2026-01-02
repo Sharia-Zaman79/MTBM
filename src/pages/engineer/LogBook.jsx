@@ -186,11 +186,47 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
     company: "",
     location: "Dhaka",
   });
+  const [errors, setErrors] = useState({});
+
+  // Check if all required fields are filled
+  const isFormValid = () => {
+    return (
+      formData.issue.trim() !== "" &&
+      formData.return.trim() !== "" &&
+      formData.company.trim() !== "" &&
+      formData.location.trim() !== ""
+    );
+  };
+
+  // Validate form on submit
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.issue.trim()) {
+      newErrors.issue = "Issue date is required";
+    }
+    if (!formData.return.trim()) {
+      newErrors.return = "Return date is required";
+    }
+    if (!formData.company.trim()) {
+      newErrors.company = "Company name is required";
+    }
+    if (!formData.location.trim()) {
+      newErrors.location = "Location is required";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
-    setFormData({ issue: "", return: "", duration: "Auto Calculated", company: "", location: "Dhaka" });
+    
+    if (validateForm()) {
+      onSubmit(formData);
+      setFormData({ issue: "", return: "", duration: "Auto Calculated", company: "", location: "Dhaka" });
+      setErrors({});
+    }
   };
 
   if (!isOpen) return null;
@@ -209,25 +245,33 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
           {/* Issue Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              📅 Issue
+              📅 Issue <span className="text-red-500">*</span>
             </label>
             <DatePicker
               value={formData.issue}
-              onChange={(value) => setFormData({ ...formData, issue: value })}
+              onChange={(value) => {
+                setFormData({ ...formData, issue: value });
+                if (errors.issue) setErrors({ ...errors, issue: "" });
+              }}
               placeholder="mm/dd/yyyy"
             />
+            {errors.issue && <p className="text-red-500 text-xs mt-1">{errors.issue}</p>}
           </div>
 
           {/* Return Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              📅 Return
+              📅 Return <span className="text-red-500">*</span>
             </label>
             <DatePicker
               value={formData.return}
-              onChange={(value) => setFormData({ ...formData, return: value })}
+              onChange={(value) => {
+                setFormData({ ...formData, return: value });
+                if (errors.return) setErrors({ ...errors, return: "" });
+              }}
               placeholder="mm/dd/yyyy"
             />
+            {errors.return && <p className="text-red-500 text-xs mt-1">{errors.return}</p>}
           </div>
 
           {/* Duration */}
@@ -246,26 +290,37 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
           {/* Company Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              👥 Company Name
+              👥 Company Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.company}
-              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, company: e.target.value });
+                if (errors.company) setErrors({ ...errors, company: "" });
+              }}
               placeholder="Enter Company Name"
-              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm"
+              className={`w-full px-3 py-2 border rounded text-gray-900 text-sm ${
+                errors.company ? "border-red-500 bg-red-50" : "border-gray-300"
+              }`}
             />
+            {errors.company && <p className="text-red-500 text-xs mt-1">{errors.company}</p>}
           </div>
 
           {/* Location */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              📍 Location
+              📍 Location <span className="text-red-500">*</span>
             </label>
             <select
               value={formData.location}
-              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm"
+              onChange={(e) => {
+                setFormData({ ...formData, location: e.target.value });
+                if (errors.location) setErrors({ ...errors, location: "" });
+              }}
+              className={`w-full px-3 py-2 border rounded text-gray-900 text-sm ${
+                errors.location ? "border-red-500 bg-red-50" : "border-gray-300"
+              }`}
             >
               {LOCATIONS.map((loc) => (
                 <option key={loc} value={loc}>
@@ -273,6 +328,7 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
                 </option>
               ))}
             </select>
+            {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
           </div>
 
           {/* Buttons */}
@@ -286,7 +342,12 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 font-medium"
+              disabled={!isFormValid()}
+              className={`flex-1 px-4 py-2 rounded font-medium text-white transition-colors ${
+                isFormValid()
+                  ? "bg-blue-500 hover:bg-blue-600 cursor-pointer"
+                  : "bg-gray-400 cursor-not-allowed opacity-50"
+              }`}
             >
               Save Entry
             </button>
