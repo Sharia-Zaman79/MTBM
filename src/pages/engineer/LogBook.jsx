@@ -17,7 +17,28 @@ const dummyLogData = [
   { id: 10, issue: "27 APR", return: "27 AUG", duration: "4 Month", company: "Skanska", location: "Barishal" },
 ];
 
-const LOCATIONS = ["Dhaka", "Chittagong", "Khulna", "Rangpur", "Barishal"];
+const LOCATIONS = [
+  "Dhaka",
+  "Chittagong",
+  "Khulna",
+  "Rangpur",
+  "Barishal",
+  "Sylhet",
+  "Mymensingh",
+  "Rajshahi",
+  "Barisal",
+  "Cox's Bazar",
+  "Comilla",
+  "Gazipur",
+  "Narayanganj",
+  "Tangail",
+  "Jashore",
+  "Dinajpur",
+  "Bogra",
+  "Pabna",
+  "Noakhali",
+  "Feni"
+];
 
 // Date Picker Component
 function DatePicker({ value, onChange, placeholder }) {
