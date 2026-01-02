@@ -433,13 +433,19 @@ export default function LogBookPage() {
   const [entries, setEntries] = useState(dummyLogData);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 10;
 
-  // Calculate pagination
-  const totalPages = Math.ceil(entries.length / itemsPerPage);
+  // Filter entries by company name based on search query
+  const filteredEntries = entries.filter((entry) =>
+    entry.company.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Calculate pagination based on filtered entries
+  const totalPages = Math.ceil(filteredEntries.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentEntries = entries.slice(startIndex, endIndex);
+  const currentEntries = filteredEntries.slice(startIndex, endIndex);
 
   const handleAddEntry = (formData) => {
     const newEntry = {
@@ -533,7 +539,12 @@ export default function LogBookPage() {
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search by Company name"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
             className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded text-gray-300 text-sm placeholder-gray-500"
           />
         </div>
