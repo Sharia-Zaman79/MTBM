@@ -97,11 +97,11 @@ const Landing = () => {
                 </h1>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end group cursor-pointer">
                 <img
                   src="/assets/mtbm/landing/overview-hero.png.jpeg"
                   alt="MTBM"
-                  className="w-full max-w-xl"
+                  className="w-full max-w-xl transition-transform duration-300 group-hover:scale-150 origin-right"
                 />
               </div>
             </section>
