@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Bell, Trash2, X, LogOut } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
+import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
 import {
   Popover,
   PopoverContent,
@@ -379,7 +380,10 @@ function DashboardContent() {
           <Link to="/engineer/logbook">
             <Button variant="ghost">Log Book</Button>
           </Link>
-          <Button variant="ghost" className="text-orange-400 hover:text-orange-300">Call Technician</Button>
+          <CallTechnicianAction
+            buttonVariant="ghost"
+            buttonClassName="text-orange-400 hover:text-orange-300"
+          />
           <AlertsPopover />
           <Button
             variant="destructive"

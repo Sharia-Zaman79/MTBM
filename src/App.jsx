@@ -9,6 +9,7 @@ import EngineerDashboard from './pages/engineer/Dashboard';
 import EngineerNavigation from './pages/engineer/Navigation';
 import EngineerSensors from './pages/engineer/Sensors';
 import LogBook from './pages/engineer/LogBook';
+import EngineerCallTechnician from './pages/engineer/CallTechnician';
 import TechnicianDashboard from './pages/technician/TechnicianDashboard';
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ function App() {
             <Route path="/engineer/navigation" element={<EngineerNavigation />} />
             <Route path="/engineer/sensors" element={<EngineerSensors />} />
             <Route path="/engineer/logbook" element={<LogBook />} />
+            <Route path="/engineer/call-technician" element={<EngineerCallTechnician />} />
             {/* Technician Dashboard Route */}
             <Route path="/technician" element={<TechnicianDashboard />} />
           </Routes>

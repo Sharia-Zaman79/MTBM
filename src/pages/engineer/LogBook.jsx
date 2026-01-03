@@ -1,8 +1,134 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, X, Calendar } from "lucide-react";
+import { Bell, LogOut, Trash2, X, Calendar } from "lucide-react";
+import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
+import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+function AlertsPopover() {
+  const { alerts, clearAlerts, removeAlert } = useAlerts();
+  const alertCount = alerts.length;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative text-gray-300 hover:text-white"
+        >
+          <Bell className="h-5 w-5" />
+          {alertCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs flex items-center justify-center font-bold">
+              {alertCount > 99 ? "99+" : alertCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-80 p-0 bg-gray-900 border-gray-700"
+        align="end"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+          <h4 className="font-semibold text-white">Alerts ({alertCount})</h4>
+          {alertCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAlerts}
+              className="text-gray-400 hover:text-white h-8 px-2"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Clear all
+            </Button>
+          )}
+        </div>
+        <ScrollArea className="h-[300px]">
+          {alertCount === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[200px] text-gray-400">
+              <Bell className="h-10 w-10 mb-2 opacity-50" />
+              <p className="text-sm">No alerts yet</p>
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {alerts.map((alert) => (
+                <AlertItem key={alert.id} alert={alert} onRemove={removeAlert} />
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function AlertItem({ alert, onRemove }) {
+  const formatTime = (date) => {
+    if (!(date instanceof Date)) return "";
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  };
+
+  const isRepair = alert?.type === "repair";
+  const level = isRepair ? "repair" : alert?.level;
+  const levelColors = {
+    warning: "bg-orange-500/20 border-l-orange-500 text-orange-400",
+    critical: "bg-red-500/20 border-l-red-500 text-red-400",
+    repair: "bg-blue-500/20 border-l-blue-500 text-blue-300",
+  };
+
+  const title = isRepair ? alert?.subsystem ?? "Repair Request" : alert?.sensorName ?? "Alert";
+
+  const detail = isRepair
+    ? alert?.issue ?? ""
+    : `${alert?.sensorType ?? ""}: ${typeof alert?.value === "number" ? alert.value.toFixed(1) : ""}${alert?.unit ?? ""}`;
+
+  return (
+    <div
+      className={`flex items-start gap-3 px-4 py-3 border-b border-gray-800 border-l-4 ${
+        levelColors[level] ?? levelColors.warning
+      }`}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-white text-sm">{title}</span>
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded ${
+              isRepair
+                ? "bg-blue-500"
+                : alert?.level === "critical"
+                  ? "bg-red-500"
+                  : "bg-orange-500"
+            } text-white font-medium`}
+          >
+            {isRepair ? "REPAIR" : alert?.level === "critical" ? "CRITICAL" : "WARNING"}
+          </span>
+        </div>
+        {detail ? <p className="text-xs text-gray-400 mt-1">{detail}</p> : null}
+        <p className="text-xs text-gray-500 mt-0.5">{formatTime(alert?.timestamp)}</p>
+      </div>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 text-gray-400 hover:text-white"
+        onClick={() => onRemove(alert.id)}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
 
 // Dummy data for log entries
 const dummyLogData = [
@@ -514,6 +640,11 @@ export default function LogBookPage() {
           >
             Log Book
           </Button>
+          <CallTechnicianAction
+            buttonVariant="ghost"
+            buttonClassName="text-orange-400 hover:text-orange-300"
+          />
+          <AlertsPopover />
           <Button
             variant="destructive"
             className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"

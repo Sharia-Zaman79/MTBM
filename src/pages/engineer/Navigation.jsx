@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
+import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
 import {
   Bell,
   Trash2,
@@ -310,7 +311,10 @@ export default function NavigationPage() {
           <Link to="/engineer/logbook">
             <Button variant="ghost">Log Book</Button>
           </Link>
-          <Button variant="ghost" className="text-orange-400 hover:text-orange-300">Call Technician</Button>
+          <CallTechnicianAction
+            buttonVariant="ghost"
+            buttonClassName="text-orange-400 hover:text-orange-300"
+          />
           <AlertsPopover />
           <Button
             variant="destructive"
