@@ -7,7 +7,7 @@ const TechnicianDashboard = () => {
   const navigate = useNavigate();
 
   // Mock data for repair alerts
-  const repairAlerts = [
+  const [repairAlerts, setRepairAlerts] = useState([
     {
       id: 1,
       subsystem: "Cutterhead",
@@ -29,7 +29,7 @@ const TechnicianDashboard = () => {
       timestamp: "1 week ago",
       status: "pending",
     },
-  ];
+  ]);
 
   // Mock data for component wear
   const componentWear = [
@@ -41,7 +41,7 @@ const TechnicianDashboard = () => {
   ];
 
   // Mock data for repair jobs
-  const repairJobs = [
+  const [repairJobs, setRepairJobs] = useState([
     {
       id: 1,
       title: "Slurry System Leak",
@@ -62,10 +62,49 @@ const TechnicianDashboard = () => {
       status: "Done",
       statusColor: "bg-green-500",
     },
-  ];
+  ]);
 
   const handleAccept = (id) => {
-    alert(`Accepted repair alert #${id}`);
+    const acceptedAlert = repairAlerts.find((a) => a.id === id);
+    if (!acceptedAlert) return;
+
+    // Create a job entry from the alert (frontend-only placeholder)
+    setRepairJobs((prev) => {
+      const alreadyExists = prev.some((j) => j.sourceAlertId === id);
+      if (alreadyExists) return prev;
+
+      const nextId = prev.reduce((maxId, j) => Math.max(maxId, j.id), 0) + 1;
+      const newJob = {
+        id: nextId,
+        sourceAlertId: id,
+        title: acceptedAlert.issue,
+        subsystem: acceptedAlert.subsystem,
+        priority: "High",
+        repairType: "Inspection",
+        eta: "2 hrs",
+        status: "In Progress",
+        statusColor: "bg-orange-500",
+      };
+
+      return [newJob, ...prev];
+    });
+
+    // Remove from alerts list so it can only be accepted once
+    setRepairAlerts((prev) => prev.filter((a) => a.id !== id));
+    setActiveTab("repair-jobs");
+  };
+
+  const handleMarkFixed = (jobId) => {
+    setRepairJobs((prev) =>
+      prev.map((job) => {
+        if (job.id !== jobId) return job;
+        return {
+          ...job,
+          status: "Done",
+          statusColor: "bg-green-500",
+        };
+      })
+    );
   };
 
   const handleLogout = () => {
@@ -279,7 +318,15 @@ const TechnicianDashboard = () => {
                     <button className="rounded-md bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-600">
                       Update Status
                     </button>
-                    <button className="rounded-md bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-900 flex items-center gap-2">
+                    <button
+                      onClick={() => handleMarkFixed(job.id)}
+                      disabled={job.status === "Done"}
+                      className={`rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors flex items-center gap-2 ${
+                        job.status === "Done"
+                          ? "bg-neutral-800 cursor-not-allowed opacity-60"
+                          : "bg-black hover:bg-neutral-900"
+                      }`}
+                    >
                       <span>✓</span> Mark Fixed
                     </button>
                   </div>

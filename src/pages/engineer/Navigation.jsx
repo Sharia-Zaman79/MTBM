@@ -52,7 +52,8 @@ function normalizeHeading(heading) {
 // Alerts Popover Component
 function AlertsPopover() {
   const { alerts, clearAlerts, removeAlert } = useAlerts();
-  const alertCount = alerts.length;
+  const visibleAlerts = alerts.filter((a) => a?.type !== "repair");
+  const alertCount = visibleAlerts.length;
 
   return (
     <Popover>
@@ -97,7 +98,7 @@ function AlertsPopover() {
             </div>
           ) : (
             <div className="flex flex-col">
-              {alerts.map((alert) => (
+              {visibleAlerts.map((alert) => (
                 <AlertItem
                   key={alert.id}
                   alert={alert}
