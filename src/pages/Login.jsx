@@ -103,17 +103,6 @@ const Login = () => {
                     >
                       Technician
                     </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setSelectedRole('admin')}
-                      className={`flex-1 h-9 rounded-md px-4 ${
-                        selectedRole === 'admin'
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'bg-neutral-300 text-neutral-900 hover:bg-neutral-400'
-                      }`}
-                    >
-                      Admin
-                    </Button>
                   </div>
                 </div>
 
@@ -134,8 +123,7 @@ const Login = () => {
                   }
                   const dashboardRoutes = {
                     engineer: '/engineer',
-                    technician: '/technician',
-                    admin: '/admin'
+                    technician: '/technician'
                   };
                   navigate(dashboardRoutes[selectedRole], { state: { message: 'Successfully logged in' } });
                 }}>
