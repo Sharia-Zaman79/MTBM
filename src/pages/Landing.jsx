@@ -164,58 +164,67 @@ const Landing = () => {
         )}
 
         {activeTab === "navigation" && (
-          <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-            <div>
-              <h1 className="text-6xl font-extrabold tracking-tight">
-                <span className="text-orange-500">NAVIGATION</span>
-                <br />
-                <span className="text-neutral-200">SYSTEM</span>
-              </h1>
-
-              <div className="mt-8">
-                <button
-                  onClick={() => toggleSection("nav-intro")}
-                  className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
-                >
-                  {expandedSections["nav-intro"] ? "See Less" : "See More"}
-                </button>
-                {expandedSections["nav-intro"] && (
-                  <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
-                    The navigation system of a micro tunnel boring machine (MTBM) is a
-                    sophisticated arrangement of sensors and controls, primarily
-                    designed to ensure the precise alignment and trajectory of the
-                    machine within the tunneling project. It incorporates a
-                    combination of laser guidance, gyroscopes, and inclinometers to
-                    accurately determine the machine&apos;s position and orientation.
-                    Laser guidance systems provide real-time feedback on the MTBM&apos;s
-                    position in relation to a predefined tunnel path, enabling
-                    adjustments to maintain the desired course.
-                  </p>
-                )}
+          <section className="w-full">
+            <div className="mx-auto w-full max-w-7xl px-6 py-10">
+              <div className="flex flex-col items-center text-center">
+                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
+                  <span className="text-orange-500">NAVIGATION</span>
+                  <br />
+                  <span className="text-neutral-200">SYSTEM</span>
+                </h1>
               </div>
-            </div>
 
-            <div className="pt-10 lg:pt-14">
-              <img
-                src="/assets/mtbm/landing/navigation.png.jpeg"
-                alt="Navigation system screen"
-                className="w-full max-w-xl"
-              />
-              <button
-                onClick={() => toggleSection("nav-details")}
-                className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
-              >
-                {expandedSections["nav-details"] ? "See Less" : "See More"}
-              </button>
-              {expandedSections["nav-details"] && (
-                <p className="mt-4 max-w-xl text-sm italic leading-7 text-neutral-400">
-                  Gyroscopes and inclinometers help monitor the machine&apos;s pitch and
-                  roll angles, ensuring that it remains on a stable and level
-                  trajectory. This navigation system plays a crucial role in avoiding
-                  deviations, reducing the risk of misalignment, and ensuring the
-                  MTBM&apos;s successful advancement through the underground environment.
-                </p>
-              )}
+              <div className="mt-10 flex justify-center">
+                <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40">
+                  <img
+                    src="/assets/mtbm/landing/navigation.png.jpeg"
+                    alt="Navigation system screen"
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:items-start">
+                <div>
+                  <button
+                    onClick={() => toggleSection("nav-intro")}
+                    className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+                  >
+                    {expandedSections["nav-intro"] ? "See Less" : "See More"}
+                  </button>
+                  {expandedSections["nav-intro"] && (
+                    <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
+                      The navigation system of a micro tunnel boring machine (MTBM) is a
+                      sophisticated arrangement of sensors and controls, primarily
+                      designed to ensure the precise alignment and trajectory of the
+                      machine within the tunneling project. It incorporates a
+                      combination of laser guidance, gyroscopes, and inclinometers to
+                      accurately determine the machine&apos;s position and orientation.
+                      Laser guidance systems provide real-time feedback on the MTBM&apos;s
+                      position in relation to a predefined tunnel path, enabling
+                      adjustments to maintain the desired course.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <button
+                    onClick={() => toggleSection("nav-details")}
+                    className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+                  >
+                    {expandedSections["nav-details"] ? "See Less" : "See More"}
+                  </button>
+                  {expandedSections["nav-details"] && (
+                    <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
+                      Gyroscopes and inclinometers help monitor the machine&apos;s pitch and
+                      roll angles, ensuring that it remains on a stable and level
+                      trajectory. This navigation system plays a crucial role in avoiding
+                      deviations, reducing the risk of misalignment, and ensuring the
+                      MTBM&apos;s successful advancement through the underground environment.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </section>
         )}
