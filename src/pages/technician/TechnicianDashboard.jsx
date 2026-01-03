@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { LogOut, Bell, Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const TechnicianDashboard = () => {
   const [activeTab, setActiveTab] = useState("repair-alerts");
@@ -83,7 +83,7 @@ const TechnicianDashboard = () => {
       {/* Header */}
       <header className="w-full border-b border-neutral-800 bg-neutral-900/50">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-800">
               <img
                 src="/assets/mtbm/logo.png"
@@ -95,7 +95,7 @@ const TechnicianDashboard = () => {
               <h1 className="text-lg font-bold">Bored Tunnelers</h1>
               <p className="text-xs text-neutral-400">Technician Dashboard</p>
             </div>
-          </div>
+          </Link>
 
           {/* Navigation Tabs */}
           <div className="flex items-center gap-4">
