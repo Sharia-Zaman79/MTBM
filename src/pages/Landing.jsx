@@ -264,14 +264,12 @@ const Landing = () => {
               )}
             </div>
 
-            <div className="flex justify-end pt-8 lg:pt-10">
-              <div className="group cursor-pointer overflow-hidden">
-                <img
-                  src="/assets/mtbm/landing/propulsion.png.jpeg"
-                  alt="Propulsion system"
-                  className="w-full max-w-2xl transition-transform duration-300 group-hover:scale-150 origin-left"
-                />
-              </div>
+            <div className="flex items-center justify-end">
+              <img
+                src="/assets/mtbm/landing/propulsion.png.jpeg"
+                alt="Propulsion system"
+                className="w-full h-auto object-contain"
+              />
             </div>
           </section>
         )}
