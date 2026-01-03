@@ -13,8 +13,6 @@ const Signup = () => {
 		switch (accountType) {
 			case "technician":
 				return "Technician"
-			case "admin":
-				return "Admin"
 			case "engineer":
 			default:
 				return "Engineer"
@@ -63,17 +61,6 @@ const Signup = () => {
 									: "bg-neutral-200 text-neutral-900 hover:bg-neutral-300")
 							}>
 							Engineer
-						</Button>
-						<Button
-							type="button"
-							onClick={() => setAccountType("admin")}
-							className={
-								"h-9 rounded-md px-6 " +
-								(accountType === "admin"
-									? "bg-[#5B89B1] text-white hover:bg-[#4a7294]"
-									: "bg-neutral-200 text-neutral-900 hover:bg-neutral-300")
-							}>
-							Admin
 						</Button>
 					</div>
 				</div>
