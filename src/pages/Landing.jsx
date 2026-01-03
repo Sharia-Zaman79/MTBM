@@ -276,38 +276,37 @@ const Landing = () => {
         )}
 
         {activeTab === "cutterhead" && (
-          <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-            <div>
-              <h1 className="text-6xl font-extrabold tracking-tight">
+          <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="flex flex-col items-center justify-center text-center">
+              <h1 className="text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                 <span className="text-neutral-500">CUTTER</span>
                 <span className="text-orange-500">HEAD</span>
               </h1>
 
-              <div className="mt-8">
-                <button
-                  onClick={() => toggleSection("cutter-details")}
-                  className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
-                >
-                  {expandedSections["cutter-details"] ? "See Less" : "See More"}
-                </button>
-                {expandedSections["cutter-details"] && (
-                  <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
-                    The cutterhead of a micro tunnel boring machine (MTBM) serves as
-                    the primary excavation component, featuring cutting tools such as
-                    carbide disc cutters and roller cutters. This apparatus is
-                    designed with adaptability in mind, as the configuration and tool
-                    choice depend on the geological conditions at the tunneling site.
-                    Driven by hydraulic or electric motors, the cutterhead rotates,
-                    applying pressure and thrust to cut through abrasive materials like
-                    rock or soil. Advanced monitoring and control systems enable
-                    real-time adjustments, optimizing the cutting process. Maintenance
-                    and replacement of worn tools are essential to sustain cutting
-                    efficiency. The cutterhead is integral to successful tunneling
-                    projects, with its design tailored to specific project requirements
-                    and geological factors.
-                  </p>
-                )}
-              </div>
+              <button
+                onClick={() => toggleSection("cutter-details")}
+                className="mt-8 inline-block px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+              >
+                {expandedSections["cutter-details"] ? "See Less" : "See More"}
+              </button>
+
+              {expandedSections["cutter-details"] && (
+                <p className="mt-6 max-w-xl text-sm italic leading-7 text-neutral-400">
+                  The cutterhead of a micro tunnel boring machine (MTBM) serves as
+                  the primary excavation component, featuring cutting tools such as
+                  carbide disc cutters and roller cutters. This apparatus is
+                  designed with adaptability in mind, as the configuration and tool
+                  choice depend on the geological conditions at the tunneling site.
+                  Driven by hydraulic or electric motors, the cutterhead rotates,
+                  applying pressure and thrust to cut through abrasive materials like
+                  rock or soil. Advanced monitoring and control systems enable
+                  real-time adjustments, optimizing the cutting process. Maintenance
+                  and replacement of worn tools are essential to sustain cutting
+                  efficiency. The cutterhead is integral to successful tunneling
+                  projects, with its design tailored to specific project requirements
+                  and geological factors.
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end pt-8 lg:pt-10">
