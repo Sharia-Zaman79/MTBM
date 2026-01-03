@@ -72,43 +72,45 @@ const Landing = () => {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-6 py-10">
+      <main className="w-full">
         {activeTab === "overview" && (
           <div className="w-full">
-            <section className="grid gap-8 md:grid-cols-2 md:items-center">
-              <div className="pt-8 group cursor-pointer">
-                <h1 className="text-2xl font-semibold text-neutral-400 md:text-3xl transition-transform duration-300 group-hover:scale-150 origin-left">
-                  Bangladesh&apos;s 1st home-
-                  <br />
-                  grown Micro Tunnel Boring
-                  <br />
-                  Machine (MTBM)
-                  <svg
-                    className="ml-2 inline-block h-5 w-6"
-                    viewBox="0 0 300 200"
-                    xmlns="http://www.w3.org/2000/svg"
-                    role="img"
-                    aria-label="Bangladesh flag"
-                  >
-                    <title>Bangladesh</title>
-                    <rect width="300" height="200" fill="#006A4E" />
-                    <circle cx="140" cy="100" r="48" fill="#F42A41" />
-                  </svg>
-                </h1>
-              </div>
+            <div className="mx-auto w-full max-w-7xl px-6 py-10">
+              <section className="grid gap-8 md:grid-cols-2 md:items-center">
+                <div className="pt-8 group cursor-pointer">
+                  <h1 className="text-2xl font-semibold text-neutral-400 md:text-3xl transition-transform duration-300 group-hover:scale-150 origin-left">
+                    Bangladesh&apos;s 1st home-
+                    <br />
+                    grown Micro Tunnel Boring
+                    <br />
+                    Machine (MTBM)
+                    <svg
+                      className="ml-2 inline-block h-5 w-6"
+                      viewBox="0 0 300 200"
+                      xmlns="http://www.w3.org/2000/svg"
+                      role="img"
+                      aria-label="Bangladesh flag"
+                    >
+                      <title>Bangladesh</title>
+                      <rect width="300" height="200" fill="#006A4E" />
+                      <circle cx="140" cy="100" r="48" fill="#F42A41" />
+                    </svg>
+                  </h1>
+                </div>
 
-              <div className="flex justify-end group cursor-pointer">
-                <img
-                  src="/assets/mtbm/landing/overview-hero.png.jpeg"
-                  alt="MTBM"
-                  className="w-full max-w-xl transition-transform duration-300 group-hover:scale-150 origin-right"
-                />
-              </div>
-            </section>
+                <div className="flex justify-end group cursor-pointer">
+                  <img
+                    src="/assets/mtbm/landing/overview-hero.png.jpeg"
+                    alt="MTBM"
+                    className="w-full max-w-xl transition-transform duration-300 group-hover:scale-150 origin-right"
+                  />
+                </div>
+              </section>
+            </div>
 
-            <section className="mt-10 bg-neutral-200 text-neutral-900">
-              <div className="mx-auto grid w-full max-w-7xl gap-8 px-6 py-10 md:grid-cols-[0.9fr_1.1fr] md:items-center">
-                <div>
+            <section className="w-full bg-neutral-200 text-neutral-900">
+              <div className="grid w-full gap-0 md:grid-cols-[0.9fr_1.1fr] md:items-center">
+                <div className="px-6 py-10 ml-auto mr-0 max-w-7xl">
                   <h2 className="text-2xl font-extrabold leading-tight text-slate-800">
                     Introduction to
                     <br />
@@ -136,9 +138,16 @@ const Landing = () => {
                   )}
                 </div>
 
-                <div className="flex justify-center md:justify-end">
-                  <div className="aspect-video w-full max-w-xl bg-black" />
-                </div>
+                <video
+                  className="w-full h-full bg-black"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                >
+                  <source src="/assets/mtbm/landing/Animation.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
             </section>
           </div>
