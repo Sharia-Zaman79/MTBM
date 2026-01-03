@@ -78,7 +78,7 @@ const Landing = () => {
             <div className="mx-auto w-full max-w-7xl px-6 py-10">
               <section className="grid gap-8 md:grid-cols-2 md:items-center">
                 <div className="pt-8 group cursor-pointer">
-                  <h1 className="text-2xl font-semibold text-neutral-400 md:text-3xl transition-transform duration-300 group-hover:scale-150 origin-left">
+                  <h1 className="text-2xl font-extrabold text-neutral-400 md:text-3xl transition-transform duration-300 group-hover:scale-150 origin-left">
                     Bangladesh&apos;s 1st home-
                     <br />
                     grown Micro Tunnel Boring
@@ -108,10 +108,21 @@ const Landing = () => {
               </section>
             </div>
 
-            <section className="w-full bg-neutral-200 text-neutral-900">
-              <div className="grid w-full gap-0 md:grid-cols-[0.9fr_1.1fr] md:items-center">
-                <div className="px-6 py-10 ml-auto mr-0 max-w-7xl">
-                  <h2 className="text-2xl font-extrabold leading-tight text-slate-800">
+            <section className="w-full bg-black text-white">
+              <div className="grid w-full gap-0 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+                <video
+                  className="w-full h-full bg-black"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                >
+                  <source src="/assets/mtbm/landing/Animation.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+
+                <div className="px-6 py-12 max-w-7xl flex flex-col items-center text-center">
+                  <h2 className="text-3xl md:text-4xl font-extrabold leading-tight text-white animate-in fade-in slide-in-from-left-8 duration-700">
                     Introduction to
                     <br />
                     Micro Tunnel Boring
@@ -120,12 +131,12 @@ const Landing = () => {
                   </h2>
                   <button
                     onClick={() => toggleSection("overview-intro")}
-                    className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+                    className="inline-block mt-5 px-5 py-2.5 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold animate-in fade-in slide-in-from-left-8 duration-700 delay-150"
                   >
                     {expandedSections["overview-intro"] ? "See Less" : "See More"}
                   </button>
                   {expandedSections["overview-intro"] && (
-                    <p className="mt-4 max-w-sm text-xs leading-5 text-neutral-600">
+                    <p className="mt-5 max-w-md text-sm leading-6 text-neutral-300">
                       A Micro Tunnel Boring Machine (MTBM) is a stack,
                       remotely operated machine that works deep
                       underground for utilities water, sewer, gas, comms
@@ -137,17 +148,6 @@ const Landing = () => {
                     </p>
                   )}
                 </div>
-
-                <video
-                  className="w-full h-full bg-black"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                >
-                  <source src="/assets/mtbm/landing/Animation.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
               </div>
             </section>
           </div>
