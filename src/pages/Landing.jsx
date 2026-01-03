@@ -230,31 +230,22 @@ const Landing = () => {
         )}
 
         {activeTab === "propulsion" && (
-          <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
-            <div>
-              <h1 className="text-6xl font-extrabold tracking-tight">
+          <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div className="flex flex-col items-center justify-center text-center">
+              <h1 className="text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                 <span className="text-neutral-500">PRO</span>
                 <span className="text-orange-500">PULSION</span>
               </h1>
 
-              <div className="mt-6 group cursor-pointer overflow-hidden">
-                <img
-                  src="/assets/mtbm/landing/propulsion.png.jpeg"
-                  alt="Propulsion system"
-                  className="w-full max-w-2xl transition-transform duration-300 group-hover:scale-150 origin-left"
-                />
-              </div>
-            </div>
-
-            <div className="pt-14 lg:pt-20">
               <button
                 onClick={() => toggleSection("prop-details")}
-                className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+                className="mt-8 inline-block px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
               >
                 {expandedSections["prop-details"] ? "See Less" : "See More"}
               </button>
+
               {expandedSections["prop-details"] && (
-                <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
+                <p className="mt-6 max-w-xl text-sm italic leading-7 text-neutral-400">
                   The propulsion system of a micro tunnel boring machine (MTBM) is a
                   complex mechanism designed for the controlled advancement of the
                   machine through the underground environment. It typically employs a
@@ -271,6 +262,16 @@ const Landing = () => {
                   path.
                 </p>
               )}
+            </div>
+
+            <div className="flex justify-end pt-8 lg:pt-10">
+              <div className="group cursor-pointer overflow-hidden">
+                <img
+                  src="/assets/mtbm/landing/propulsion.png.jpeg"
+                  alt="Propulsion system"
+                  className="w-full max-w-2xl transition-transform duration-300 group-hover:scale-150 origin-left"
+                />
+              </div>
             </div>
           </section>
         )}
