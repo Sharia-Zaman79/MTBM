@@ -336,6 +336,14 @@ function DashboardContent() {
     navigate("/login", { state: { message: "Successfully logged out" } });
   };
 
+  const handleStop = () => {
+    const host =
+      typeof window !== "undefined" && window.location?.host
+        ? window.location.host
+        : "localhost";
+    toast(`${host} stopped the machine`);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Row 1: Header */}
@@ -376,6 +384,7 @@ function DashboardContent() {
           <Button
             variant="destructive"
             className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"
+            onClick={handleStop}
           >
             STOP
           </Button>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, X, Calendar } from "lucide-react";
+import { toast } from "sonner";
 
 // Dummy data for log entries
 const dummyLogData = [
@@ -460,6 +461,14 @@ export default function LogBookPage() {
     navigate("/login");
   };
 
+  const handleStop = () => {
+    const host =
+      typeof window !== "undefined" && window.location?.host
+        ? window.location.host
+        : "localhost";
+    toast(`${host} stopped the machine`);
+  };
+
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -508,6 +517,7 @@ export default function LogBookPage() {
           <Button
             variant="destructive"
             className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"
+            onClick={handleStop}
           >
             Stop
           </Button>
