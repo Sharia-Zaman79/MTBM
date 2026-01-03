@@ -319,66 +319,47 @@ const Landing = () => {
         )}
 
         {activeTab === "muck" && (
-          <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-            <div>
-              <h1 className="text-6xl font-extrabold tracking-tight">
+          <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div className="flex flex-col items-center justify-center text-center">
+              <h1 className="text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                 <span className="text-orange-500">MUCK</span>
                 <span className="text-neutral-500"> REMOVAL</span>
                 <br />
                 <span className="text-orange-500">SYSTEM</span>
               </h1>
 
-              <div className="mt-8">
-                <button
-                  onClick={() => toggleSection("muck-intro")}
-                  className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
-                >
-                  {expandedSections["muck-intro"] ? "See Less" : "See More"}
-                </button>
-                {expandedSections["muck-intro"] && (
-                  <p className="max-w-xl text-sm italic leading-7 text-neutral-400">
-                    The muck removal system in a micro tunnel boring machine (MTBM) is
-                    a crucial component responsible for the efficient transport of
-                    excavated material, known as muck, from the tunnel face to the
-                    surface. This system typically comprises a slurry or screw
-                    conveyor, and it must be designed to handle the specific
-                    geotechnical characteristics of the muck encountered during
-                    tunneling. The muck removal process is often aided by pumps,
-                    augers, and settling tanks, which separate solids from the slurry
-                    for efficient disposal or reuse. Efficient muck removal is
-                    paramount in maintaining the tunneling process&apos;s productivity and
-                    preventing clogs and blockages. The design and configuration of the
-                    muck removal system must align with the geological conditions and
-                    project requirements to ensure seamless excavation and material
-                    transport.
-                  </p>
-                )}
-              </div>
+              <button
+                onClick={() => toggleSection("muck-intro")}
+                className="mt-8 inline-block px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
+              >
+                {expandedSections["muck-intro"] ? "See Less" : "See More"}
+              </button>
+              {expandedSections["muck-intro"] && (
+                <p className="mt-6 max-w-xl text-sm italic leading-7 text-neutral-400">
+                  The muck removal system in a micro tunnel boring machine (MTBM) is
+                  a crucial component responsible for the efficient transport of
+                  excavated material, known as muck, from the tunnel face to the
+                  surface. This system typically comprises a slurry or screw
+                  conveyor, and it must be designed to handle the specific
+                  geotechnical characteristics of the muck encountered during
+                  tunneling. The muck removal process is often aided by pumps,
+                  augers, and settling tanks, which separate solids from the slurry
+                  for efficient disposal or reuse. Efficient muck removal is
+                  paramount in maintaining the tunneling process&apos;s productivity and
+                  preventing clogs and blockages. The design and configuration of the
+                  muck removal system must align with the geological conditions and
+                  project requirements to ensure seamless excavation and material
+                  transport.
+                </p>
+              )}
             </div>
 
-            <div className="pt-8 lg:pt-10">
+            <div className="pt-8 lg:pt-10 flex flex-col items-end">
               <img
                 src="/assets/mtbm/landing/muck-removal.png.jpeg"
                 alt="Muck removal system"
                 className="w-full max-w-xl"
               />
-              <button
-                onClick={() => toggleSection("muck-details")}
-                className="inline-block mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
-              >
-                {expandedSections["muck-details"] ? "See Less" : "See More"}
-              </button>
-              {expandedSections["muck-details"] && (
-                <p className="mt-4 max-w-xl text-sm italic leading-7 text-neutral-400">
-                  The muck removal process is often aided by pumps, augers, and
-                  settling tanks, which separate solids from the slurry for efficient
-                  disposal or reuse. Efficient muck removal is paramount in maintaining
-                  the tunneling process&apos;s productivity and preventing clogs and
-                  blockages. The design and configuration of the muck removal system
-                  must align with the geological conditions and project requirements to
-                  ensure seamless excavation and material transport.
-                </p>
-              )}
             </div>
           </section>
         )}
