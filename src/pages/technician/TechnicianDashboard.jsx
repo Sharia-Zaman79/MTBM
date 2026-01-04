@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { LogOut, Bell, Settings } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import UserBadge from "@/components/UserBadge";
+import { clearCurrentUser } from "@/lib/auth";
 
 const TechnicianDashboard = () => {
   const [activeTab, setActiveTab] = useState("repair-alerts");
@@ -108,6 +110,7 @@ const TechnicianDashboard = () => {
   };
 
   const handleLogout = () => {
+    clearCurrentUser();
     navigate("/login");
   };
 
@@ -177,6 +180,8 @@ const TechnicianDashboard = () => {
             <button className="p-2 text-neutral-400 hover:text-white transition-colors">
               <Settings size={20} />
             </button>
+
+            <UserBadge className="ml-2" />
 
             {/* Logout Button */}
             <button

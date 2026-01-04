@@ -6,6 +6,8 @@ import { CheckCircle2, Bell, Trash2, X, LogOut } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
+import UserBadge from "@/components/UserBadge";
+import { clearCurrentUser } from "@/lib/auth";
 import {
   Popover,
   PopoverContent,
@@ -335,6 +337,7 @@ function DashboardContent() {
   const currentRange = sensorRanges[selectedSensor];
 
   const handleLogout = () => {
+    clearCurrentUser();
     navigate("/login", { state: { message: "Successfully logged out" } });
   };
 
@@ -386,6 +389,7 @@ function DashboardContent() {
             buttonClassName="text-orange-400 hover:text-orange-300"
           />
           <AlertsPopover />
+          <UserBadge className="ml-1" />
           <Button
             variant="destructive"
             className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"

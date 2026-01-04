@@ -5,12 +5,64 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import Toast from "@/components/ui/toast"
+import { toast } from "sonner"
+import { loadUsers, setCurrentUser } from "@/lib/auth"
 
 const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [toastMessage, setToastMessage] = useState(location.state?.message || '')
   const [selectedRole, setSelectedRole] = useState(null)
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+
+    if (!selectedRole) {
+      toast.error('Please select a role to continue')
+      return
+    }
+
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) {
+      toast.error('Email is required')
+      return
+    }
+
+    const emailLooksValid = /^\S+@\S+\.\S+$/.test(normalizedEmail)
+    if (!emailLooksValid) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
+    if (!password) {
+      toast.error('Password is required')
+      return
+    }
+
+    const users = loadUsers()
+    const match = users.find(
+      (u) =>
+        (u?.email ?? '').toLowerCase() === normalizedEmail &&
+        u?.role === selectedRole &&
+        u?.password === password
+    )
+
+    if (!match) {
+      toast.error('Wrong email or password')
+      return
+    }
+
+    setCurrentUser(match)
+
+    const dashboardRoutes = {
+      engineer: '/engineer',
+      technician: '/technician'
+    }
+    navigate(dashboardRoutes[selectedRole], { state: { message: 'Successfully logged in' } })
+  }
   return (
     <div className="min-h-screen w-full bg-neutral-950 text-foreground">
       <header className="w-full bg-neutral-900/80">
@@ -106,29 +158,37 @@ const Login = () => {
                   </div>
                 </div>
 
-                <Input type="email" placeholder="Email" className="bg-neutral-100" />
-                <Input type="password" placeholder="Password" className="bg-neutral-100" />
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    className="bg-neutral-100"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    className="bg-neutral-100"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                  />
 
-                <div className="flex items-center gap-3 pt-1">
-                  <Checkbox id="remember" />
-                  <label htmlFor="remember" className="text-sm text-neutral-800">
-                    Remember for 30 days
-                  </label>
-                </div>
+                  <div className="flex items-center gap-3 pt-1">
+                    <Checkbox id="remember" />
+                    <label htmlFor="remember" className="text-sm text-neutral-800">
+                      Remember for 30 days
+                    </label>
+                  </div>
 
-                <Button className="w-full bg-slate-600 hover:bg-slate-700 text-white" type="button" onClick={() => {
-                  if (!selectedRole) {
-                    alert('Please select a role to continue');
-                    return;
-                  }
-                  const dashboardRoutes = {
-                    engineer: '/engineer',
-                    technician: '/technician'
-                  };
-                  navigate(dashboardRoutes[selectedRole], { state: { message: 'Successfully logged in' } });
-                }}>
-                  Log in
-                </Button>
+                  <Button className="w-full bg-slate-600 hover:bg-slate-700 text-white" type="submit">
+                    Log in
+                  </Button>
+                </form>
 
                 <Toast message={toastMessage} onClose={() => setToastMessage('')} />
 

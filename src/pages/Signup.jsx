@@ -5,9 +5,16 @@ import { Link } from "react-router-dom"
 import { Building2, Lock, Mail, User, Wrench } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useNavigate } from 'react-router-dom'
+import { toast } from "sonner"
+import { loadUsers, saveUsers, setCurrentUser } from "@/lib/auth"
 
 const Signup = () => {
 	const [accountType, setAccountType] = useState("engineer")
+	const [fullName, setFullName] = useState("")
+	const [email, setEmail] = useState("")
+	const [organization, setOrganization] = useState("")
+	const [password, setPassword] = useState("")
+	const [confirmPassword, setConfirmPassword] = useState("")
 
 	const accountLabel = useMemo(() => {
 		switch (accountType) {
@@ -20,6 +27,75 @@ const Signup = () => {
 	}, [accountType])
 
 	const navigate = useNavigate()
+
+	const handleSubmit = (event) => {
+		event.preventDefault()
+
+		if (!fullName.trim()) {
+			toast.error("Full name is required")
+			return
+		}
+
+		const normalizedEmail = email.trim().toLowerCase()
+		if (!normalizedEmail) {
+			toast.error("Email address is required")
+			return
+		}
+
+		const emailLooksValid = /^\S+@\S+\.\S+$/.test(normalizedEmail)
+		if (!emailLooksValid) {
+			toast.error("Please enter a valid email address")
+			return
+		}
+
+		if (!organization.trim()) {
+			toast.error("Organization is required")
+			return
+		}
+
+		if (!password) {
+			toast.error("Password is required")
+			return
+		}
+
+		if (!confirmPassword) {
+			toast.error("Please confirm your password")
+			return
+		}
+
+		if (password !== confirmPassword) {
+			toast.error("Passwords do not match")
+			return
+		}
+
+		const users = loadUsers()
+		const exists = users.some(
+			(u) => (u?.email ?? "").toLowerCase() === normalizedEmail && u?.role === accountType
+		)
+		if (exists) {
+			toast.error("An account with this email already exists")
+			return
+		}
+
+		users.push({
+			email: normalizedEmail,
+			password,
+			role: accountType,
+			fullName: fullName.trim(),
+			organization: organization.trim(),
+			createdAt: new Date().toISOString(),
+		})
+		saveUsers(users)
+
+		setCurrentUser({
+			email: normalizedEmail,
+			role: accountType,
+			fullName: fullName.trim(),
+			organization: organization.trim(),
+		})
+
+		navigate('/login', { state: { message: 'Successfully signed up' } })
+	}
 
 	return (
 		<div className="min-h-screen w-full bg-white text-neutral-900">
@@ -87,7 +163,7 @@ const Signup = () => {
 					</CardHeader>
 
 					<CardContent className="px-10 py-8">
-										<form className="space-y-5">
+									<form className="space-y-5" onSubmit={handleSubmit}>
 							<div className="space-y-2">
 								<label className="text-xs font-semibold text-neutral-800">Full Name</label>
 								<div className="relative">
@@ -96,6 +172,10 @@ const Signup = () => {
 										type="text"
 										placeholder="Enter your full name"
 										className="h-10 rounded-md border-neutral-400 bg-neutral-100 pl-10 text-sm"
+										value={fullName}
+										onChange={(e) => setFullName(e.target.value)}
+										required
+										autoComplete="name"
 									/>
 								</div>
 							</div>
@@ -108,6 +188,10 @@ const Signup = () => {
 										type="email"
 										placeholder="you@company.com"
 										className="h-10 rounded-md border-neutral-400 bg-neutral-100 pl-10 text-sm"
+										value={email}
+										onChange={(e) => setEmail(e.target.value)}
+										required
+										autoComplete="email"
 									/>
 								</div>
 							</div>
@@ -120,6 +204,10 @@ const Signup = () => {
 										type="text"
 										placeholder="Your company name"
 										className="h-10 rounded-md border-neutral-400 bg-neutral-100 pl-10 text-sm"
+										value={organization}
+										onChange={(e) => setOrganization(e.target.value)}
+										required
+										autoComplete="organization"
 									/>
 								</div>
 							</div>
@@ -132,6 +220,10 @@ const Signup = () => {
 										type="password"
 										placeholder="••••••••"
 										className="h-10 rounded-md border-neutral-400 bg-neutral-100 pl-10 text-sm"
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										required
+										autoComplete="new-password"
 									/>
 								</div>
 							</div>
@@ -144,14 +236,17 @@ const Signup = () => {
 										type="password"
 										placeholder="••••••••"
 										className="h-10 rounded-md border-neutral-400 bg-neutral-100 pl-10 text-sm"
+										value={confirmPassword}
+										onChange={(e) => setConfirmPassword(e.target.value)}
+										required
+										autoComplete="new-password"
 									/>
 								</div>
 							</div>
 
 							<Button
-								type="button"
+								type="submit"
 								className="mt-2 h-11 w-full rounded-md bg-[#5B89B1] text-white hover:bg-[#4a7294]"
-								onClick={() => navigate('/login', { state: { message: 'Successfully signed up' } })}
 							>
 								Create {accountLabel} Account
 							</Button>
