@@ -1,8 +1,103 @@
 import { useState } from "react";
-import { LogOut, Bell, Settings } from "lucide-react";
+import { LogOut, Bell, Settings, Trash2, X } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import UserBadge from "@/components/UserBadge";
 import { clearCurrentUser } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+function AlertsPopover({ alerts, onClear, onRemove }) {
+  const alertCount = alerts.length;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative text-neutral-400 hover:text-white transition-colors"
+        >
+          <Bell className="h-5 w-5" />
+          {alertCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs flex items-center justify-center font-bold">
+              {alertCount > 99 ? "99+" : alertCount}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        className="w-80 p-0 bg-neutral-900 border-neutral-700 text-white"
+        align="end"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-700">
+          <h4 className="font-semibold">Alerts ({alertCount})</h4>
+          {alertCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClear}
+              className="text-neutral-400 hover:text-white h-8 px-2"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Clear history
+            </Button>
+          )}
+        </div>
+
+        <ScrollArea className="h-[300px]">
+          {alertCount === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[200px] text-neutral-400">
+              <Bell className="h-10 w-10 mb-2 opacity-50" />
+              <p className="text-sm">No alerts yet</p>
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {alerts.map((alert) => (
+                <div
+                  key={alert.id}
+                  className="flex items-start gap-3 px-4 py-3 border-b border-neutral-800 border-l-4 bg-blue-500/10 border-l-blue-500"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">
+                        {alert.subsystem}
+                      </span>
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500 text-white font-medium">
+                        REPAIR
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-300 mt-1">
+                      {alert.issue}
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      {alert.timestamp}
+                    </p>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-neutral-400 hover:text-white"
+                    onClick={() => onRemove(alert.id)}
+                    aria-label="Remove alert"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 const TechnicianDashboard = () => {
   const [activeTab, setActiveTab] = useState("repair-alerts");
@@ -114,6 +209,14 @@ const TechnicianDashboard = () => {
     navigate("/login");
   };
 
+  const handleClearAlertHistory = () => {
+    setRepairAlerts([]);
+  };
+
+  const handleRemoveAlert = (id) => {
+    setRepairAlerts((prev) => prev.filter((a) => a.id !== id));
+  };
+
   const getWearColor = (usage) => {
     if (usage <= 30) return "bg-green-500";
     if (usage <= 60) return "bg-yellow-500";
@@ -173,9 +276,13 @@ const TechnicianDashboard = () => {
             </button>
 
             {/* Alerts and Settings Icons */}
-            <button className="ml-8 p-2 text-neutral-400 hover:text-white transition-colors">
-              <Bell size={20} />
-            </button>
+            <div className="ml-8">
+              <AlertsPopover
+                alerts={repairAlerts}
+                onClear={handleClearAlertHistory}
+                onRemove={handleRemoveAlert}
+              />
+            </div>
 
             <button className="p-2 text-neutral-400 hover:text-white transition-colors">
               <Settings size={20} />
