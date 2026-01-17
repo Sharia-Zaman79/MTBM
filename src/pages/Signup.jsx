@@ -6,7 +6,7 @@ import { Building2, Lock, Mail, User, Wrench } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useNavigate } from 'react-router-dom'
 import { toast } from "sonner"
-import { loadUsers, saveUsers, setCurrentUser } from "@/lib/auth"
+import { signup } from "@/lib/auth"
 
 const Signup = () => {
 	const [accountType, setAccountType] = useState("engineer")
@@ -28,7 +28,7 @@ const Signup = () => {
 
 	const navigate = useNavigate()
 
-	const handleSubmit = (event) => {
+	const handleSubmit = async (event) => {
 		event.preventDefault()
 
 		if (!fullName.trim()) {
@@ -68,31 +68,18 @@ const Signup = () => {
 			return
 		}
 
-		const users = loadUsers()
-		const exists = users.some(
-			(u) => (u?.email ?? "").toLowerCase() === normalizedEmail && u?.role === accountType
-		)
-		if (exists) {
-			toast.error("An account with this email already exists")
+		try {
+			await signup({
+				email: normalizedEmail,
+				password,
+				role: accountType,
+				fullName: fullName.trim(),
+				organization: organization.trim(),
+			})
+		} catch (err) {
+			toast.error(err?.message || 'Signup failed')
 			return
 		}
-
-		users.push({
-			email: normalizedEmail,
-			password,
-			role: accountType,
-			fullName: fullName.trim(),
-			organization: organization.trim(),
-			createdAt: new Date().toISOString(),
-		})
-		saveUsers(users)
-
-		setCurrentUser({
-			email: normalizedEmail,
-			role: accountType,
-			fullName: fullName.trim(),
-			organization: organization.trim(),
-		})
 
 		navigate('/login', { state: { message: 'Successfully signed up' } })
 	}

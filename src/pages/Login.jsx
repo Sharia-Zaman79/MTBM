@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import Toast from "@/components/ui/toast"
 import { toast } from "sonner"
-import { loadUsers, setCurrentUser } from "@/lib/auth"
+import { login } from "@/lib/auth"
 
 const Login = () => {
   const navigate = useNavigate()
@@ -17,7 +17,7 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (!selectedRole) {
@@ -42,20 +42,12 @@ const Login = () => {
       return
     }
 
-    const users = loadUsers()
-    const match = users.find(
-      (u) =>
-        (u?.email ?? '').toLowerCase() === normalizedEmail &&
-        u?.role === selectedRole &&
-        u?.password === password
-    )
-
-    if (!match) {
-      toast.error('Wrong email or password')
+    try {
+      await login({ email: normalizedEmail, password, role: selectedRole })
+    } catch (err) {
+      toast.error(err?.message || 'Login failed')
       return
     }
-
-    setCurrentUser(match)
 
     const dashboardRoutes = {
       engineer: '/engineer',
