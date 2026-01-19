@@ -1,6 +1,8 @@
 import express from 'express'
 import cors from 'cors'
+import path from 'path'
 import authRoutes from './routes/auth.js'
+import uploadRoutes from './routes/uploads.js'
 import { env, requireEnv } from './lib/env.js'
 import { connectDb } from './lib/db.js'
 
@@ -17,11 +19,15 @@ async function main() {
   )
   app.use(express.json({ limit: '1mb' }))
 
+  // Serve uploaded files (avatars)
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true })
   })
 
   app.use('/api/auth', authRoutes)
+  app.use('/api/uploads', uploadRoutes)
 
   // Minimal error handler
   app.use((err, _req, res, _next) => {

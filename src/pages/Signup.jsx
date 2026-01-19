@@ -2,19 +2,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link } from "react-router-dom"
-import { Building2, Lock, Mail, User, Wrench } from "lucide-react"
-import { useMemo, useState } from "react"
+import { Building2, Image, Lock, Mail, User, Wrench } from "lucide-react"
+import { useMemo, useRef, useState } from "react"
 import { useNavigate } from 'react-router-dom'
 import { toast } from "sonner"
-import { signup } from "@/lib/auth"
+import { signup, uploadAvatar } from "@/lib/auth"
 
 const Signup = () => {
 	const [accountType, setAccountType] = useState("engineer")
 	const [fullName, setFullName] = useState("")
 	const [email, setEmail] = useState("")
 	const [organization, setOrganization] = useState("")
+	const [photoFile, setPhotoFile] = useState(null)
 	const [password, setPassword] = useState("")
 	const [confirmPassword, setConfirmPassword] = useState("")
+	const photoInputRef = useRef(null)
 
 	const accountLabel = useMemo(() => {
 		switch (accountType) {
@@ -69,12 +71,19 @@ const Signup = () => {
 		}
 
 		try {
+			let uploadedPhotoUrl
+			if (photoFile) {
+				const result = await uploadAvatar(photoFile)
+				uploadedPhotoUrl = result?.url
+			}
+
 			await signup({
 				email: normalizedEmail,
 				password,
 				role: accountType,
 				fullName: fullName.trim(),
 				organization: organization.trim(),
+				photoUrl: uploadedPhotoUrl,
 			})
 		} catch (err) {
 			toast.error(err?.message || 'Signup failed')
@@ -197,6 +206,29 @@ const Signup = () => {
 										autoComplete="organization"
 									/>
 								</div>
+							</div>
+
+							<div className="space-y-2">
+								<label className="text-xs font-semibold text-neutral-800">Photo (Optional)</label>
+								<input
+									ref={photoInputRef}
+									type="file"
+									accept="image/*"
+									className="hidden"
+									onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+								/>
+								<button
+									type="button"
+									onClick={() => photoInputRef.current?.click()}
+									className="h-10 w-full rounded-md border border-neutral-400 bg-neutral-100 px-3 text-sm text-neutral-700 flex items-center justify-between hover:bg-neutral-200"
+								>
+									<span className="flex items-center gap-2">
+										<User className="h-4 w-4 text-neutral-700" />
+										<span>{photoFile ? "Photo selected" : "Choose a photo"}</span>
+									</span>
+									<Image className="h-4 w-4 text-neutral-700" />
+								</button>
+								<p className="text-[11px] text-neutral-600">Max size 2MB. If you skip this, a default icon will be used.</p>
 							</div>
 
 							<div className="space-y-2">

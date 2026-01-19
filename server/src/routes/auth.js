@@ -20,16 +20,18 @@ function toSafeUser(user) {
     role: user.role,
     fullName: user.fullName,
     organization: user.organization,
+    photoUrl: user.photoUrl,
   }
 }
 
 router.post('/signup', async (req, res) => {
-  const { email, password, role, fullName, organization } = req.body ?? {}
+  const { email, password, role, fullName, organization, photoUrl } = req.body ?? {}
 
   const normalizedEmail = String(email || '').trim().toLowerCase()
   const normalizedRole = String(role || '').trim()
   const normalizedFullName = String(fullName || '').trim()
   const normalizedOrg = String(organization || '').trim()
+  const normalizedPhotoUrl = String(photoUrl || '').trim()
 
   if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' })
   if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
@@ -53,6 +55,7 @@ router.post('/signup', async (req, res) => {
       role: normalizedRole,
       fullName: normalizedFullName,
       organization: normalizedOrg,
+      photoUrl: normalizedPhotoUrl,
       passwordHash,
     })
 

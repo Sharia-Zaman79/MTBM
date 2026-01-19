@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { User } from "lucide-react";
 import { loadCurrentUser } from "@/lib/auth";
 
@@ -18,12 +18,26 @@ const UserBadge = ({ className = "" }) => {
     return loadCurrentUser();
   }, []);
 
+  const [imgError, setImgError] = useState(false);
+
+  const photoUrl = (user?.photoUrl ?? "").trim();
+  const showPhoto = Boolean(photoUrl) && !imgError;
+
   const displayName = getDisplayName(user);
 
   return (
     <div className={`flex items-center gap-2 ${className}`.trim()}>
       <div className="h-9 w-9 shrink-0 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center">
-        <User className="h-5 w-5 text-neutral-200" />
+        {showPhoto ? (
+          <img
+            src={photoUrl}
+            alt="User"
+            className="h-full w-full rounded-full object-cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <User className="h-5 w-5 text-neutral-200" />
+        )}
       </div>
       <div className="max-w-[180px] truncate text-sm font-semibold text-white">
         {displayName}
