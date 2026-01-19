@@ -5,6 +5,7 @@ import { Bell, LogOut, Trash2, X, Calendar } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
+import UserBadge from "@/components/UserBadge";
 import {
   Popover,
   PopoverContent,
@@ -558,16 +559,36 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
 // Main LogBook Page
 export default function LogBookPage() {
   const navigate = useNavigate();
-  const [entries, setEntries] = useState(dummyLogData);
+  const [entries, setEntries] = useState(() =>
+    dummyLogData.map((entry, index) => ({ ...entry, createdOrder: index }))
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [locationQuery, setLocationQuery] = useState("");
   const itemsPerPage = 10;
 
-  // Filter entries by company name based on search query
-  const filteredEntries = entries.filter((entry) =>
-    entry.company.toLowerCase().includes(searchQuery.toLowerCase())
+  const normalizedCompanyQuery = searchQuery.trim().toLowerCase();
+  const normalizedLocationQuery = locationQuery.trim().toLowerCase();
+
+  const orderedEntries = [...entries].sort(
+    (a, b) => (a?.createdOrder ?? 0) - (b?.createdOrder ?? 0)
   );
+
+  // Filter entries by company name + location
+  const filteredEntries = orderedEntries.filter((entry) => {
+    const company = (entry?.company ?? "").toLowerCase();
+    const location = (entry?.location ?? "").toLowerCase();
+
+    const companyOk = normalizedCompanyQuery
+      ? company.includes(normalizedCompanyQuery)
+      : true;
+    const locationOk = normalizedLocationQuery
+      ? location.includes(normalizedLocationQuery)
+      : true;
+
+    return companyOk && locationOk;
+  });
 
   // Calculate pagination based on filtered entries
   const totalPages = Math.ceil(filteredEntries.length / itemsPerPage);
@@ -576,11 +597,18 @@ export default function LogBookPage() {
   const currentEntries = filteredEntries.slice(startIndex, endIndex);
 
   const handleAddEntry = (formData) => {
-    const newEntry = {
-      id: entries.length + 1,
-      ...formData,
-    };
-    setEntries([...entries, newEntry]);
+    setEntries((prev) => {
+      const maxOrder = prev.reduce(
+        (acc, e) => Math.max(acc, e?.createdOrder ?? 0),
+        -1
+      );
+      const newEntry = {
+        id: prev.length + 1,
+        createdOrder: maxOrder + 1,
+        ...formData,
+      };
+      return [...prev, newEntry];
+    });
     setIsModalOpen(false);
   };
 
@@ -646,6 +674,7 @@ export default function LogBookPage() {
             buttonClassName="text-orange-400 hover:text-orange-300"
           />
           <AlertsPopover />
+          <UserBadge className="ml-1" />
           <Button
             variant="destructive"
             className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"
@@ -686,6 +715,16 @@ export default function LogBookPage() {
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setCurrentPage(1); // Reset to first page when searching
+            }}
+            className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded text-gray-300 text-sm placeholder-gray-500"
+          />
+          <input
+            type="text"
+            placeholder="Search by Location"
+            value={locationQuery}
+            onChange={(e) => {
+              setLocationQuery(e.target.value);
+              setCurrentPage(1);
             }}
             className="flex-1 px-4 py-2 bg-gray-900 border border-gray-700 rounded text-gray-300 text-sm placeholder-gray-500"
           />

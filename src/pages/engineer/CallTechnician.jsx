@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, LogOut, Trash2, X } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
+import UserBadge from "@/components/UserBadge";
 import {
   Popover,
   PopoverContent,
@@ -290,6 +291,8 @@ export default function EngineerCallTechnician() {
           </Button>
 
           <AlertsPopover />
+
+          <UserBadge className="ml-1" />
 
           <Button
             variant="destructive"
