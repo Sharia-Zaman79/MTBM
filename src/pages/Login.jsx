@@ -185,6 +185,12 @@ const Login = () => {
                 <Toast message={toastMessage} onClose={() => setToastMessage('')} />
 
                 <p className="text-center text-sm text-neutral-800">
+                  <Link to="/forgot-password" className="text-blue-700 font-semibold">
+                    Forgot password?
+                  </Link>
+                </p>
+
+                <p className="text-center text-sm text-neutral-800">
                   Don&apos;t have an account?{" "}
                   <Link to="/signup" className="text-blue-700 font-semibold">
                     Sign up

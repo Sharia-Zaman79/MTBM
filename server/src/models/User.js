@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema(
     organization: { type: String, required: true, trim: true },
     photoUrl: { type: String, required: false, trim: true, default: '' },
     passwordHash: { type: String, required: true },
+    resetToken: { type: String, required: false, trim: true },
+    resetTokenExpires: { type: Date, required: false },
   },
   { timestamps: true }
 )

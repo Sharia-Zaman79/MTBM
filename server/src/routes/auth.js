@@ -1,10 +1,27 @@
 import express from 'express'
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
+import nodemailer from 'nodemailer'
 import { User } from '../models/User.js'
 import { env } from '../lib/env.js'
 
 const router = express.Router()
+
+let transporter = null
+const emailReady = Boolean(env.gmailEmail && env.gmailAppPassword)
+
+if (emailReady) {
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: env.gmailEmail,
+      pass: env.gmailAppPassword,
+    },
+  })
+} else {
+  console.warn('GMAIL_EMAIL or GMAIL_APP_PASSWORD not set; password reset emails will not be sent.')
+}
 
 function signToken(user) {
   return jwt.sign(
@@ -90,6 +107,90 @@ router.post('/login', async (req, res) => {
 
   const token = signToken(user)
   return res.json({ token, user: toSafeUser(user) })
+})
+
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body ?? {}
+  const normalizedEmail = String(email || '').trim().toLowerCase()
+
+  if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' })
+
+  const user = await User.findOne({ email: normalizedEmail })
+  if (!user) {
+    // Don't reveal if email exists (security best practice)
+    return res.json({ message: 'If email exists, reset link will be sent' })
+  }
+
+  // Generate reset token (valid for 1 hour)
+  const resetToken = crypto.randomBytes(32).toString('hex')
+  const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex')
+  const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+
+  await User.updateOne(
+    { _id: user._id },
+    { resetToken: resetTokenHash, resetTokenExpires }
+  )
+
+  const resetUrl = `${env.frontendUrl.replace(/\/$/, '')}/forgot-password?token=${resetToken}`
+
+  if (emailReady) {
+    try {
+      await transporter.sendMail({
+        from: env.gmailEmail,
+        to: user.email,
+        subject: 'Reset your MTBM password',
+        text: `Hi ${user.fullName || 'there'},\n\nUse this link to reset your password: ${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, you can ignore this email.`,
+        html: `
+          <p>Hi ${user.fullName || 'there'},</p>
+          <p>Use this link to reset your password (expires in 1 hour):</p>
+          <p><a href="${resetUrl}" style="background-color: #5B89B1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+          <p style="color: #666; font-size: 12px;">If you didn't request this, you can ignore this email.</p>
+        `,
+      })
+      console.log(`Password reset email sent to ${user.email}`)
+    } catch (err) {
+      console.error('Failed to send reset email:', err.message)
+      // Still respond generically so reset UX isn't blocked
+    }
+  } else {
+    // Fallback: log the reset URL for dev
+    console.log(`Reset URL (email not configured): ${resetUrl}`)
+  }
+
+  return res.json({ message: 'If email exists, reset link will be sent' })
+})
+
+router.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body ?? {}
+  const normalizedPassword = String(newPassword || '').trim()
+
+  if (!token) return res.status(400).json({ message: 'Reset token is required' })
+  if (!normalizedPassword) return res.status(400).json({ message: 'New password is required' })
+  if (normalizedPassword.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters' })
+  }
+
+  const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex')
+  const user = await User.findOne({
+    resetToken: resetTokenHash,
+    resetTokenExpires: { $gt: new Date() },
+  })
+
+  if (!user) {
+    return res.status(400).json({ message: 'Invalid or expired reset token' })
+  }
+
+  const passwordHash = await bcrypt.hash(normalizedPassword, 10)
+  await User.updateOne(
+    { _id: user._id },
+    {
+      passwordHash,
+      resetToken: undefined,
+      resetTokenExpires: undefined,
+    }
+  )
+
+  return res.json({ message: 'Password reset successful' })
 })
 
 export default router

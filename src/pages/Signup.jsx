@@ -217,17 +217,19 @@ const Signup = () => {
 									className="hidden"
 									onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
 								/>
-								<button
-									type="button"
-									onClick={() => photoInputRef.current?.click()}
-									className="h-10 w-full rounded-md border border-neutral-400 bg-neutral-100 px-3 text-sm text-neutral-700 flex items-center justify-between hover:bg-neutral-200"
-								>
+								<div className="h-10 w-full rounded-md border border-neutral-400 bg-neutral-100 px-3 text-sm text-neutral-700 flex items-center justify-between">
 									<span className="flex items-center gap-2">
 										<User className="h-4 w-4 text-neutral-700" />
 										<span>{photoFile ? "Photo selected" : "Choose a photo"}</span>
 									</span>
-									<Image className="h-4 w-4 text-neutral-700" />
-								</button>
+									<button
+										type="button"
+										onClick={() => photoInputRef.current?.click()}
+										className="cursor-pointer hover:text-neutral-900"
+									>
+										<Image className="h-4 w-4 text-neutral-700" />
+									</button>
+								</div>
 								<p className="text-[11px] text-neutral-600">Max size 2MB. If you skip this, a default icon will be used.</p>
 							</div>
 

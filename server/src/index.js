@@ -35,9 +35,34 @@ async function main() {
     res.status(500).json({ message: 'Internal server error' })
   })
 
-  app.listen(env.port, () => {
-    console.log(`MTBM server listening on http://localhost:${env.port}`)
-  })
+  // Try to start on the configured port; if it's busy, fall back to the next port
+  const startServer = async (portToTry, attempt = 1) => {
+    try {
+      await new Promise((resolve, reject) => {
+        const server = app.listen(portToTry, () => resolve(server))
+        server.on('error', reject)
+      })
+
+      return portToTry
+    } catch (err) {
+      if (err?.code === 'EADDRINUSE' && attempt === 1) {
+        const fallbackPort = portToTry + 1
+        console.warn(`Port ${portToTry} is in use. Retrying on ${fallbackPort}...`)
+        return startServer(fallbackPort, attempt + 1)
+      }
+
+      throw err
+    }
+  }
+
+  const runningPort = await startServer(env.port)
+  console.log(`MTBM server listening on http://localhost:${runningPort}`)
+
+  if (runningPort !== env.port) {
+    console.warn(
+      `Update your client API base (e.g. VITE_API_URL) to http://localhost:${runningPort} if requests fail.`
+    )
+  }
 }
 
 main().catch((err) => {

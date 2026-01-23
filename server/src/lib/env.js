@@ -8,6 +8,9 @@ export const env = {
   mongoUri: process.env.MONGODB_URI,
   mongoDbName: process.env.MONGODB_DB || 'MTBM',
   jwtSecret: process.env.JWT_SECRET,
+  gmailEmail: process.env.GMAIL_EMAIL,
+  gmailAppPassword: process.env.GMAIL_APP_PASSWORD,
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
 }
 
 export function requireEnv() {
