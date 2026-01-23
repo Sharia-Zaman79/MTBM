@@ -1,21 +1,89 @@
 import { Button } from "@/components/ui/button"
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import Toast from "@/components/ui/toast"
 import { toast } from "sonner"
-import { login } from "@/lib/auth"
+import { googleLogin, login } from "@/lib/auth"
 
 const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [toastMessage, setToastMessage] = useState(location.state?.message || '')
   const [selectedRole, setSelectedRole] = useState(null)
+  const selectedRoleRef = useRef(null)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+  const dashboardRoutes = {
+    engineer: '/engineer',
+    technician: '/technician'
+  }
+
+  useEffect(() => {
+    selectedRoleRef.current = selectedRole
+  }, [selectedRole])
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return
+
+    const initializeGoogle = () => {
+      if (!window.google?.accounts?.id) return
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          const role = selectedRoleRef.current
+          if (!role) {
+            toast.error('Please select a role to continue')
+            return
+          }
+
+          try {
+            await googleLogin({ credential: response.credential, role })
+          } catch (err) {
+            toast.error(err?.message || 'Google login failed')
+            return
+          }
+
+          navigate(dashboardRoutes[role], { state: { message: 'Successfully logged in' } })
+        },
+      })
+
+      const buttonHost = document.getElementById('google-signin-button')
+      if (buttonHost && buttonHost.childNodes.length === 0) {
+        window.google.accounts.id.renderButton(buttonHost, {
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          shape: 'pill',
+          width: 360,
+        })
+      }
+    }
+
+    if (window.google?.accounts?.id) {
+      initializeGoogle()
+      return
+    }
+
+    const existingScript = document.querySelector('script[data-google-identity="true"]')
+    if (existingScript) {
+      existingScript.addEventListener('load', initializeGoogle, { once: true })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.dataset.googleIdentity = 'true'
+    script.onload = initializeGoogle
+    document.body.appendChild(script)
+  }, [GOOGLE_CLIENT_ID, navigate])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -49,10 +117,6 @@ const Login = () => {
       return
     }
 
-    const dashboardRoutes = {
-      engineer: '/engineer',
-      technician: '/technician'
-    }
     navigate(dashboardRoutes[selectedRole], { state: { message: 'Successfully logged in' } })
   }
   return (
@@ -85,36 +149,21 @@ const Login = () => {
           <CardContent className="pt-6">
             <div className="grid gap-8 md:grid-cols-2 md:items-center">
               <div className="space-y-4 md:px-6">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-3 bg-white text-neutral-900 font-semibold"
-                  type="button">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 48 48"
-                      aria-hidden="true">
-                      <path
-                        fill="#FFC107"
-                        d="M43.611 20.083H42V20H24v8h11.303C33.563 32.655 29.214 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"
-                      />
-                      <path
-                        fill="#FF3D00"
-                        d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4c-7.682 0-14.354 4.337-17.694 10.691z"
-                      />
-                      <path
-                        fill="#4CAF50"
-                        d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.193 0-9.533-3.318-11.292-7.946l-6.52 5.02C9.494 39.556 16.227 44 24 44z"
-                      />
-                      <path
-                        fill="#1976D2"
-                        d="M43.611 20.083H42V20H24v8h11.303a11.96 11.96 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"
-                      />
-                    </svg>
-                  </span>
-                  Log in with Google
-                </Button>
+                {GOOGLE_CLIENT_ID ? (
+                  <div
+                    id="google-signin-button"
+                    className="w-full flex justify-center"
+                  />
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-3 bg-white text-neutral-900 font-semibold"
+                    type="button"
+                    disabled
+                  >
+                    Log in with Google (not configured)
+                  </Button>
+                )}
 
                 <div className="flex items-center gap-4 text-sm text-neutral-600">
                   <div className="h-px flex-1 bg-neutral-400" />

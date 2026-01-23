@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
+import { OAuth2Client } from 'google-auth-library'
 import { User } from '../models/User.js'
 import { env } from '../lib/env.js'
 
@@ -10,6 +11,7 @@ const router = express.Router()
 
 let transporter = null
 const emailReady = Boolean(env.gmailEmail && env.gmailAppPassword)
+const googleClient = env.googleClientId ? new OAuth2Client(env.googleClientId) : null
 
 if (emailReady) {
   transporter = nodemailer.createTransport({
@@ -21,6 +23,10 @@ if (emailReady) {
   })
 } else {
   console.warn('GMAIL_EMAIL or GMAIL_APP_PASSWORD not set; password reset emails will not be sent.')
+}
+
+if (!googleClient) {
+  console.warn('GOOGLE_CLIENT_ID not set; Google login will not be available.')
 }
 
 function signToken(user) {
@@ -107,6 +113,65 @@ router.post('/login', async (req, res) => {
 
   const token = signToken(user)
   return res.json({ token, user: toSafeUser(user) })
+})
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential, role } = req.body ?? {}
+    const normalizedRole = String(role || '').trim()
+
+    if (!credential) return res.status(400).json({ message: 'Google credential is required' })
+    if (!['engineer', 'technician'].includes(normalizedRole)) {
+      return res.status(400).json({ message: 'Role is required' })
+    }
+    if (!googleClient) {
+      return res.status(500).json({ message: 'Google login is not configured' })
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: env.googleClientId,
+    })
+
+    const payload = ticket.getPayload()
+    const normalizedEmail = String(payload?.email || '').trim().toLowerCase()
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: 'Google account email not available' })
+    }
+
+    const fullName = String(payload?.name || payload?.given_name || normalizedEmail).trim()
+    const photoUrl = String(payload?.picture || '').trim()
+
+    let user = await User.findOne({ email: normalizedEmail, role: normalizedRole })
+
+    if (!user) {
+      const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10)
+      user = await User.create({
+        email: normalizedEmail,
+        role: normalizedRole,
+        fullName: fullName || 'Google User',
+        organization: 'Google',
+        photoUrl,
+        passwordHash,
+      })
+    } else {
+      const updates = {}
+      if (!user.fullName && fullName) updates.fullName = fullName
+      if (!user.photoUrl && photoUrl) updates.photoUrl = photoUrl
+      if (!user.organization) updates.organization = 'Google'
+
+      if (Object.keys(updates).length) {
+        await User.updateOne({ _id: user._id }, updates)
+        user = { ...user.toObject(), ...updates }
+      }
+    }
+
+    const token = signToken(user)
+    return res.json({ token, user: toSafeUser(user) })
+  } catch (err) {
+    console.error('Google login failed', err)
+    return res.status(500).json({ message: 'Google login failed' })
+  }
 })
 
 router.post('/forgot-password', async (req, res) => {

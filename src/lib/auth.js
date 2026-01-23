@@ -88,6 +88,17 @@ export const login = async ({ email, password, role }) => {
   return data
 }
 
+export const googleLogin = async ({ credential, role }) => {
+  const data = await apiRequest('/api/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ credential, role }),
+  })
+
+  if (data?.token) setAuthToken(data.token)
+  if (data?.user) setCurrentUser(data.user)
+  return data
+}
+
 export const logout = () => {
   clearAuthToken()
   clearCurrentUser()
