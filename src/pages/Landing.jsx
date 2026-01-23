@@ -312,7 +312,7 @@ const Landing = () => {
               <img
                 src="/assets/mtbm/landing/cutterhead.png.jpeg"
                 alt="Cutterhead"
-                className="w-full max-w-xl"
+                className="w-full max-w-lg"
               />
             </div>
           </section>
