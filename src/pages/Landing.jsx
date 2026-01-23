@@ -174,18 +174,8 @@ const Landing = () => {
                 </h1>
               </div>
 
-              <div className="mt-10 flex justify-center">
-                <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40">
-                  <img
-                    src="/assets/mtbm/landing/navigation.png.jpeg"
-                    alt="Navigation system screen"
-                    className="w-full h-auto object-contain"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:items-start">
-                <div>
+              <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_3fr_1fr] lg:items-start">
+                <div className="flex flex-col items-start">
                   <button
                     onClick={() => toggleSection("nav-intro")}
                     className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
@@ -207,7 +197,17 @@ const Landing = () => {
                   )}
                 </div>
 
-                <div>
+                <div className="flex justify-center">
+                  <div className="w-full max-w-6xl overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40">
+                    <img
+                      src="/assets/mtbm/landing/navigation.png.jpeg"
+                      alt="Navigation system screen"
+                      className="w-full h-auto object-contain"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-start">
                   <button
                     onClick={() => toggleSection("nav-details")}
                     className="inline-block mb-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors text-sm font-semibold"
@@ -319,7 +319,7 @@ const Landing = () => {
         )}
 
         {activeTab === "muck" && (
-          <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <section className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center">
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                 <span className="text-orange-500">MUCK</span>
@@ -358,7 +358,7 @@ const Landing = () => {
               <img
                 src="/assets/mtbm/landing/muck-removal.png.jpeg"
                 alt="Muck removal system"
-                className="w-full max-w-xl"
+                className="w-full max-w-2xl"
               />
             </div>
           </section>
