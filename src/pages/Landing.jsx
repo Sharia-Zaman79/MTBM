@@ -319,7 +319,7 @@ const Landing = () => {
         )}
 
         {activeTab === "muck" && (
-          <section className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center">
+          <section className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:items-center">
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                 <span className="text-orange-500">MUCK</span>
@@ -358,7 +358,7 @@ const Landing = () => {
               <img
                 src="/assets/mtbm/landing/muck-removal.png.jpeg"
                 alt="Muck removal system"
-                className="w-full max-w-2xl"
+                className="w-full max-w-3xl"
               />
             </div>
           </section>
