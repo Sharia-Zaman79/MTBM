@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Bell, LogOut, Trash2, X, Calendar } from "lucide-react";
@@ -131,34 +131,6 @@ function AlertItem({ alert, onRemove }) {
     </div>
   );
 }
-
-// Dummy data for log entries
-const dummyLogData = [
-  { id: 1, issue: "27 AUG", return: "27 NOV", duration: "3 Month", company: "BD Govt", location: "Dhaka" },
-  { id: 2, issue: "27 NOV", return: "27 APR", duration: "5 Month", company: "China Railway", location: "Chittagong" },
-  { id: 3, issue: "27 APR", return: "27 SEP", duration: "5 Month", company: "Sinohydro", location: "Khulna" },
-  { id: 4, issue: "27 SEP", return: "27 APR", duration: "7 Month", company: "Japan Tunneling Co.", location: "Rangpur" },
-  { id: 5, issue: "27 APR", return: "27 OCT", duration: "6 Month", company: "Bouygues Construction", location: "Barishal" },
-  { id: 6, issue: "27 OCT", return: "27 APR", duration: "6 Month", company: "Hochtief", location: "Dhaka" },
-  { id: 7, issue: "27 APR", return: "27 JUL", duration: "3 Month", company: "Vinci Construction", location: "Chittagong" },
-  { id: 8, issue: "27 JUL", return: "27 FEB", duration: "7 Month", company: "Strabag", location: "Khulna" },
-  { id: 9, issue: "27 FEB", return: "27 APR", duration: "2 Month", company: "Salini Impregilo", location: "Rangpur" },
-  { id: 10, issue: "27 APR", return: "27 AUG", duration: "4 Month", company: "Skanska", location: "Barishal" },
-  { id: 11, issue: "15 JAN", return: "20 MAY", duration: "4 Month", company: "Kiewit", location: "Sylhet" },
-  { id: 12, issue: "10 FEB", return: "15 JUN", duration: "4 Month", company: "Turner Construction", location: "Mymensingh" },
-  { id: 13, issue: "05 MAR", return: "10 AUG", duration: "5 Month", company: "Bechtel", location: "Rajshahi" },
-  { id: 14, issue: "20 MAR", return: "25 JUL", duration: "4 Month", company: "Laing O'Rourke", location: "Cox's Bazar" },
-  { id: 15, issue: "01 APR", return: "15 SEP", duration: "5 Month", company: "Dragados", location: "Comilla" },
-  { id: 16, issue: "12 APR", return: "20 OCT", duration: "6 Month", company: "Sacyr", location: "Gazipur" },
-  { id: 17, issue: "25 APR", return: "30 NOV", duration: "7 Month", company: "Herrenknecht", location: "Narayanganj" },
-  { id: 18, issue: "08 MAY", return: "15 DEC", duration: "7 Month", company: "Seli Thiess", location: "Tangail" },
-  { id: 19, issue: "18 MAY", return: "20 JAN", duration: "8 Month", company: "Acciona", location: "Jashore" },
-  { id: 20, issue: "30 MAY", return: "25 FEB", duration: "9 Month", company: "PORR", location: "Dinajpur" },
-  { id: 21, issue: "10 JUN", return: "15 MAR", duration: "9 Month", company: "Doosan", location: "Bogra" },
-  { id: 22, issue: "22 JUN", return: "18 APR", duration: "10 Month", company: "Hyundai", location: "Pabna" },
-  { id: 23, issue: "05 JUL", return: "02 MAY", duration: "10 Month", company: "Samsung", location: "Noakhali" },
-  { id: 24, issue: "17 JUL", return: "12 JUN", duration: "11 Month", company: "Hitachi", location: "Feni" },
-];
 
 const LOCATIONS = [
   "Dhaka",
@@ -559,20 +531,51 @@ function AddEntryModal({ isOpen, onClose, onSubmit }) {
 // Main LogBook Page
 export default function LogBookPage() {
   const navigate = useNavigate();
-  const [entries, setEntries] = useState(() =>
-    dummyLogData.map((entry, index) => ({ ...entry, createdOrder: index }))
-  );
+  const [entries, setEntries] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const itemsPerPage = 10;
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchEntries = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/logbook`);
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(data?.message || "Failed to load logbook entries");
+        }
+
+        if (isActive) {
+          const normalized = Array.isArray(data?.entries) ? data.entries : [];
+          setEntries(normalized);
+        }
+      } catch (err) {
+        if (isActive) {
+          toast.error(err?.message || "Failed to load logbook entries");
+        }
+      } finally {
+        if (isActive) setIsLoading(false);
+      }
+    };
+
+    fetchEntries();
+    return () => {
+      isActive = false;
+    };
+  }, [API_BASE_URL]);
 
   const normalizedCompanyQuery = searchQuery.trim().toLowerCase();
   const normalizedLocationQuery = locationQuery.trim().toLowerCase();
 
   const orderedEntries = [...entries].sort(
-    (a, b) => (a?.createdOrder ?? 0) - (b?.createdOrder ?? 0)
+    (a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0)
   );
 
   // Filter entries by company name + location
@@ -591,25 +594,35 @@ export default function LogBookPage() {
   });
 
   // Calculate pagination based on filtered entries
-  const totalPages = Math.ceil(filteredEntries.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentEntries = filteredEntries.slice(startIndex, endIndex);
 
-  const handleAddEntry = (formData) => {
-    setEntries((prev) => {
-      const maxOrder = prev.reduce(
-        (acc, e) => Math.max(acc, e?.createdOrder ?? 0),
-        -1
-      );
-      const newEntry = {
-        id: prev.length + 1,
-        createdOrder: maxOrder + 1,
-        ...formData,
-      };
-      return [...prev, newEntry];
-    });
-    setIsModalOpen(false);
+  const handleAddEntry = async (formData) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/logbook`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to save entry");
+      }
+
+      const created = data?.entry;
+      if (created) {
+        setEntries((prev) => [created, ...prev]);
+        setCurrentPage(1);
+      }
+
+      setIsModalOpen(false);
+      toast.success("Log entry saved");
+    } catch (err) {
+      toast.error(err?.message || "Failed to save entry");
+    }
   };
 
   const handleLogout = () => {
@@ -743,15 +756,38 @@ export default function LogBookPage() {
               </tr>
             </thead>
             <tbody>
-              {currentEntries.map((entry) => (
-                <tr key={entry.id} className="border-b border-gray-700 hover:bg-gray-900/50">
-                  <td className="px-4 py-3 text-sm text-gray-300">{entry.issue}</td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{entry.return}</td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{entry.duration}</td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{entry.company}</td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{entry.location}</td>
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-6 text-center text-sm text-gray-400"
+                  >
+                    Loading log entries...
+                  </td>
                 </tr>
-              ))}
+              ) : currentEntries.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-6 text-center text-sm text-gray-400"
+                  >
+                    No log entries yet.
+                  </td>
+                </tr>
+              ) : (
+                currentEntries.map((entry) => (
+                  <tr
+                    key={entry._id ?? entry.id}
+                    className="border-b border-gray-700 hover:bg-gray-900/50"
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-300">{entry.issue}</td>
+                    <td className="px-4 py-3 text-sm text-gray-300">{entry.return}</td>
+                    <td className="px-4 py-3 text-sm text-gray-300">{entry.duration}</td>
+                    <td className="px-4 py-3 text-sm text-gray-300">{entry.company}</td>
+                    <td className="px-4 py-3 text-sm text-gray-300">{entry.location}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

@@ -3,6 +3,7 @@ import cors from 'cors'
 import path from 'path'
 import authRoutes from './routes/auth.js'
 import uploadRoutes from './routes/uploads.js'
+import logbookRoutes from './routes/logbook.js'
 import { env, requireEnv } from './lib/env.js'
 import { connectDb } from './lib/db.js'
 
@@ -28,6 +29,7 @@ async function main() {
 
   app.use('/api/auth', authRoutes)
   app.use('/api/uploads', uploadRoutes)
+  app.use('/api/logbook', logbookRoutes)
 
   // Minimal error handler
   app.use((err, _req, res, _next) => {
