@@ -12,10 +12,15 @@ const Signup = () => {
 	const [accountType, setAccountType] = useState("engineer")
 	const [fullName, setFullName] = useState("")
 	const [email, setEmail] = useState("")
+	const [otp, setOtp] = useState("")
+	const [otpSent, setOtpSent] = useState(false)
+	const [otpVerified, setOtpVerified] = useState(false)
 	const [organization, setOrganization] = useState("")
 	const [photoFile, setPhotoFile] = useState(null)
 	const [password, setPassword] = useState("")
 	const [confirmPassword, setConfirmPassword] = useState("")
+	const [sendingOtp, setSendingOtp] = useState(false)
+	const [verifyingOtp, setVerifyingOtp] = useState(false)
 	const photoInputRef = useRef(null)
 
 	const accountLabel = useMemo(() => {
@@ -29,6 +34,91 @@ const Signup = () => {
 	}, [accountType])
 
 	const navigate = useNavigate()
+
+	const handleSendOtp = async () => {
+		const normalizedEmail = email.trim().toLowerCase()
+		if (!normalizedEmail) {
+			toast.error("Email address is required")
+			return
+		}
+
+		const emailRegex = /^\S+@\S+\.\S+$/
+		if (!emailRegex.test(normalizedEmail)) {
+			toast.error("Please enter a valid email address")
+			return
+		}
+
+		setSendingOtp(true)
+		try {
+			const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+			console.log('Sending OTP to:', apiUrl)
+			
+			const response = await fetch(`${apiUrl}/api/otp/send-otp`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: normalizedEmail }),
+			})
+
+			console.log('Response status:', response.status)
+			const data = await response.json()
+			console.log('Response data:', data)
+
+			if (!response.ok) {
+				throw new Error(data.message || 'Failed to send OTP')
+			}
+
+			toast.success('OTP sent to your email. Check your inbox!')
+			setOtpSent(true)
+		} catch (err) {
+			console.error('OTP Send Error:', err)
+			toast.error(err?.message || 'Network error. Please check if the server is running.')
+		} finally {
+			setSendingOtp(false)
+		}
+	}
+
+	const handleVerifyOtp = async () => {
+		const normalizedEmail = email.trim().toLowerCase()
+		const normalizedOtp = otp.trim()
+
+		if (!normalizedOtp) {
+			toast.error("OTP is required")
+			return
+		}
+
+		if (!/^\d{6}$/.test(normalizedOtp)) {
+			toast.error("OTP must be 6 digits")
+			return
+		}
+
+		setVerifyingOtp(true)
+		try {
+			const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+			console.log('Verifying OTP...')
+			
+			const response = await fetch(`${apiUrl}/api/otp/verify-otp`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: normalizedEmail, otp: normalizedOtp }),
+			})
+
+			console.log('Verify response status:', response.status)
+			const data = await response.json()
+			console.log('Verify response data:', data)
+
+			if (!response.ok) {
+				throw new Error(data.message || 'OTP verification failed')
+			}
+
+			toast.success('Email verified successfully! ✓')
+			setOtpVerified(true)
+		} catch (err) {
+			console.error('OTP Verify Error:', err)
+			toast.error(err?.message || 'Network error. Please try again.')
+		} finally {
+			setVerifyingOtp(false)
+		}
+	}
 
 	const handleSubmit = async (event) => {
 		event.preventDefault()
@@ -47,6 +137,11 @@ const Signup = () => {
 		const emailLooksValid = /^\S+@\S+\.\S+$/.test(normalizedEmail)
 		if (!emailLooksValid) {
 			toast.error("Please enter a valid email address")
+			return
+		}
+
+		if (!otpVerified) {
+			toast.error("Please verify your email with OTP first")
 			return
 		}
 
@@ -84,6 +179,7 @@ const Signup = () => {
 				fullName: fullName.trim(),
 				organization: organization.trim(),
 				photoUrl: uploadedPhotoUrl,
+				emailVerified: true,
 			})
 		} catch (err) {
 			toast.error(err?.message || 'Signup failed')
@@ -159,7 +255,7 @@ const Signup = () => {
 					</CardHeader>
 
 					<CardContent className="px-10 py-8">
-									<form className="space-y-5" onSubmit={handleSubmit}>
+						<form className="space-y-5" onSubmit={handleSubmit}>
 							<div className="space-y-2">
 								<label className="text-xs font-semibold text-neutral-800">Full Name</label>
 								<div className="relative">
@@ -188,9 +284,50 @@ const Signup = () => {
 										onChange={(e) => setEmail(e.target.value)}
 										required
 										autoComplete="email"
+										disabled={otpVerified}
 									/>
 								</div>
+								{!otpVerified && (
+									<Button
+										type="button"
+										onClick={handleSendOtp}
+										disabled={sendingOtp || !email.trim()}
+										className="mt-2 h-9 w-full rounded-md bg-[#5B89B1] text-white hover:bg-[#4a7294]"
+									>
+										{sendingOtp ? "Sending..." : otpSent ? "Resend OTP" : "Send Verification Code"}
+									</Button>
+								)}
+								{otpVerified && (
+									<p className="text-xs text-green-600 font-medium mt-1">✓ Email verified</p>
+								)}
 							</div>
+
+							{otpSent && !otpVerified && (
+								<div className="space-y-2">
+									<label className="text-xs font-semibold text-neutral-800">Enter Verification Code</label>
+									<div className="relative">
+										<Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-700" />
+										<Input
+											type="text"
+											placeholder="6-digit code"
+											className="h-10 rounded-md border-neutral-400 bg-neutral-100 pl-10 text-sm"
+											value={otp}
+											onChange={(e) => setOtp(e.target.value)}
+											maxLength={6}
+											required
+										/>
+									</div>
+									<Button
+										type="button"
+										onClick={handleVerifyOtp}
+										disabled={verifyingOtp || otp.length !== 6}
+										className="mt-2 h-9 w-full rounded-md bg-green-600 text-white hover:bg-green-700"
+									>
+										{verifyingOtp ? "Verifying..." : "Verify Code"}
+									</Button>
+									<p className="text-[11px] text-neutral-600">Check your email inbox for the verification code. It expires in 10 minutes.</p>
+								</div>
+							)}
 
 							<div className="space-y-2">
 								<label className="text-xs font-semibold text-neutral-800">Organization</label>

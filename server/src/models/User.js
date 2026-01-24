@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-// Preserve your current behavior: same email can exist for different roles
+// Allow same email for different roles
 userSchema.index({ email: 1, role: 1 }, { unique: true })
 
 export const User = mongoose.model('User', userSchema)

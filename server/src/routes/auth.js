@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
 import { OAuth2Client } from 'google-auth-library'
 import { User } from '../models/User.js'
+import { OTP } from '../models/OTP.js'
 import { env } from '../lib/env.js'
 
 const router = express.Router()
@@ -48,23 +49,23 @@ function toSafeUser(user) {
 }
 
 router.post('/signup', async (req, res) => {
-  const { email, password, role, fullName, organization, photoUrl } = req.body ?? {}
+  const { email, password, role, fullName, organization, photoUrl, emailVerified } = req.body ?? {}
 
-  const normalizedEmail = String(email || '').trim().toLowerCase()
   const normalizedRole = String(role || '').trim()
   const normalizedFullName = String(fullName || '').trim()
   const normalizedOrg = String(organization || '').trim()
   const normalizedPhotoUrl = String(photoUrl || '').trim()
+  const normalizedEmail = String(email || '').trim().toLowerCase()
 
-  if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' })
-  if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
-    return res.status(400).json({ message: 'Invalid email address' })
-  }
   if (!['engineer', 'technician'].includes(normalizedRole)) {
     return res.status(400).json({ message: 'Invalid role' })
   }
   if (!normalizedFullName) return res.status(400).json({ message: 'Full name is required' })
   if (!normalizedOrg) return res.status(400).json({ message: 'Organization is required' })
+  if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' })
+  if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
+    return res.status(400).json({ message: 'Invalid email address' })
+  }
   if (!password) return res.status(400).json({ message: 'Password is required' })
   if (String(password).length < 6) {
     return res.status(400).json({ message: 'Password must be at least 6 characters' })
@@ -85,7 +86,6 @@ router.post('/signup', async (req, res) => {
     const token = signToken(user)
     return res.status(201).json({ token, user: toSafeUser(user) })
   } catch (err) {
-    // Duplicate key error (email+role)
     if (err?.code === 11000) {
       return res.status(409).json({ message: 'An account with this email already exists' })
     }
