@@ -5,6 +5,8 @@ import { Bell, LogOut, Trash2, X } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import UserBadge from "@/components/UserBadge";
+import { repairAlertsApi } from "@/lib/repairAlertsApi";
+import { useEngineerNotifications } from "@/lib/useEngineerNotifications";
 import {
   Popover,
   PopoverContent,
@@ -82,19 +84,27 @@ function AlertItem({ alert, onRemove }) {
   };
 
   const isRepair = alert?.type === "repair";
+  const isNotification = alert?.type === "notification";
 
-  const level = isRepair ? "repair" : alert?.level;
+  const level = isRepair ? "repair" : isNotification ? "info" : alert?.level;
   const levelColors = {
     warning: "bg-orange-500/20 border-l-orange-500 text-orange-400",
     critical: "bg-red-500/20 border-l-red-500 text-red-400",
     repair: "bg-blue-500/20 border-l-blue-500 text-blue-300",
+    info: "bg-blue-500/20 border-l-blue-500 text-blue-300",
   };
 
-  const title = isRepair ? alert?.subsystem ?? "Repair Request" : alert?.sensorName ?? "Alert";
+  const title = isRepair
+    ? alert?.subsystem ?? "Repair Request"
+    : isNotification
+      ? alert?.title ?? "Notification"
+      : alert?.sensorName ?? "Alert";
 
   const detail = isRepair
     ? alert?.issue ?? ""
-    : `${alert?.sensorType ?? ""}: ${typeof alert?.value === "number" ? alert.value.toFixed(1) : ""}${alert?.unit ?? ""}`;
+    : isNotification
+      ? alert?.detail ?? ""
+      : `${alert?.sensorType ?? ""}: ${typeof alert?.value === "number" ? alert.value.toFixed(1) : ""}${alert?.unit ?? ""}`;
 
   return (
     <div
@@ -109,12 +119,14 @@ function AlertItem({ alert, onRemove }) {
             className={`text-xs px-1.5 py-0.5 rounded ${
               isRepair
                 ? "bg-blue-500"
-                : alert?.level === "critical"
+                : level === "critical"
                   ? "bg-red-500"
-                  : "bg-orange-500"
+                  : level === "info"
+                    ? "bg-blue-500"
+                    : "bg-orange-500"
             } text-white font-medium`}
           >
-            {isRepair ? "REPAIR" : alert?.level === "critical" ? "CRITICAL" : "WARNING"}
+            {isRepair ? "REPAIR" : level === "critical" ? "CRITICAL" : level === "info" ? "UPDATE" : "WARNING"}
           </span>
         </div>
         {detail ? <p className="text-xs text-gray-400 mt-1">{detail}</p> : null}
@@ -220,6 +232,10 @@ export default function EngineerCallTechnician() {
   const navigate = useNavigate();
   const { addAlert } = useAlerts();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Enable engineer notifications for when technicians accept problems
+  useEngineerNotifications();
 
   const handleLogout = () => {
     navigate("/login", { state: { message: "Successfully logged out" } });
@@ -233,23 +249,43 @@ export default function EngineerCallTechnician() {
     toast(`${host} stopped the machine`);
   };
 
-  const handleSubmit = ({ subsystem, problem }) => {
-    addAlert({
-      type: "repair",
-      subsystem,
-      issue: problem,
-      status: "pending",
-      // Keep compatibility with existing engineer alert UIs
-      sensorName: subsystem,
-      sensorType: "Repair",
-      value: 0,
-      unit: "",
-      level: "warning",
-    });
-    setIsModalOpen(false);
-    toast.success("Technician notified", {
-      description: `Subsystem: ${subsystem}`,
-    });
+  const handleSubmit = async ({ subsystem, problem }) => {
+    setIsSubmitting(true);
+    console.log('📨 Submitting repair alert:', { subsystem, problem });
+    try {
+      // Send to backend
+      const result = await repairAlertsApi.create({
+        subsystem,
+        issue: problem,
+        priority: 'medium',
+      });
+      console.log('✅ Backend response:', result);
+
+      // Also add to local alerts for immediate UI feedback
+      addAlert({
+        type: "repair",
+        subsystem,
+        issue: problem,
+        status: "pending",
+        sensorName: subsystem,
+        sensorType: "Repair",
+        value: 0,
+        unit: "",
+        level: "warning",
+      });
+
+      setIsModalOpen(false);
+      toast.success("Technician notified", {
+        description: `Subsystem: ${subsystem} - Request sent to backend`,
+      });
+    } catch (err) {
+      console.error('❌ Error submitting:', err);
+      toast.error("Failed to submit request", {
+        description: err.message || "Please try again",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

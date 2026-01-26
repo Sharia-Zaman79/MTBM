@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { LogOut, Bell, Settings, Trash2, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { LogOut, Bell, Settings, Trash2, X, Loader2 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import UserBadge from "@/components/UserBadge";
-import { clearCurrentUser } from "@/lib/auth";
+import { clearCurrentUser, loadCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { repairAlertsApi } from "@/lib/repairAlertsApi";
+import { toast } from "sonner";
 import {
   Popover,
   PopoverContent,
@@ -102,33 +104,13 @@ function AlertsPopover({ alerts, onClear, onRemove }) {
 const TechnicianDashboard = () => {
   const [activeTab, setActiveTab] = useState("repair-alerts");
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAccepting, setIsAccepting] = useState(null);
 
-  // Mock data for repair alerts
-  const [repairAlerts, setRepairAlerts] = useState([
-    {
-      id: 1,
-      subsystem: "Cutterhead",
-      issue: "Overheating detected",
-      timestamp: "10 mins ago",
-      status: "pending",
-    },
-    {
-      id: 2,
-      subsystem: "Cutterhead",
-      issue: "Blade wearing off",
-      timestamp: "2 hours ago",
-      status: "pending",
-    },
-    {
-      id: 3,
-      subsystem: "Slurry Pump",
-      issue: "Leakage detected",
-      timestamp: "1 week ago",
-      status: "pending",
-    },
-  ]);
+  // Real data from backend
+  const [repairAlerts, setRepairAlerts] = useState([]);
 
-  // Mock data for component wear
+  // Mock data for component wear (keep as-is)
   const componentWear = [
     { component: "Cutter Blades", usage: 60 },
     { component: "Hydraulic Seals", usage: 50 },
@@ -137,71 +119,140 @@ const TechnicianDashboard = () => {
     { component: "Steering Platform", usage: 20 },
   ];
 
-  // Mock data for repair jobs
-  const [repairJobs, setRepairJobs] = useState([
-    {
-      id: 1,
-      title: "Slurry System Leak",
-      subsystem: "Muck Removal System",
-      priority: "High",
-      repairType: "Pipe Replacement",
-      eta: "2 hrs",
-      status: "In Progress",
-      statusColor: "bg-orange-500",
-    },
-    {
-      id: 2,
-      title: "Blade wear-off",
-      subsystem: "Cutterhead",
-      priority: "High",
-      repairType: "Blade Replacement",
-      eta: "2 hrs",
-      status: "Done",
-      statusColor: "bg-green-500",
-    },
-  ]);
+  // Repair jobs from accepted alerts
+  const [repairJobs, setRepairJobs] = useState([]);
 
-  const handleAccept = (id) => {
-    const acceptedAlert = repairAlerts.find((a) => a.id === id);
-    if (!acceptedAlert) return;
+  // Fetch repair alerts from backend
+  const fetchRepairAlerts = useCallback(async (showErrors = true) => {
+    try {
+      // Fetch pending alerts for technician view
+      const { alerts: pendingAlerts } = await repairAlertsApi.getAll('pending');
+      
+      // Format for display
+      const formattedAlerts = pendingAlerts.map(alert => ({
+        id: alert._id,
+        subsystem: alert.subsystem,
+        issue: alert.issue,
+        timestamp: formatTimestamp(alert.createdAt),
+        status: alert.status,
+        engineerName: alert.engineerName,
+        priority: alert.priority,
+      }));
+      
+      setRepairAlerts(formattedAlerts);
 
-    // Create a job entry from the alert (frontend-only placeholder)
-    setRepairJobs((prev) => {
-      const alreadyExists = prev.some((j) => j.sourceAlertId === id);
-      if (alreadyExists) return prev;
+      // Also fetch in-progress alerts (accepted by this technician)
+      const { alerts: inProgressAlerts } = await repairAlertsApi.getAll('in-progress');
+      const user = loadCurrentUser();
+      
+      const myJobs = inProgressAlerts
+        .filter(a => a.technicianEmail === user?.email)
+        .map(alert => ({
+          id: alert._id,
+          sourceAlertId: alert._id,
+          title: alert.issue,
+          subsystem: alert.subsystem,
+          priority: alert.priority === 'high' ? 'High' : alert.priority === 'critical' ? 'Critical' : 'Medium',
+          repairType: "Inspection",
+          eta: "2 hrs",
+          status: "In Progress",
+          statusColor: "bg-orange-500",
+        }));
 
-      const nextId = prev.reduce((maxId, j) => Math.max(maxId, j.id), 0) + 1;
-      const newJob = {
-        id: nextId,
-        sourceAlertId: id,
-        title: acceptedAlert.issue,
-        subsystem: acceptedAlert.subsystem,
-        priority: "High",
-        repairType: "Inspection",
-        eta: "2 hrs",
-        status: "In Progress",
-        statusColor: "bg-orange-500",
-      };
-
-      return [newJob, ...prev];
-    });
-
-    // Remove from alerts list so it can only be accepted once
-    setRepairAlerts((prev) => prev.filter((a) => a.id !== id));
-    setActiveTab("repair-jobs");
-  };
-
-  const handleMarkFixed = (jobId) => {
-    setRepairJobs((prev) =>
-      prev.map((job) => {
-        if (job.id !== jobId) return job;
-        return {
-          ...job,
+      // Fetch resolved alerts too
+      const { alerts: resolvedAlerts } = await repairAlertsApi.getAll('resolved');
+      const myResolvedJobs = resolvedAlerts
+        .filter(a => a.technicianEmail === user?.email)
+        .map(alert => ({
+          id: alert._id,
+          sourceAlertId: alert._id,
+          title: alert.issue,
+          subsystem: alert.subsystem,
+          priority: alert.priority === 'high' ? 'High' : alert.priority === 'critical' ? 'Critical' : 'Medium',
+          repairType: "Completed",
+          eta: "-",
           status: "Done",
           statusColor: "bg-green-500",
-        };
-      })
-    );
+        }));
+
+      setRepairJobs([...myJobs, ...myResolvedJobs]);
+    } catch (err) {
+      if (showErrors) {
+        toast.error("Failed to load alerts", {
+          description: err.message || "Please check your connection",
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Format timestamp for display
+  const formatTimestamp = (dateStr) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} mins ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Initial fetch and polling
+  useEffect(() => {
+    fetchRepairAlerts(true);
+
+    // Poll every 5 seconds for real-time updates
+    const interval = setInterval(() => {
+      fetchRepairAlerts(false);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [fetchRepairAlerts]);
+
+  const handleAccept = async (id) => {
+    setIsAccepting(id);
+    try {
+      // Update status on backend
+      await repairAlertsApi.update(id, 'in-progress');
+      
+      toast.success("Alert accepted!", {
+        description: "The engineer has been notified.",
+      });
+
+      // Refresh the lists
+      await fetchRepairAlerts(false);
+      setActiveTab("repair-jobs");
+    } catch (err) {
+      toast.error("Failed to accept alert", {
+        description: err.message || "Please try again",
+      });
+    } finally {
+      setIsAccepting(null);
+    }
+  };
+
+  const handleMarkFixed = async (jobId) => {
+    try {
+      // Update status on backend
+      await repairAlertsApi.update(jobId, 'resolved');
+      
+      toast.success("Job marked as fixed!", {
+        description: "Great work!",
+      });
+
+      // Refresh the lists
+      await fetchRepairAlerts(false);
+    } catch (err) {
+      toast.error("Failed to update job", {
+        description: err.message || "Please try again",
+      });
+    }
   };
 
   const handleLogout = () => {
@@ -312,30 +363,60 @@ const TechnicianDashboard = () => {
                 <span className="text-xs font-bold">⚠</span>
               </div>
               <h2 className="text-2xl font-bold">Active Repair Alerts</h2>
+              {isLoading && <Loader2 className="h-5 w-5 animate-spin text-blue-500" />}
             </div>
 
             <div className="space-y-4">
-              {repairAlerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="flex items-center justify-between rounded-lg bg-neutral-700 px-6 py-4"
-                >
-                  <div>
-                    <h3 className="font-semibold text-white">
-                      Subsystem: {alert.subsystem}
-                    </h3>
-                    <p className="text-sm text-neutral-300">
-                      {alert.issue} • {alert.timestamp}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleAccept(alert.id)}
-                    className="rounded-md bg-green-500 px-6 py-2 font-semibold text-white transition-colors hover:bg-green-600"
-                  >
-                    Accept
-                  </button>
+              {isLoading && repairAlerts.length === 0 ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  <span className="ml-3 text-neutral-400">Loading alerts...</span>
                 </div>
-              ))}
+              ) : repairAlerts.length === 0 ? (
+                <div className="text-center py-12 text-neutral-400">
+                  <Bell className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No pending repair alerts</p>
+                  <p className="text-sm mt-1">New alerts from engineers will appear here</p>
+                </div>
+              ) : (
+                repairAlerts.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className="flex items-center justify-between rounded-lg bg-neutral-700 px-6 py-4"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-white">
+                          Subsystem: {alert.subsystem}
+                        </h3>
+                        <span className={`text-xs px-2 py-0.5 rounded ${
+                          alert.priority === 'high' || alert.priority === 'critical' 
+                            ? 'bg-red-500' 
+                            : 'bg-yellow-500'
+                        } text-white font-medium`}>
+                          {alert.priority?.toUpperCase() || 'MEDIUM'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-neutral-300">
+                        {alert.issue} • {alert.timestamp}
+                      </p>
+                      {alert.engineerName && (
+                        <p className="text-xs text-blue-400 mt-1">
+                          Reported by: {alert.engineerName}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleAccept(alert.id)}
+                      disabled={isAccepting === alert.id}
+                      className="rounded-md bg-green-500 px-6 py-2 font-semibold text-white transition-colors hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {isAccepting === alert.id && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Accept
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

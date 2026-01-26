@@ -116,6 +116,7 @@ function AlertsPopover() {
 
 function AlertItem({ alert, onRemove }) {
   const formatTime = (date) => {
+    if (!(date instanceof Date)) return "";
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
@@ -124,34 +125,48 @@ function AlertItem({ alert, onRemove }) {
     });
   };
 
+  const isNotification = alert?.type === "notification";
+
   const levelColors = {
     warning: "bg-orange-500/20 border-l-orange-500 text-orange-400",
     critical: "bg-red-500/20 border-l-red-500 text-red-400",
+    info: "bg-blue-500/20 border-l-blue-500 text-blue-300",
   };
+
+  const title = isNotification
+    ? alert?.title ?? "Notification"
+    : alert?.sensorName ?? "Alert";
+
+  const detail = isNotification
+    ? alert?.detail ?? ""
+    : `${alert?.sensorType ?? ""}: ${typeof alert?.value === "number" ? alert.value.toFixed(1) : ""}${alert?.unit ?? ""}`;
+
+  const level = isNotification ? "info" : alert?.level;
 
   return (
     <div
-      className={`flex items-start gap-3 px-4 py-3 border-b border-gray-800 border-l-4 ${levelColors[alert.level]}`}
+      className={`flex items-start gap-3 px-4 py-3 border-b border-gray-800 border-l-4 ${levelColors[level] ?? levelColors.warning}`}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium text-white text-sm">
-            {alert.sensorName}
+            {title}
           </span>
           <span
             className={`text-xs px-1.5 py-0.5 rounded ${
-              alert.level === "critical" ? "bg-red-500" : "bg-orange-500"
+              level === "critical"
+                ? "bg-red-500"
+                : level === "info"
+                  ? "bg-blue-500"
+                  : "bg-orange-500"
             } text-white font-medium`}
           >
-            {alert.level === "critical" ? "CRITICAL" : "WARNING"}
+            {level === "critical" ? "CRITICAL" : level === "info" ? "UPDATE" : "WARNING"}
           </span>
         </div>
-        <p className="text-xs text-gray-400 mt-1">
-          {alert.sensorType}: {alert.value.toFixed(1)}
-          {alert.unit}
-        </p>
+        {detail ? <p className="text-xs text-gray-400 mt-1">{detail}</p> : null}
         <p className="text-xs text-gray-500 mt-0.5">
-          {formatTime(alert.timestamp)}
+          {formatTime(alert?.timestamp)}
         </p>
       </div>
       <Button

@@ -83,18 +83,26 @@ function AlertItem({ alert, onRemove }) {
   };
 
   const isRepair = alert?.type === "repair";
-  const level = isRepair ? "repair" : alert?.level;
+  const isNotification = alert?.type === "notification";
+  const level = isRepair ? "repair" : isNotification ? "info" : alert?.level;
   const levelColors = {
     warning: "bg-orange-500/20 border-l-orange-500 text-orange-400",
     critical: "bg-red-500/20 border-l-red-500 text-red-400",
     repair: "bg-blue-500/20 border-l-blue-500 text-blue-300",
+    info: "bg-blue-500/20 border-l-blue-500 text-blue-300",
   };
 
-  const title = isRepair ? alert?.subsystem ?? "Repair Request" : alert?.sensorName ?? "Alert";
+  const title = isRepair
+    ? alert?.subsystem ?? "Repair Request"
+    : isNotification
+      ? alert?.title ?? "Notification"
+      : alert?.sensorName ?? "Alert";
 
   const detail = isRepair
     ? alert?.issue ?? ""
-    : `${alert?.sensorType ?? ""}: ${typeof alert?.value === "number" ? alert.value.toFixed(1) : ""}${alert?.unit ?? ""}`;
+    : isNotification
+      ? alert?.detail ?? ""
+      : `${alert?.sensorType ?? ""}: ${typeof alert?.value === "number" ? alert.value.toFixed(1) : ""}${alert?.unit ?? ""}`;
 
   return (
     <div
@@ -109,12 +117,14 @@ function AlertItem({ alert, onRemove }) {
             className={`text-xs px-1.5 py-0.5 rounded ${
               isRepair
                 ? "bg-blue-500"
-                : alert?.level === "critical"
+                : level === "critical"
                   ? "bg-red-500"
-                  : "bg-orange-500"
+                  : level === "info"
+                    ? "bg-blue-500"
+                    : "bg-orange-500"
             } text-white font-medium`}
           >
-            {isRepair ? "REPAIR" : alert?.level === "critical" ? "CRITICAL" : "WARNING"}
+            {isRepair ? "REPAIR" : level === "critical" ? "CRITICAL" : level === "info" ? "UPDATE" : "WARNING"}
           </span>
         </div>
         {detail ? <p className="text-xs text-gray-400 mt-1">{detail}</p> : null}

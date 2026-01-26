@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
+import { repairAlertsApi } from "@/lib/repairAlertsApi";
 
 function CallTechnicianModal({ isOpen, onClose, onSubmit }) {
   const [subsystem, setSubsystem] = useState("");
@@ -92,25 +93,43 @@ export default function CallTechnicianAction({
 }) {
   const { addAlert } = useAlerts();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = ({ subsystem, problem }) => {
-    addAlert({
-      type: "repair",
-      subsystem,
-      issue: problem,
-      status: "pending",
-      // Compatibility with existing engineer alert UIs
-      sensorName: subsystem,
-      sensorType: "Repair",
-      value: 0,
-      unit: "",
-      level: "warning",
-    });
+  const handleSubmit = async ({ subsystem, problem }) => {
+    setIsSubmitting(true);
+    try {
+      // Send to backend
+      await repairAlertsApi.create({
+        subsystem,
+        issue: problem,
+        priority: 'medium',
+      });
 
-    setIsOpen(false);
-    toast.success("Technician notified", {
-      description: `Subsystem: ${subsystem}`,
-    });
+      // Also add to local alerts for immediate UI feedback
+      addAlert({
+        type: "repair",
+        subsystem,
+        issue: problem,
+        status: "pending",
+        sensorName: subsystem,
+        sensorType: "Repair",
+        value: 0,
+        unit: "",
+        level: "warning",
+      });
+
+      setIsOpen(false);
+      toast.success("Technician notified", {
+        description: `Subsystem: ${subsystem} - Saved to database`,
+      });
+    } catch (err) {
+      console.error("Failed to submit repair alert:", err);
+      toast.error("Failed to submit request", {
+        description: err.message || "Please try again",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -119,7 +138,9 @@ export default function CallTechnicianAction({
         variant={buttonVariant}
         className={buttonClassName}
         onClick={() => setIsOpen(true)}
+        disabled={isSubmitting}
       >
+        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
         Call Technician
       </Button>
 
