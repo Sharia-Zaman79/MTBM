@@ -14,7 +14,8 @@ export function AlertProvider({ children }) {
     const newAlert = {
       ...alert,
       id: crypto.randomUUID(),
-      timestamp: new Date(),
+      // Use provided timestamp or default to current time
+      timestamp: alert.timestamp ? new Date(alert.timestamp) : new Date(),
     };
     setAlerts((prev) => [newAlert, ...prev]);
   }, []);

@@ -44,6 +44,8 @@ export function useEngineerNotifications() {
             level: 'info',
             title: `${alert.technicianName} accepted the problem`,
             detail: `Subsystem: ${alert.subsystem} - ${alert.issue}`,
+            // Use actual accepted timestamp from backend
+            timestamp: alert.acceptedAt || alert.updatedAt,
           })
           notifiedAlertsRef.current.add(alertKey)
         }
@@ -55,6 +57,8 @@ export function useEngineerNotifications() {
             level: 'info',
             title: `${alert.technicianName} resolved the issue!`,
             detail: `Subsystem: ${alert.subsystem} - ${alert.issue}`,
+            // Use actual resolved timestamp from backend
+            timestamp: alert.resolvedAt || alert.updatedAt,
           })
           notifiedAlertsRef.current.add(alertKey)
         }
