@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import UserBadge from "@/components/UserBadge";
 import { clearCurrentUser, loadCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { repairAlertsApi } from "@/lib/repairAlertsApi";
+import { chatApi, repairAlertsApi } from "@/lib/repairAlertsApi";
 import { toast } from "sonner";
 import ChatBox from "@/components/ChatBox";
 import { RatingDisplay } from "@/components/RatingModal";
@@ -127,6 +127,10 @@ const TechnicianDashboard = () => {
   // Repair jobs from accepted alerts
   const [repairJobs, setRepairJobs] = useState([]);
 
+  // Chat message counts per job
+  const [chatCounts, setChatCounts] = useState({});
+  const [lastSeenCounts, setLastSeenCounts] = useState({});
+
   // Fetch repair alerts from backend
   const fetchRepairAlerts = useCallback(async (showErrors = true) => {
     try {
@@ -225,6 +229,53 @@ const TechnicianDashboard = () => {
 
     return () => clearInterval(interval);
   }, [fetchRepairAlerts]);
+
+  // Fetch chat message counts for each job
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadChatCounts = async () => {
+      try {
+        if (repairJobs.length === 0) {
+          if (isMounted) setChatCounts({});
+          return;
+        }
+
+        const results = await Promise.all(
+          repairJobs.map(async (job) => {
+            try {
+              const data = await chatApi.getMessages(job.id);
+              const count = Array.isArray(data?.messages) ? data.messages.length : 0;
+              return [job.id, count];
+            } catch {
+              return [job.id, 0];
+            }
+          })
+        );
+
+        if (!isMounted) return;
+        const nextCounts = Object.fromEntries(results);
+        setChatCounts(nextCounts);
+        setLastSeenCounts((prev) => {
+          const next = { ...prev };
+          for (const [jobId] of results) {
+            if (next[jobId] == null) next[jobId] = 0;
+          }
+          return next;
+        });
+      } catch {
+        // ignore count errors
+      }
+    };
+
+    loadChatCounts();
+    const interval = setInterval(loadChatCounts, 8000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [repairJobs]);
 
   const handleAccept = async (id) => {
     setIsAccepting(id);
@@ -540,21 +591,34 @@ const TechnicianDashboard = () => {
                     {/* Action Buttons */}
                     <div className="flex gap-3">
                       <button
-                        onClick={() => setActiveChatAlert({
-                          id: job.id,
-                          info: {
-                            subsystem: job.subsystem,
-                            issue: job.title,
-                            status: job.status === "Done" ? "resolved" : "in-progress",
-                            engineerName: job.engineerName,
-                            technicianName: job.technicianName,
-                            priority: job.priority.toLowerCase(),
-                          }
-                        })}
+                        onClick={() => {
+                          setActiveChatAlert({
+                            id: job.id,
+                            info: {
+                              subsystem: job.subsystem,
+                              issue: job.title,
+                              status: job.status === "Done" ? "resolved" : "in-progress",
+                              engineerName: job.engineerName,
+                              technicianName: job.technicianName,
+                              priority: job.priority.toLowerCase(),
+                            },
+                          });
+                          setLastSeenCounts((prev) => ({
+                            ...prev,
+                            [job.id]: chatCounts[job.id] || 0,
+                          }));
+                        }}
                         className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 flex items-center gap-2"
                       >
                         <MessageCircle size={16} />
                         Chat with Engineer
+                        {Math.max((chatCounts[job.id] || 0) - (lastSeenCounts[job.id] || 0), 0) > 0 && (
+                          <span className="ml-1 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                            {Math.max((chatCounts[job.id] || 0) - (lastSeenCounts[job.id] || 0), 0) > 99
+                              ? "99+"
+                              : Math.max((chatCounts[job.id] || 0) - (lastSeenCounts[job.id] || 0), 0)}
+                          </span>
+                        )}
                       </button>
                       <button
                         onClick={() => handleMarkFixed(job.id)}
