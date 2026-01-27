@@ -116,6 +116,27 @@ export const chatApi = {
     })
   },
 
+  // Upload and send an image
+  sendImage: async (alertId, file) => {
+    const token = loadAuthToken()
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const res = await fetch(`${API_BASE_URL}/api/chat/${alertId}/image`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    })
+
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error(data?.message || 'Image upload failed')
+    }
+    return data
+  },
+
   // Get unread message count
   getUnreadCount: async () => {
     return apiRequest('/api/chat/unread/count')

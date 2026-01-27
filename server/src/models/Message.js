@@ -26,8 +26,19 @@ const messageSchema = new mongoose.Schema(
     // Message content
     message: {
       type: String,
-      required: true,
+      default: '',
       trim: true,
+    },
+    // Message type (text or image)
+    messageType: {
+      type: String,
+      enum: ['text', 'image'],
+      default: 'text',
+    },
+    // Image URL (if messageType is 'image')
+    imageUrl: {
+      type: String,
+      default: null,
     },
     // Read status
     isRead: {

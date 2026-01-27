@@ -134,11 +134,37 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setNewMessage((prev) => prev + ` 📎 [${file.name}]`);
-      setShowAttachMenu(false);
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB');
+      return;
+    }
+
+    setShowAttachMenu(false);
+    setSending(true);
+
+    try {
+      const result = await chatApi.sendImage(alertId, file);
+      setMessages((prev) => [...prev, result.data]);
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      alert('Failed to upload image: ' + err.message);
+    } finally {
+      setSending(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -269,6 +295,10 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
               const isMe = msg.senderRole === userRole;
               const showName =
                 index === 0 || messages[index - 1]?.senderRole !== msg.senderRole;
+              const isImage = msg.messageType === 'image' && msg.imageUrl;
+              const imageFullUrl = isImage
+                ? (msg.imageUrl.startsWith('http') ? msg.imageUrl : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${msg.imageUrl}`)
+                : null;
 
               return (
                 <div
@@ -280,17 +310,38 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
                       {msg.senderName}
                     </span>
                   )}
-                  <div
-                    className={`max-w-[80%] rounded-lg px-3 py-2 ${
-                      isMe
-                        ? "bg-orange-600 text-white"
-                        : "bg-neutral-800 text-neutral-100"
-                    }`}
-                  >
-                    <p className="text-sm leading-relaxed break-words">
-                      {renderMessageContent(msg.message)}
-                    </p>
-                  </div>
+                  {isImage ? (
+                    <div
+                      className={`max-w-[80%] rounded-lg overflow-hidden ${
+                        isMe ? "bg-orange-600" : "bg-neutral-800"
+                      }`}
+                    >
+                      <a href={imageFullUrl} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={imageFullUrl}
+                          alt="Shared image"
+                          className="max-w-full max-h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '';
+                            e.target.alt = 'Image failed to load';
+                          }}
+                        />
+                      </a>
+                    </div>
+                  ) : (
+                    <div
+                      className={`max-w-[80%] rounded-lg px-3 py-2 ${
+                        isMe
+                          ? "bg-orange-600 text-white"
+                          : "bg-neutral-800 text-neutral-100"
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed break-words">
+                        {renderMessageContent(msg.message)}
+                      </p>
+                    </div>
+                  )}
                   <span className="text-[10px] text-neutral-600 mt-1 px-1">
                     {formatTime(msg.createdAt)}
                   </span>

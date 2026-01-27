@@ -1,9 +1,34 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
+import multer from 'multer'
+import path from 'path'
+import fs from 'fs'
+import crypto from 'crypto'
 import Message from '../models/Message.js'
 import RepairAlert from '../models/RepairAlert.js'
 import { User } from '../models/User.js'
 import { env } from '../lib/env.js'
+
+// Setup uploads directory for chat images
+const chatUploadsDir = path.join(process.cwd(), 'uploads', 'chat')
+fs.mkdirSync(chatUploadsDir, { recursive: true })
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, chatUploadsDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || '')
+    cb(null, `${crypto.randomUUID()}${ext}`)
+  },
+})
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype?.startsWith('image/')) return cb(null, true)
+    cb(new Error('Only images are allowed'))
+  },
+})
 
 const router = express.Router()
 
@@ -134,6 +159,45 @@ router.post('/:alertId', verifyUser, verifyAlertAccess, async (req, res) => {
     console.error('Error sending message:', err)
     res.status(500).json({ message: 'Failed to send message' })
   }
+})
+
+// Upload image and send as message
+router.post('/:alertId/image', verifyUser, verifyAlertAccess, (req, res) => {
+  upload.single('image')(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'Upload failed' })
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded' })
+    }
+
+    try {
+      const { alertId } = req.params
+      const imageUrl = `/uploads/chat/${req.file.filename}`
+
+      const newMessage = new Message({
+        repairAlertId: alertId,
+        senderId: req.user._id,
+        senderName: req.user.fullName || req.user.email,
+        senderRole: req.isEngineer ? 'engineer' : 'technician',
+        message: '',
+        messageType: 'image',
+        imageUrl,
+      })
+
+      await newMessage.save()
+      console.log('📷 Image message sent:', newMessage._id)
+
+      res.status(201).json({
+        message: 'Image sent successfully',
+        data: newMessage,
+      })
+    } catch (error) {
+      console.error('Error saving image message:', error)
+      res.status(500).json({ message: 'Failed to send image' })
+    }
+  })
 })
 
 // Get unread message count for user
