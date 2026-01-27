@@ -95,6 +95,48 @@ export const repairAlertsApi = {
   getTechnicianRating: async (technicianId) => {
     return apiRequest(`/api/repair-alerts/technician/${technicianId}/rating`)
   },
+
+  // Get technician's complete stats
+  getTechnicianStats: async (technicianId) => {
+    return apiRequest(`/api/repair-alerts/technician/${technicianId}/stats`)
+  },
+}
+
+// Profile API
+export const profileApi = {
+  // Get current user profile
+  getProfile: async () => {
+    return apiRequest('/api/auth/profile')
+  },
+
+  // Update profile
+  updateProfile: async (data) => {
+    return apiRequest('/api/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
+
+  // Upload profile photo
+  uploadPhoto: async (file) => {
+    const token = loadAuthToken()
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const res = await fetch(`${API_BASE_URL}/api/uploads/avatar`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    })
+
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error(data?.message || 'Photo upload failed')
+    }
+    return data
+  },
 }
 
 // Chat API

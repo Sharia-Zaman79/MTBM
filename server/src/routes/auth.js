@@ -258,4 +258,66 @@ router.post('/reset-password', async (req, res) => {
   return res.json({ message: 'Password reset successful' })
 })
 
+// Middleware to verify JWT
+const verifyToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No token provided' })
+    }
+    const token = authHeader.split(' ')[1]
+    const decoded = jwt.verify(token, env.jwtSecret)
+    const userId = decoded.sub || decoded.userId
+    const user = await User.findById(userId).select('-passwordHash')
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' })
+    }
+    req.user = user
+    next()
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid token' })
+  }
+}
+
+// Get current user profile
+router.get('/profile', verifyToken, async (req, res) => {
+  return res.json({ user: toSafeUser(req.user) })
+})
+
+// Update user profile
+router.patch('/profile', verifyToken, async (req, res) => {
+  try {
+    const { fullName, photoUrl } = req.body ?? {}
+    const updates = {}
+
+    if (fullName !== undefined) {
+      const trimmed = String(fullName).trim()
+      if (!trimmed) {
+        return res.status(400).json({ message: 'Full name cannot be empty' })
+      }
+      updates.fullName = trimmed
+    }
+
+    if (photoUrl !== undefined) {
+      updates.photoUrl = String(photoUrl).trim()
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No fields to update' })
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      updates,
+      { new: true }
+    ).select('-passwordHash')
+
+    console.log('👤 Profile updated:', updatedUser.email)
+    return res.json({ user: toSafeUser(updatedUser) })
+  } catch (err) {
+    console.error('Profile update error:', err)
+    return res.status(500).json({ message: 'Failed to update profile' })
+  }
+})
+
 export default router

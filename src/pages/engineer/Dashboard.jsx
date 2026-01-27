@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Bell, Trash2, X, LogOut, MessageCircle, Star } from "lucide-react";
+import { CheckCircle2, Bell, Trash2, X, MessageCircle, Star, LogOut } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
-import UserBadge from "@/components/UserBadge";
+import { TechnicianProfilePopover } from "@/components/TechnicianProfile";
 import { clearCurrentUser } from "@/lib/auth";
 import { useEngineerNotifications } from "@/lib/useEngineerNotifications";
 import { repairAlertsApi } from "@/lib/repairAlertsApi";
@@ -247,7 +247,6 @@ function AlertItem({ alert, onRemove }) {
 }
 
 function DashboardContent() {
-  const navigate = useNavigate();
   const [selectedSensor, setSelectedSensor] = useState("Temperature");
   const [controls, setControls] = useState({
     propulsion: true,
@@ -422,11 +421,6 @@ function DashboardContent() {
   const currentData = sensorData[selectedSensor];
   const currentRange = sensorRanges[selectedSensor];
 
-  const handleLogout = () => {
-    clearCurrentUser();
-    navigate("/login", { state: { message: "Successfully logged out" } });
-  };
-
   const handleStop = () => {
     const host =
       typeof window !== "undefined" && window.location?.host
@@ -475,7 +469,7 @@ function DashboardContent() {
             buttonClassName="text-orange-400 hover:text-orange-300"
           />
           <AlertsPopover />
-          <UserBadge className="ml-1" />
+          <TechnicianProfilePopover className="ml-1" />
           <Button
             variant="destructive"
             className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"
@@ -487,7 +481,10 @@ function DashboardContent() {
             variant="ghost"
             size="icon"
             className="text-gray-300 hover:text-white"
-            onClick={handleLogout}
+            onClick={() => {
+              clearCurrentUser();
+              window.location.href = "/login";
+            }}
           >
             <LogOut className="h-5 w-5" />
           </Button>

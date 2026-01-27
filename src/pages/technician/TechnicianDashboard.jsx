@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { LogOut, Bell, Settings, Trash2, X, Loader2, MessageCircle, Star } from "lucide-react";
+import { Bell, Settings, Trash2, X, Loader2, MessageCircle, Star, LogOut } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import UserBadge from "@/components/UserBadge";
-import { clearCurrentUser, loadCurrentUser } from "@/lib/auth";
+import { TechnicianProfilePopover } from "@/components/TechnicianProfile";
+import { loadCurrentUser, clearCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { chatApi, repairAlertsApi } from "@/lib/repairAlertsApi";
 import { toast } from "sonner";
@@ -317,11 +317,6 @@ const TechnicianDashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    clearCurrentUser();
-    navigate("/login");
-  };
-
   const handleClearAlertHistory = () => {
     setRepairAlerts([]);
   };
@@ -397,15 +392,15 @@ const TechnicianDashboard = () => {
               />
             </div>
 
-            <button className="p-2 text-neutral-400 hover:text-white transition-colors">
-              <Settings size={20} />
-            </button>
-
-            <UserBadge className="ml-2" />
+            {/* Profile Popover */}
+            <TechnicianProfilePopover className="ml-2" />
 
             {/* Logout Button */}
             <button
-              onClick={handleLogout}
+              onClick={() => {
+                clearCurrentUser();
+                window.location.href = "/login";
+              }}
               className="ml-4 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold transition-colors hover:bg-red-700"
             >
               <LogOut size={16} />

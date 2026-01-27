@@ -317,4 +317,79 @@ router.get('/technician/:technicianId/rating', verifyUser, async (req, res) => {
   }
 })
 
+// Get technician's complete stats
+router.get('/technician/:technicianId/stats', verifyUser, async (req, res) => {
+  try {
+    const { technicianId } = req.params
+    const techId = new mongoose.Types.ObjectId(technicianId)
+
+    // Get problem counts by status
+    const [resolved, inProgress, totalAccepted] = await Promise.all([
+      RepairAlert.countDocuments({ technicianId: techId, status: 'resolved' }),
+      RepairAlert.countDocuments({ technicianId: techId, status: 'in-progress' }),
+      RepairAlert.countDocuments({ technicianId: techId, status: { $in: ['in-progress', 'resolved'] } }),
+    ])
+
+    // Get rating stats
+    const ratingResult = await RepairAlert.aggregate([
+      {
+        $match: {
+          technicianId: techId,
+          rating: { $ne: null },
+        }
+      },
+      {
+        $group: {
+          _id: '$technicianId',
+          averageRating: { $avg: '$rating' },
+          totalRatings: { $sum: 1 },
+          fiveStars: { $sum: { $cond: [{ $eq: ['$rating', 5] }, 1, 0] } },
+          fourStars: { $sum: { $cond: [{ $eq: ['$rating', 4] }, 1, 0] } },
+          threeStars: { $sum: { $cond: [{ $eq: ['$rating', 3] }, 1, 0] } },
+          twoStars: { $sum: { $cond: [{ $eq: ['$rating', 2] }, 1, 0] } },
+          oneStar: { $sum: { $cond: [{ $eq: ['$rating', 1] }, 1, 0] } },
+        }
+      }
+    ])
+
+    // Get recent activity (last 5 resolved)
+    const recentActivity = await RepairAlert.find({
+      technicianId: techId,
+      status: 'resolved',
+    })
+      .sort({ resolvedAt: -1 })
+      .limit(5)
+      .select('subsystem issue rating resolvedAt')
+
+    const rating = ratingResult[0] || {
+      averageRating: null,
+      totalRatings: 0,
+      fiveStars: 0,
+      fourStars: 0,
+      threeStars: 0,
+      twoStars: 0,
+      oneStar: 0,
+    }
+
+    res.json({
+      problemsSolved: resolved,
+      problemsInProgress: inProgress,
+      totalAccepted,
+      averageRating: rating.averageRating ? Math.round(rating.averageRating * 10) / 10 : null,
+      totalRatings: rating.totalRatings,
+      ratingBreakdown: {
+        5: rating.fiveStars,
+        4: rating.fourStars,
+        3: rating.threeStars,
+        2: rating.twoStars,
+        1: rating.oneStar,
+      },
+      recentActivity,
+    })
+  } catch (err) {
+    console.error('Error fetching technician stats:', err)
+    res.status(500).json({ message: 'Failed to fetch stats' })
+  }
+})
+
 export default router
