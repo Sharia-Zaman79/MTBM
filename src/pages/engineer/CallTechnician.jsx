@@ -162,6 +162,7 @@ function AlertItem({ alert, onRemove }) {
 function CallTechnicianModal({ isOpen, onClose, onSubmit }) {
   const [subsystem, setSubsystem] = useState("");
   const [problem, setProblem] = useState("");
+  const [priority, setPriority] = useState("medium");
 
   const isValid = useMemo(() => {
     return subsystem.trim().length > 0 && problem.trim().length > 0;
@@ -171,9 +172,10 @@ function CallTechnicianModal({ isOpen, onClose, onSubmit }) {
     e.preventDefault();
     if (!isValid) return;
 
-    onSubmit({ subsystem: subsystem.trim(), problem: problem.trim() });
+    onSubmit({ subsystem: subsystem.trim(), problem: problem.trim(), priority });
     setSubsystem("");
     setProblem("");
+    setPriority("medium");
   };
 
   if (!isOpen) return null;
@@ -202,6 +204,22 @@ function CallTechnicianModal({ isOpen, onClose, onSubmit }) {
               placeholder="e.g., Cutterhead"
               className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Priority <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 text-sm"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
           </div>
 
           <div>
@@ -264,7 +282,7 @@ export default function EngineerCallTechnician() {
     toast(`${host} stopped the machine`);
   };
 
-  const handleSubmit = async ({ subsystem, problem }) => {
+  const handleSubmit = async ({ subsystem, problem, priority }) => {
     setIsSubmitting(true);
     console.log('📨 Submitting repair alert:', { subsystem, problem });
     try {
@@ -272,7 +290,7 @@ export default function EngineerCallTechnician() {
       const result = await repairAlertsApi.create({
         subsystem,
         issue: problem,
-        priority: 'medium',
+        priority,
       });
       console.log('✅ Backend response:', result);
 
