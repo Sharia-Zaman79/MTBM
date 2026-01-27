@@ -1,10 +1,35 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { chatApi } from "@/lib/repairAlertsApi";
 import { loadCurrentUser } from "@/lib/auth";
-import { MessageCircle, Send, X, Loader2 } from "lucide-react";
+import {
+  MessageCircle,
+  Send,
+  X,
+  Loader2,
+  Image,
+  MapPin,
+  Link2,
+  Smile,
+  Paperclip,
+  Mic,
+  Wrench,
+  Circle,
+} from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+// Common emojis for quick access
+const EMOJI_LIST = [
+  "😀", "😂", "😍", "🥰", "😊", "😎", "🤔", "😅",
+  "👍", "👎", "👏", "🙌", "🔥", "❤️", "💯", "✅",
+  "😢", "😭", "😱", "🤯", "😤", "🙄", "😴", "🤒",
+  "👋", "🤝", "✌️", "🤞", "💪", "🛠️", "⚙️", "🔧",
+];
 
 export function ChatBox({ alertId, alertInfo, onClose }) {
   const [messages, setMessages] = useState([]);
@@ -12,7 +37,10 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
   const currentUser = loadCurrentUser();
   const userRole = currentUser?.role?.toLowerCase();
 
@@ -74,7 +102,7 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
   }, [alertId]);
 
   const handleSend = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!newMessage.trim() || sending) return;
 
     setSending(true);
@@ -90,13 +118,63 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleEmojiClick = (emoji) => {
+    setNewMessage((prev) => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewMessage((prev) => prev + ` 📎 [${file.name}]`);
+      setShowAttachMenu(false);
+    }
+  };
+
+  const handleShareLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const locationUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
+          setNewMessage((prev) => prev + ` 📍 Location: ${locationUrl}`);
+          setShowAttachMenu(false);
+        },
+        () => {
+          alert("Unable to get location. Please enable location access.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+  };
+
+  const handleShareLink = () => {
+    const link = prompt("Enter the URL to share:");
+    if (link) {
+      setNewMessage((prev) => prev + ` 🔗 ${link}`);
+    }
+    setShowAttachMenu(false);
+  };
+
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const diff = now - date;
     
     if (diff < 60000) return "Just now";
-    if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
@@ -105,61 +183,116 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
     ? alertInfo?.technicianName 
     : alertInfo?.engineerName;
 
+  const statusColor =
+    alertInfo?.status === "resolved"
+      ? "bg-green-500"
+      : alertInfo?.status === "in-progress"
+      ? "bg-blue-500"
+      : "bg-yellow-500";
+
+  // Detect if message contains a link
+  const renderMessageContent = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+
+    return parts.map((part, i) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-blue-300 hover:text-blue-200"
+          >
+            {part.length > 40 ? part.slice(0, 40) + "..." : part}
+          </a>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
   return (
-    <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl flex flex-col z-50">
+    <div className="fixed bottom-4 right-4 w-[400px] h-[520px] bg-neutral-950 border border-neutral-800 rounded-xl shadow-2xl flex flex-col z-50 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700 bg-zinc-800 rounded-t-lg">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5 text-blue-400" />
+      <div className="flex items-center justify-between px-4 py-3 bg-neutral-900 border-b border-neutral-800">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-orange-500/20 flex items-center justify-center">
+            <Wrench className="w-5 h-5 text-orange-400" />
+          </div>
           <div>
-            <h3 className="font-semibold text-white text-sm">Chat with {otherParty || "Technician"}</h3>
-            <p className="text-xs text-zinc-400">{alertInfo?.subsystem} - {alertInfo?.issue?.slice(0, 30)}...</p>
+            <h3 className="font-semibold text-white text-sm flex items-center gap-2">
+              {otherParty || "Technician"}
+              <Circle className={`w-2 h-2 ${statusColor} fill-current`} />
+            </h3>
+            <p className="text-xs text-neutral-500">
+              {alertInfo?.subsystem} • {alertInfo?.status === "resolved" ? "Resolved" : "In Progress"}
+            </p>
           </div>
         </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onClose}
-          className="h-8 w-8 text-zinc-400 hover:text-white"
+          className="h-8 w-8 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-lg"
         >
           <X className="w-4 h-4" />
         </Button>
       </div>
 
+      {/* Issue Description */}
+      <div className="px-4 py-2 bg-neutral-900/50 border-b border-neutral-800/50">
+        <p className="text-xs text-neutral-400 line-clamp-1">
+          <span className="text-orange-400 font-medium">Issue:</span> {alertInfo?.issue}
+        </p>
+      </div>
+
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4 bg-neutral-950">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-orange-400" />
           </div>
         ) : error ? (
           <div className="text-center text-red-400 text-sm">{error}</div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-zinc-500 text-sm mt-8">
-            <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-            <p>No messages yet</p>
-            <p className="text-xs mt-1">Start the conversation!</p>
+          <div className="text-center text-neutral-600 text-sm mt-12">
+            <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="font-medium text-neutral-500">No messages yet</p>
+            <p className="text-xs mt-1">Send a message to start discussing</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {messages.map((msg) => {
+          <div className="space-y-4">
+            {messages.map((msg, index) => {
               const isMe = msg.senderRole === userRole;
+              const showName =
+                index === 0 || messages[index - 1]?.senderRole !== msg.senderRole;
+
               return (
                 <div
                   key={msg._id}
                   className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
                 >
+                  {showName && (
+                    <span className="text-[10px] text-neutral-500 mb-1 px-1">
+                      {msg.senderName}
+                    </span>
+                  )}
                   <div
                     className={`max-w-[80%] rounded-lg px-3 py-2 ${
                       isMe
-                        ? "bg-blue-600 text-white"
-                        : "bg-zinc-700 text-white"
+                        ? "bg-orange-600 text-white"
+                        : "bg-neutral-800 text-neutral-100"
                     }`}
                   >
-                    <p className="text-sm">{msg.message}</p>
+                    <p className="text-sm leading-relaxed break-words">
+                      {renderMessageContent(msg.message)}
+                    </p>
                   </div>
-                  <span className="text-xs text-zinc-500 mt-1">
-                    {msg.senderName} • {formatTime(msg.createdAt)}
+                  <span className="text-[10px] text-neutral-600 mt-1 px-1">
+                    {formatTime(msg.createdAt)}
                   </span>
                 </div>
               );
@@ -170,19 +303,102 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
       </ScrollArea>
 
       {/* Input Area */}
-      <form onSubmit={handleSend} className="p-3 border-t border-zinc-700 bg-zinc-800 rounded-b-lg">
-        <div className="flex gap-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 bg-zinc-700 border-zinc-600 text-white placeholder:text-zinc-400"
-            disabled={sending}
-          />
-          <Button 
-            type="submit" 
+      <div className="p-3 bg-neutral-900 border-t border-neutral-800">
+        <div className="flex items-center gap-2">
+          {/* Attachment Menu */}
+          <Popover open={showAttachMenu} onOpenChange={setShowAttachMenu}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-neutral-500 hover:text-orange-400 hover:bg-neutral-800 rounded-lg"
+              >
+                <Paperclip className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-44 p-1.5 bg-neutral-900 border-neutral-700"
+              side="top"
+              align="start"
+            >
+              <button
+                onClick={handleImageUpload}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800 rounded-md"
+              >
+                <Image className="w-4 h-4 text-green-400" />
+                Photo
+              </button>
+              <button
+                onClick={handleShareLocation}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800 rounded-md"
+              >
+                <MapPin className="w-4 h-4 text-red-400" />
+                Location
+              </button>
+              <button
+                onClick={handleShareLink}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-800 rounded-md"
+              >
+                <Link2 className="w-4 h-4 text-blue-400" />
+                Link
+              </button>
+            </PopoverContent>
+          </Popover>
+
+          {/* Emoji Picker */}
+          <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-neutral-500 hover:text-yellow-400 hover:bg-neutral-800 rounded-lg"
+              >
+                <Smile className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-56 p-2 bg-neutral-900 border-neutral-700"
+              side="top"
+            >
+              <div className="grid grid-cols-8 gap-0.5">
+                {EMOJI_LIST.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => handleEmojiClick(emoji)}
+                    className="w-6 h-6 flex items-center justify-center hover:bg-neutral-800 rounded text-base"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Text Input */}
+          <div className="flex-1">
+            <textarea
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              rows={1}
+              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder:text-neutral-500 focus:outline-none focus:border-orange-500/50 resize-none text-sm"
+              disabled={sending}
+              style={{ minHeight: "38px", maxHeight: "80px" }}
+            />
+          </div>
+
+          {/* Send Button */}
+          <Button
+            type="button"
+            onClick={handleSend}
             disabled={!newMessage.trim() || sending}
-            className="bg-blue-600 hover:bg-blue-700"
+            size="icon"
+            className={`h-9 w-9 rounded-lg transition-colors ${
+              newMessage.trim()
+                ? "bg-orange-600 hover:bg-orange-700 text-white"
+                : "bg-neutral-800 text-neutral-600"
+            }`}
           >
             {sending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -191,7 +407,16 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
             )}
           </Button>
         </div>
-      </form>
+
+        {/* Hidden file input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*,video/*,.pdf,.doc,.docx"
+          className="hidden"
+        />
+      </div>
     </div>
   );
 }
