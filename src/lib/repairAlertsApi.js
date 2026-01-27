@@ -82,6 +82,44 @@ export const repairAlertsApi = {
   getStats: async () => {
     return apiRequest('/api/repair-alerts/stats/summary')
   },
+
+  // Rate a technician (Engineer only, after resolved)
+  rateTechnician: async (alertId, rating, comment = null) => {
+    return apiRequest(`/api/repair-alerts/${alertId}/rate`, {
+      method: 'POST',
+      body: JSON.stringify({ rating, comment }),
+    })
+  },
+
+  // Get technician's average rating
+  getTechnicianRating: async (technicianId) => {
+    return apiRequest(`/api/repair-alerts/technician/${technicianId}/rating`)
+  },
+}
+
+// Chat API
+export const chatApi = {
+  // Get messages for a repair alert
+  getMessages: async (alertId, since = null) => {
+    const params = new URLSearchParams()
+    if (since) params.append('since', since)
+    
+    const query = params.toString()
+    return apiRequest(`/api/chat/${alertId}${query ? `?${query}` : ''}`)
+  },
+
+  // Send a message
+  sendMessage: async (alertId, message) => {
+    return apiRequest(`/api/chat/${alertId}`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    })
+  },
+
+  // Get unread message count
+  getUnreadCount: async () => {
+    return apiRequest('/api/chat/unread/count')
+  },
 }
 
 export default repairAlertsApi

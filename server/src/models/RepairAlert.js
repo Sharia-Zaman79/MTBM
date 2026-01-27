@@ -59,6 +59,22 @@ const repairAlertSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Rating given by engineer after resolution (1-5 stars)
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null,
+    },
+    ratingComment: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    ratedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true, // Adds createdAt and updatedAt

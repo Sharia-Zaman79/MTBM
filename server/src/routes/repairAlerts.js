@@ -1,5 +1,6 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
+import mongoose from 'mongoose'
 import RepairAlert from '../models/RepairAlert.js'
 import { User } from '../models/User.js'
 import { env } from '../lib/env.js'
@@ -220,6 +221,99 @@ router.get('/stats/summary', verifyUser, async (req, res) => {
   } catch (err) {
     console.error('Error fetching stats:', err)
     res.status(500).json({ message: 'Failed to fetch stats' })
+  }
+})
+
+// Rate a technician (Engineer only, after issue is resolved)
+router.post('/:id/rate', verifyUser, async (req, res) => {
+  try {
+    const { rating, comment } = req.body
+    const alertId = req.params.id
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' })
+    }
+
+    const alert = await RepairAlert.findById(alertId)
+    if (!alert) {
+      return res.status(404).json({ message: 'Repair alert not found' })
+    }
+
+    // Only the engineer who created the alert can rate
+    if (alert.engineerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Only the requesting engineer can rate' })
+    }
+
+    // Can only rate resolved alerts
+    if (alert.status !== 'resolved') {
+      return res.status(400).json({ message: 'Can only rate after issue is resolved' })
+    }
+
+    // Check if already rated
+    if (alert.rating) {
+      return res.status(400).json({ message: 'This repair has already been rated' })
+    }
+
+    const updatedAlert = await RepairAlert.findByIdAndUpdate(
+      alertId,
+      {
+        rating: Number(rating),
+        ratingComment: comment?.trim() || null,
+        ratedAt: new Date(),
+      },
+      { new: true }
+    )
+
+    console.log('⭐ Technician rated:', updatedAlert.technicianName, 'Rating:', rating)
+
+    res.json({
+      message: 'Rating submitted successfully',
+      alert: updatedAlert,
+    })
+  } catch (err) {
+    console.error('Error rating technician:', err)
+    res.status(500).json({ message: 'Failed to submit rating' })
+  }
+})
+
+// Get technician's average rating
+router.get('/technician/:technicianId/rating', verifyUser, async (req, res) => {
+  try {
+    const { technicianId } = req.params
+
+    const result = await RepairAlert.aggregate([
+      {
+        $match: {
+          technicianId: new mongoose.Types.ObjectId(technicianId),
+          rating: { $ne: null },
+        }
+      },
+      {
+        $group: {
+          _id: '$technicianId',
+          averageRating: { $avg: '$rating' },
+          totalRatings: { $sum: 1 },
+          ratings: { $push: { rating: '$rating', comment: '$ratingComment', date: '$ratedAt' } }
+        }
+      }
+    ])
+
+    if (result.length === 0) {
+      return res.json({
+        averageRating: null,
+        totalRatings: 0,
+        ratings: [],
+      })
+    }
+
+    res.json({
+      averageRating: Math.round(result[0].averageRating * 10) / 10,
+      totalRatings: result[0].totalRatings,
+      ratings: result[0].ratings,
+    })
+  } catch (err) {
+    console.error('Error fetching technician rating:', err)
+    res.status(500).json({ message: 'Failed to fetch rating' })
   }
 })
 

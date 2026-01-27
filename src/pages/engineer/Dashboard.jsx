@@ -2,13 +2,16 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Bell, Trash2, X, LogOut } from "lucide-react";
+import { CheckCircle2, Bell, Trash2, X, LogOut, MessageCircle, Star } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
 import UserBadge from "@/components/UserBadge";
 import { clearCurrentUser } from "@/lib/auth";
 import { useEngineerNotifications } from "@/lib/useEngineerNotifications";
+import { repairAlertsApi } from "@/lib/repairAlertsApi";
+import ChatBox from "@/components/ChatBox";
+import { RatingModal, RatingDisplay } from "@/components/RatingModal";
 import {
   Popover,
   PopoverContent,
@@ -253,8 +256,57 @@ function DashboardContent() {
     slurryPump: false,
   });
 
+  // Active requests state for chat
+  const [activeRequests, setActiveRequests] = useState([]);
+  const [showRequestsPanel, setShowRequestsPanel] = useState(false);
+  const [activeChatAlert, setActiveChatAlert] = useState(null);
+  const [ratingAlert, setRatingAlert] = useState(null);
+
   // Enable engineer notifications for when technicians accept problems
   useEngineerNotifications();
+
+  // Fetch active requests (in-progress or resolved)
+  useEffect(() => {
+    const fetchActiveRequests = async () => {
+      try {
+        const { alerts } = await repairAlertsApi.getMyAlerts();
+        // Filter to only show in-progress or resolved (where chat is available)
+        const active = (alerts || []).filter(
+          a => a.status === 'in-progress' || a.status === 'resolved'
+        );
+        setActiveRequests(active);
+      } catch (err) {
+        console.error('Error fetching requests:', err);
+      }
+    };
+
+    fetchActiveRequests();
+    const interval = setInterval(fetchActiveRequests, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleOpenChat = (request) => {
+    setActiveChatAlert({
+      id: request._id,
+      info: {
+        subsystem: request.subsystem,
+        issue: request.issue,
+        status: request.status,
+        engineerName: request.engineerName,
+        technicianName: request.technicianName,
+        priority: request.priority,
+      }
+    });
+    setShowRequestsPanel(false);
+  };
+
+  const handleRated = (alertId, rating) => {
+    setActiveRequests(prev => prev.map(r => 
+      r._id === alertId ? { ...r, rating } : r
+    ));
+    setRatingAlert(null);
+    toast.success("Rating submitted!");
+  };
 
   const toggleControl = useCallback((key) => {
     setControls((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -606,6 +658,102 @@ function DashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* Floating Active Chats Button */}
+      {activeRequests.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-40">
+          <Popover open={showRequestsPanel} onOpenChange={setShowRequestsPanel}>
+            <PopoverTrigger asChild>
+              <Button
+                className="h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg"
+              >
+                <MessageCircle className="h-6 w-6" />
+                {activeRequests.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs flex items-center justify-center font-bold">
+                    {activeRequests.length}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-80 p-0 bg-zinc-900 border-zinc-700"
+              align="end"
+              side="top"
+            >
+              <div className="px-4 py-3 border-b border-zinc-700">
+                <h4 className="font-semibold text-white">Active Requests</h4>
+                <p className="text-xs text-zinc-400">Chat with technicians</p>
+              </div>
+              <ScrollArea className="max-h-[300px]">
+                {activeRequests.map((request) => (
+                  <div
+                    key={request._id}
+                    className="px-4 py-3 border-b border-zinc-800 hover:bg-zinc-800/50"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-medium text-white text-sm truncate">
+                          {request.subsystem}
+                        </h5>
+                        <p className="text-xs text-zinc-400 truncate">{request.issue}</p>
+                        <p className="text-xs text-blue-400 mt-1">
+                          {request.technicianName || "Waiting..."}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1 ml-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleOpenChat(request)}
+                          className="bg-blue-600 hover:bg-blue-700 text-xs h-7"
+                        >
+                          <MessageCircle className="w-3 h-3 mr-1" />
+                          Chat
+                        </Button>
+                        {request.status === 'resolved' && !request.rating && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setRatingAlert(request);
+                              setShowRequestsPanel(false);
+                            }}
+                            className="border-yellow-500 text-yellow-400 text-xs h-7"
+                          >
+                            <Star className="w-3 h-3 mr-1" />
+                            Rate
+                          </Button>
+                        )}
+                        {request.rating && (
+                          <RatingDisplay rating={request.rating} size="sm" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+
+      {/* Chat Box */}
+      {activeChatAlert && (
+        <ChatBox
+          alertId={activeChatAlert.id}
+          alertInfo={activeChatAlert.info}
+          onClose={() => setActiveChatAlert(null)}
+        />
+      )}
+
+      {/* Rating Modal */}
+      {ratingAlert && (
+        <RatingModal
+          alertId={ratingAlert._id}
+          technicianName={ratingAlert.technicianName}
+          onClose={() => setRatingAlert(null)}
+          onRated={(rating) => handleRated(ratingAlert._id, rating)}
+        />
+      )}
     </div>
   );
 }

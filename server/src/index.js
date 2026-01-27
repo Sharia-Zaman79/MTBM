@@ -6,6 +6,7 @@ import uploadRoutes from './routes/uploads.js'
 import logbookRoutes from './routes/logbook.js'
 import otpRoutes from './routes/otp.js'
 import repairAlertsRoutes from './routes/repairAlerts.js'
+import chatRoutes from './routes/chat.js'
 import { env, requireEnv } from './lib/env.js'
 import { connectDb } from './lib/db.js'
 
@@ -15,9 +16,24 @@ async function main() {
 
   const app = express()
 
+  // Allow multiple CORS origins for development
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    env.corsOrigin,
+  ].filter(Boolean)
+
   app.use(
     cors({
-      origin: env.corsOrigin,
+      origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true)
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true)
+        }
+        return callback(null, false)
+      },
+      credentials: true,
     })
   )
   app.use(express.json({ limit: '1mb' }))
@@ -34,6 +50,7 @@ async function main() {
   app.use('/api/logbook', logbookRoutes)
   app.use('/api/otp', otpRoutes)
   app.use('/api/repair-alerts', repairAlertsRoutes)
+  app.use('/api/chat', chatRoutes)
 
   // Minimal error handler
   app.use((err, _req, res, _next) => {

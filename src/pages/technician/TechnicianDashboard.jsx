@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { LogOut, Bell, Settings, Trash2, X, Loader2 } from "lucide-react";
+import { LogOut, Bell, Settings, Trash2, X, Loader2, MessageCircle, Star } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import UserBadge from "@/components/UserBadge";
 import { clearCurrentUser, loadCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { repairAlertsApi } from "@/lib/repairAlertsApi";
 import { toast } from "sonner";
+import ChatBox from "@/components/ChatBox";
+import { RatingDisplay } from "@/components/RatingModal";
 import {
   Popover,
   PopoverContent,
@@ -106,6 +108,9 @@ const TechnicianDashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(null);
+  
+  // Chat state
+  const [activeChatAlert, setActiveChatAlert] = useState(null);
 
   // Real data from backend
   const [repairAlerts, setRepairAlerts] = useState([]);
@@ -157,6 +162,9 @@ const TechnicianDashboard = () => {
           eta: "2 hrs",
           status: "In Progress",
           statusColor: "bg-orange-500",
+          engineerName: alert.engineerName,
+          technicianName: alert.technicianName,
+          rating: alert.rating,
         }));
 
       // Fetch resolved alerts too
@@ -173,6 +181,9 @@ const TechnicianDashboard = () => {
           eta: "-",
           status: "Done",
           statusColor: "bg-green-500",
+          engineerName: alert.engineerName,
+          technicianName: alert.technicianName,
+          rating: alert.rating,
         }));
 
       setRepairJobs([...myJobs, ...myResolvedJobs]);
@@ -464,71 +475,115 @@ const TechnicianDashboard = () => {
             </div>
 
             <div className="space-y-4">
-              {repairJobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="rounded-lg bg-gradient-to-r from-neutral-600 to-neutral-700 p-6 border-l-4 border-blue-500"
-                >
-                  {/* Header with Title and Status */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-white">
-                        Job #{job.id} — {job.title}
-                      </h3>
-                    </div>
-                    <button
-                      className={`rounded-md ${job.statusColor} px-6 py-2 font-semibold text-white transition-colors hover:opacity-90`}
-                    >
-                      {job.status}
-                    </button>
-                  </div>
-
-                  {/* Main Content Grid */}
-                  <div className="grid grid-cols-2 gap-8 mb-4">
-                    {/* Left Side */}
-                    <div className="space-y-2">
-                      <p className="text-sm text-neutral-300">
-                        <span className="font-semibold">Subsystem:</span> {job.subsystem}
-                      </p>
-                      <p className="text-sm text-neutral-300">
-                        <span className="font-semibold">Priority:</span> {job.priority}
-                      </p>
-                    </div>
-
-                    {/* Right Side */}
-                    <div className="space-y-2">
-                      <p className="text-sm text-neutral-300">
-                        <span className="font-semibold">Repair Type:</span> {job.repairType}
-                      </p>
-                      <p className="text-sm text-neutral-300">
-                        <span className="font-semibold">ETA:</span> {job.eta}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <button className="rounded-md bg-neutral-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-600">
-                      Update Status
-                    </button>
-                    <button
-                      onClick={() => handleMarkFixed(job.id)}
-                      disabled={job.status === "Done"}
-                      className={`rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors flex items-center gap-2 ${
-                        job.status === "Done"
-                          ? "bg-neutral-800 cursor-not-allowed opacity-60"
-                          : "bg-black hover:bg-neutral-900"
-                      }`}
-                    >
-                      <span>✓</span> Mark Fixed
-                    </button>
-                  </div>
+              {repairJobs.length === 0 ? (
+                <div className="text-center py-12 text-neutral-400">
+                  <span className="text-4xl mb-3 block">🔧</span>
+                  <p>No repair jobs yet</p>
+                  <p className="text-sm mt-1">Accept alerts to see them here</p>
                 </div>
-              ))}
+              ) : (
+                repairJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    className="rounded-lg bg-gradient-to-r from-neutral-600 to-neutral-700 p-6 border-l-4 border-blue-500"
+                  >
+                    {/* Header with Title and Status */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-white">
+                          Job #{job.id.slice(-6)} — {job.title}
+                        </h3>
+                        {job.engineerName && (
+                          <p className="text-sm text-blue-400 mt-1">
+                            Requested by: {job.engineerName}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          className={`rounded-md ${job.statusColor} px-6 py-2 font-semibold text-white transition-colors hover:opacity-90`}
+                        >
+                          {job.status}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Main Content Grid */}
+                    <div className="grid grid-cols-2 gap-8 mb-4">
+                      {/* Left Side */}
+                      <div className="space-y-2">
+                        <p className="text-sm text-neutral-300">
+                          <span className="font-semibold">Subsystem:</span> {job.subsystem}
+                        </p>
+                        <p className="text-sm text-neutral-300">
+                          <span className="font-semibold">Priority:</span> {job.priority}
+                        </p>
+                      </div>
+
+                      {/* Right Side */}
+                      <div className="space-y-2">
+                        <p className="text-sm text-neutral-300">
+                          <span className="font-semibold">Repair Type:</span> {job.repairType}
+                        </p>
+                        <p className="text-sm text-neutral-300">
+                          <span className="font-semibold">ETA:</span> {job.eta}
+                        </p>
+                        {job.rating && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm text-neutral-300">Rating:</span>
+                            <RatingDisplay rating={job.rating} size="sm" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setActiveChatAlert({
+                          id: job.id,
+                          info: {
+                            subsystem: job.subsystem,
+                            issue: job.title,
+                            status: job.status === "Done" ? "resolved" : "in-progress",
+                            engineerName: job.engineerName,
+                            technicianName: job.technicianName,
+                            priority: job.priority.toLowerCase(),
+                          }
+                        })}
+                        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 flex items-center gap-2"
+                      >
+                        <MessageCircle size={16} />
+                        Chat with Engineer
+                      </button>
+                      <button
+                        onClick={() => handleMarkFixed(job.id)}
+                        disabled={job.status === "Done"}
+                        className={`rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors flex items-center gap-2 ${
+                          job.status === "Done"
+                            ? "bg-neutral-800 cursor-not-allowed opacity-60"
+                            : "bg-green-600 hover:bg-green-700"
+                        }`}
+                      >
+                        <span>✓</span> Mark Fixed
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
       </main>
+
+      {/* Chat Box */}
+      {activeChatAlert && (
+        <ChatBox
+          alertId={activeChatAlert.id}
+          alertInfo={activeChatAlert.info}
+          onClose={() => setActiveChatAlert(null)}
+        />
+      )}
     </div>
   );
 };

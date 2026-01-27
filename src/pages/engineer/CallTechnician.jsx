@@ -1,12 +1,14 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell, LogOut, Trash2, X } from "lucide-react";
+import { Bell, LogOut, Trash2, X, MessageCircle, Star, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import UserBadge from "@/components/UserBadge";
 import { repairAlertsApi } from "@/lib/repairAlertsApi";
 import { useEngineerNotifications } from "@/lib/useEngineerNotifications";
+import ChatBox from "@/components/ChatBox";
+import { RatingModal, RatingDisplay } from "@/components/RatingModal";
 import {
   Popover,
   PopoverContent,
@@ -266,9 +268,42 @@ export default function EngineerCallTechnician() {
   const { addAlert } = useAlerts();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [myRequests, setMyRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  
+  // Chat state
+  const [activeChatAlert, setActiveChatAlert] = useState(null);
+  
+  // Rating state
+  const [ratingAlert, setRatingAlert] = useState(null);
 
   // Enable engineer notifications for when technicians accept problems
   useEngineerNotifications();
+
+  // Fetch engineer's requests
+  useEffect(() => {
+    const fetchMyRequests = async () => {
+      try {
+        console.log('🔍 Fetching my requests...');
+        const { alerts } = await repairAlertsApi.getMyAlerts();
+        console.log('📋 Got alerts:', alerts?.length);
+        if (alerts?.length > 0) {
+          console.log('📋 Alert statuses:', alerts.map(a => ({ id: a._id?.slice(-6), status: a.status, subsystem: a.subsystem })));
+        }
+        setMyRequests(alerts || []);
+      } catch (err) {
+        console.error('❌ Error fetching requests:', err);
+      } finally {
+        setLoadingRequests(false);
+      }
+    };
+
+    fetchMyRequests();
+    
+    // Poll every 10 seconds
+    const interval = setInterval(fetchMyRequests, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     navigate("/login", { state: { message: "Successfully logged out" } });
@@ -293,6 +328,11 @@ export default function EngineerCallTechnician() {
         priority,
       });
       console.log('✅ Backend response:', result);
+
+      // Add new alert to local state
+      if (result.alert) {
+        setMyRequests(prev => [result.alert, ...prev]);
+      }
 
       // Also add to local alerts for immediate UI feedback
       addAlert({
@@ -319,6 +359,58 @@ export default function EngineerCallTechnician() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleOpenChat = (alert) => {
+    setActiveChatAlert({
+      id: alert._id,
+      info: {
+        subsystem: alert.subsystem,
+        issue: alert.issue,
+        status: alert.status,
+        engineerName: alert.engineerName,
+        technicianName: alert.technicianName,
+        priority: alert.priority,
+      }
+    });
+  };
+
+  const handleRated = (alertId, rating) => {
+    setMyRequests(prev => prev.map(r => 
+      r._id === alertId ? { ...r, rating } : r
+    ));
+    toast.success("Rating submitted successfully!");
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) return "just now";
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)} hour${Math.floor(diff / 3600000) > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      pending: { color: "bg-yellow-500/20 text-yellow-400 border-yellow-500", icon: Clock, text: "Pending" },
+      "in-progress": { color: "bg-blue-500/20 text-blue-400 border-blue-500", icon: AlertCircle, text: "In Progress" },
+      resolved: { color: "bg-green-500/20 text-green-400 border-green-500", icon: CheckCircle, text: "Resolved" },
+    };
+    return badges[status] || badges.pending;
+  };
+
+  const getPriorityBadge = (priority) => {
+    const badges = {
+      low: "bg-gray-500/20 text-gray-400",
+      medium: "bg-blue-500/20 text-blue-400",
+      high: "bg-orange-500/20 text-orange-400",
+      critical: "bg-red-500/20 text-red-400",
+    };
+    return badges[priority] || badges.medium;
   };
 
   return (
@@ -385,7 +477,7 @@ export default function EngineerCallTechnician() {
       {/* Main Content */}
       <div className="flex-1 p-4 lg:p-8 flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl lg:text-3xl font-bold">Service Request</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold">Service Requests</h1>
           <Button
             onClick={() => setIsModalOpen(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"
@@ -394,8 +486,105 @@ export default function EngineerCallTechnician() {
           </Button>
         </div>
 
-        <div className="text-gray-300 text-sm lg:text-base">
+        <div className="text-gray-300 text-sm lg:text-base mb-4">
           Submit a subsystem and problem description to notify the technician.
+        </div>
+
+        {/* My Requests List */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-200">My Requests</h2>
+          
+          {loadingRequests ? (
+            <div className="text-center py-8 text-gray-400">Loading requests...</div>
+          ) : myRequests.length === 0 ? (
+            <div className="text-center py-8 text-gray-400 bg-zinc-900 rounded-lg border border-zinc-800">
+              <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>No service requests yet</p>
+              <p className="text-sm mt-1">Click "Add Request" to create one</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {myRequests.map((request) => {
+                const statusBadge = getStatusBadge(request.status);
+                const StatusIcon = statusBadge.icon;
+                
+                return (
+                  <div 
+                    key={request._id} 
+                    className="bg-zinc-900 rounded-lg border border-zinc-800 p-4"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold text-white">{request.subsystem}</h3>
+                          <span className={`text-xs px-2 py-0.5 rounded-full border ${statusBadge.color}`}>
+                            <StatusIcon className="w-3 h-3 inline mr-1" />
+                            {statusBadge.text}
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityBadge(request.priority)}`}>
+                            {request.priority?.toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-400 mb-2">{request.issue}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>Created {formatTime(request.createdAt)}</span>
+                          {request.technicianName && (
+                            <span>Technician: <span className="text-gray-300">{request.technicianName}</span></span>
+                          )}
+                          {request.acceptedAt && (
+                            <span>Accepted {formatTime(request.acceptedAt)}</span>
+                          )}
+                          {request.resolvedAt && (
+                            <span>Resolved {formatTime(request.resolvedAt)}</span>
+                          )}
+                        </div>
+                        
+                        {/* Show rating if already rated */}
+                        {request.rating && (
+                          <div className="mt-2">
+                            <RatingDisplay rating={request.rating} size="sm" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Chat button - only for in-progress or resolved */}
+                        {(request.status === 'in-progress' || request.status === 'resolved') ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenChat(request)}
+                            className="border-blue-500 text-blue-400 hover:bg-blue-500/10"
+                          >
+                            <MessageCircle className="w-4 h-4 mr-1" />
+                            Chat
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-gray-500 px-2 py-1 bg-gray-800 rounded">
+                            Waiting for technician...
+                          </span>
+                        )}
+                        
+                        {/* Rate button - only for resolved and not yet rated */}
+                        {request.status === 'resolved' && !request.rating && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setRatingAlert(request)}
+                            className="border-yellow-500 text-yellow-400 hover:bg-yellow-500/10"
+                          >
+                            <Star className="w-4 h-4 mr-1" />
+                            Rate
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
@@ -404,6 +593,25 @@ export default function EngineerCallTechnician() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
       />
+
+      {/* Chat Box */}
+      {activeChatAlert && (
+        <ChatBox
+          alertId={activeChatAlert.id}
+          alertInfo={activeChatAlert.info}
+          onClose={() => setActiveChatAlert(null)}
+        />
+      )}
+
+      {/* Rating Modal */}
+      {ratingAlert && (
+        <RatingModal
+          alertId={ratingAlert._id}
+          technicianName={ratingAlert.technicianName}
+          onClose={() => setRatingAlert(null)}
+          onRated={(rating) => handleRated(ratingAlert._id, rating)}
+        />
+      )}
     </div>
   );
 }
