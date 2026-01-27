@@ -434,45 +434,55 @@ export function TechnicianProfilePopover({ className = "" }) {
                   </div>
 
                   {/* Rating Display */}
-                  {stats.averageRating && (
-                    <div className="bg-neutral-800/50 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-neutral-400">Rating</span>
+                  <div className="bg-neutral-800/50 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-neutral-400">Rating</span>
+                      {stats.averageRating ? (
                         <div className="flex items-center gap-2">
                           <StarRating rating={Math.round(stats.averageRating)} size="sm" />
                           <span className="text-sm font-semibold text-white">
                             {stats.averageRating}
                           </span>
                         </div>
-                      </div>
-                      <p className="text-xs text-neutral-500">
-                        Based on {stats.totalRatings} review{stats.totalRatings !== 1 ? "s" : ""}
-                      </p>
-                      
-                      {/* Rating Breakdown */}
-                      <div className="mt-2 space-y-1">
-                        {[5, 4, 3, 2, 1].map((star) => {
-                          const count = stats.ratingBreakdown[star] || 0;
-                          const percentage = stats.totalRatings > 0
-                            ? (count / stats.totalRatings) * 100
-                            : 0;
-                          return (
-                            <div key={star} className="flex items-center gap-2 text-xs">
-                              <span className="w-3 text-neutral-500">{star}</span>
-                              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                              <div className="flex-1 h-1.5 bg-neutral-700 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-yellow-400 rounded-full"
-                                  style={{ width: `${percentage}%` }}
-                                />
-                              </div>
-                              <span className="w-6 text-right text-neutral-500">{count}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      ) : (
+                        <span className="text-sm text-neutral-500">No ratings yet</span>
+                      )}
                     </div>
-                  )}
+                    {stats.averageRating ? (
+                      <>
+                        <p className="text-xs text-neutral-500">
+                          Based on {stats.totalRatings} review{stats.totalRatings !== 1 ? "s" : ""}
+                        </p>
+                        
+                        {/* Rating Breakdown */}
+                        <div className="mt-2 space-y-1">
+                          {[5, 4, 3, 2, 1].map((star) => {
+                            const count = stats.ratingBreakdown[star] || 0;
+                            const percentage = stats.totalRatings > 0
+                              ? (count / stats.totalRatings) * 100
+                              : 0;
+                            return (
+                              <div key={star} className="flex items-center gap-2 text-xs">
+                                <span className="w-3 text-neutral-500">{star}</span>
+                                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                                <div className="flex-1 h-1.5 bg-neutral-700 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full bg-yellow-400 rounded-full"
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                </div>
+                                <span className="w-6 text-right text-neutral-500">{count}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-xs text-neutral-500">
+                        Complete repairs to receive ratings from engineers
+                      </p>
+                    )}
+                  </div>
 
                   {/* Achievements/Badges */}
                   <div className="flex flex-wrap items-center gap-2">
