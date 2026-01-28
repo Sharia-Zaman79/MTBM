@@ -179,6 +179,28 @@ export const chatApi = {
     return data
   },
 
+  // Upload and send a voice message
+  sendVoice: async (alertId, blob, duration) => {
+    const token = loadAuthToken()
+    const formData = new FormData()
+    formData.append('voice', blob, 'voice.webm')
+    formData.append('duration', duration.toString())
+
+    const res = await fetch(`${API_BASE_URL}/api/chat/${alertId}/voice`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    })
+
+    const data = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error(data?.message || 'Voice upload failed')
+    }
+    return data
+  },
+
   // Get unread message count
   getUnreadCount: async () => {
     return apiRequest('/api/chat/unread/count')

@@ -29,16 +29,26 @@ const messageSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
-    // Message type (text or image)
+    // Message type (text, image, or voice)
     messageType: {
       type: String,
-      enum: ['text', 'image'],
+      enum: ['text', 'image', 'voice'],
       default: 'text',
     },
     // Image URL (if messageType is 'image')
     imageUrl: {
       type: String,
       default: null,
+    },
+    // Voice URL (if messageType is 'voice')
+    voiceUrl: {
+      type: String,
+      default: null,
+    },
+    // Voice duration in seconds
+    voiceDuration: {
+      type: Number,
+      default: 0,
     },
     // Read status
     isRead: {

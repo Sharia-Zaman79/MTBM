@@ -9,9 +9,11 @@ import RepairAlert from '../models/RepairAlert.js'
 import { User } from '../models/User.js'
 import { env } from '../lib/env.js'
 
-// Setup uploads directory for chat images
+// Setup uploads directory for chat images and voice
 const chatUploadsDir = path.join(process.cwd(), 'uploads', 'chat')
+const voiceUploadsDir = path.join(process.cwd(), 'uploads', 'voice')
 fs.mkdirSync(chatUploadsDir, { recursive: true })
+fs.mkdirSync(voiceUploadsDir, { recursive: true })
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, chatUploadsDir),
@@ -21,12 +23,28 @@ const storage = multer.diskStorage({
   },
 })
 
+const voiceStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, voiceUploadsDir),
+  filename: (_req, file, cb) => {
+    cb(null, `${crypto.randomUUID()}.webm`)
+  },
+})
+
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: (_req, file, cb) => {
     if (file.mimetype?.startsWith('image/')) return cb(null, true)
     cb(new Error('Only images are allowed'))
+  },
+})
+
+const voiceUpload = multer({
+  storage: voiceStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB for voice
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype?.startsWith('audio/') || file.mimetype === 'video/webm') return cb(null, true)
+    cb(new Error('Only audio files are allowed'))
   },
 })
 
@@ -196,6 +214,47 @@ router.post('/:alertId/image', verifyUser, verifyAlertAccess, (req, res) => {
     } catch (error) {
       console.error('Error saving image message:', error)
       res.status(500).json({ message: 'Failed to send image' })
+    }
+  })
+})
+
+// Upload voice message
+router.post('/:alertId/voice', verifyUser, verifyAlertAccess, (req, res) => {
+  voiceUpload.single('voice')(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message || 'Upload failed' })
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No voice file uploaded' })
+    }
+
+    try {
+      const { alertId } = req.params
+      const { duration } = req.body
+      const voiceUrl = `/uploads/voice/${req.file.filename}`
+
+      const newMessage = new Message({
+        repairAlertId: alertId,
+        senderId: req.user._id,
+        senderName: req.user.fullName || req.user.email,
+        senderRole: req.isEngineer ? 'engineer' : 'technician',
+        message: '',
+        messageType: 'voice',
+        voiceUrl,
+        voiceDuration: parseFloat(duration) || 0,
+      })
+
+      await newMessage.save()
+      console.log('🎤 Voice message sent:', newMessage._id)
+
+      res.status(201).json({
+        message: 'Voice message sent successfully',
+        data: newMessage,
+      })
+    } catch (error) {
+      console.error('Error saving voice message:', error)
+      res.status(500).json({ message: 'Failed to send voice message' })
     }
   })
 })
