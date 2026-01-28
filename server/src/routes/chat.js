@@ -291,4 +291,51 @@ router.get('/unread/count', verifyUser, async (req, res) => {
   }
 })
 
+// Delete/unsend a message
+router.delete('/:alertId/message/:messageId', verifyUser, verifyAlertAccess, async (req, res) => {
+  try {
+    const { alertId, messageId } = req.params
+    const userId = req.user._id.toString()
+
+    // Find the message
+    const message = await Message.findById(messageId)
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found' })
+    }
+
+    // Check if the message belongs to this alert
+    if (message.repairAlertId.toString() !== alertId) {
+      return res.status(400).json({ message: 'Message does not belong to this alert' })
+    }
+
+    // Only the sender can delete their own message
+    if (message.senderId.toString() !== userId) {
+      return res.status(403).json({ message: 'You can only delete your own messages' })
+    }
+
+    // Delete associated files if any
+    if (message.imageUrl) {
+      const imagePath = path.join(process.cwd(), message.imageUrl)
+      fs.unlink(imagePath, (err) => {
+        if (err) console.error('Failed to delete image file:', err.message)
+      })
+    }
+    if (message.voiceUrl) {
+      const voicePath = path.join(process.cwd(), message.voiceUrl)
+      fs.unlink(voicePath, (err) => {
+        if (err) console.error('Failed to delete voice file:', err.message)
+      })
+    }
+
+    // Delete the message
+    await Message.findByIdAndDelete(messageId)
+    console.log('🗑️ Message deleted:', messageId)
+
+    res.json({ message: 'Message deleted successfully', messageId })
+  } catch (err) {
+    console.error('Error deleting message:', err)
+    res.status(500).json({ message: 'Failed to delete message' })
+  }
+})
+
 export default router

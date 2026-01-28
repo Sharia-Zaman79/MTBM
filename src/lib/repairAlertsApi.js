@@ -205,6 +205,13 @@ export const chatApi = {
   getUnreadCount: async () => {
     return apiRequest('/api/chat/unread/count')
   },
+
+  // Delete/unsend a message
+  deleteMessage: async (alertId, messageId) => {
+    return apiRequest(`/api/chat/${alertId}/message/${messageId}`, {
+      method: 'DELETE',
+    })
+  },
 }
 
 export default repairAlertsApi

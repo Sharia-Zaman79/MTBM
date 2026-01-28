@@ -20,6 +20,7 @@ import {
   Pause,
   Wrench,
   Circle,
+  Trash2,
 } from "lucide-react";
 import {
   Popover,
@@ -365,6 +366,18 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
     }
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    if (!confirm('Are you sure you want to delete this message?')) return;
+
+    try {
+      await chatApi.deleteMessage(alertId, messageId);
+      setMessages(prev => prev.filter(msg => msg._id !== messageId));
+    } catch (err) {
+      console.error('Error deleting message:', err);
+      alert('Failed to delete message: ' + err.message);
+    }
+  };
+
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -484,51 +497,63 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
               return (
                 <div
                   key={msg._id}
-                  className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                  className={`flex flex-col ${isMe ? "items-end" : "items-start"} group`}
                 >
                   {showName && (
                     <span className="text-[10px] text-neutral-500 mb-1 px-1">
                       {msg.senderName}
                     </span>
                   )}
-                  {isVoice ? (
-                    <VoicePlayer 
-                      src={voiceFullUrl} 
-                      duration={msg.voiceDuration} 
-                      isMe={isMe} 
-                    />
-                  ) : isImage ? (
-                    <div
-                      className={`max-w-[80%] rounded-lg overflow-hidden ${
-                        isMe ? "bg-orange-600" : "bg-neutral-800"
-                      }`}
-                    >
-                      <a href={imageFullUrl} target="_blank" rel="noopener noreferrer">
-                        <img
-                          src={imageFullUrl}
-                          alt="Shared image"
-                          className="max-w-full max-h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = '';
-                            e.target.alt = 'Image failed to load';
-                          }}
-                        />
-                      </a>
-                    </div>
-                  ) : (
-                    <div
-                      className={`max-w-[80%] rounded-lg px-3 py-2 ${
-                        isMe
-                          ? "bg-orange-600 text-white"
-                          : "bg-neutral-800 text-neutral-100"
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed break-words">
-                        {renderMessageContent(msg.message)}
-                      </p>
-                    </div>
-                  )}
+                  <div className={`flex items-center gap-1 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+                    {isVoice ? (
+                      <VoicePlayer 
+                        src={voiceFullUrl} 
+                        duration={msg.voiceDuration} 
+                        isMe={isMe} 
+                      />
+                    ) : isImage ? (
+                      <div
+                        className={`max-w-[80%] rounded-lg overflow-hidden ${
+                          isMe ? "bg-orange-600" : "bg-neutral-800"
+                        }`}
+                      >
+                        <a href={imageFullUrl} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={imageFullUrl}
+                            alt="Shared image"
+                            className="max-w-full max-h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '';
+                              e.target.alt = 'Image failed to load';
+                            }}
+                          />
+                        </a>
+                      </div>
+                    ) : (
+                      <div
+                        className={`max-w-[80%] rounded-lg px-3 py-2 ${
+                          isMe
+                            ? "bg-orange-600 text-white"
+                            : "bg-neutral-800 text-neutral-100"
+                        }`}
+                      >
+                        <p className="text-sm leading-relaxed break-words">
+                          {renderMessageContent(msg.message)}
+                        </p>
+                      </div>
+                    )}
+                    {/* Delete button - only for own messages */}
+                    {isMe && (
+                      <button
+                        onClick={() => handleDeleteMessage(msg._id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-800 rounded text-neutral-500 hover:text-red-400"
+                        title="Delete message"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                   <span className="text-[10px] text-neutral-600 mt-1 px-1">
                     {formatTime(msg.createdAt)}
                   </span>
