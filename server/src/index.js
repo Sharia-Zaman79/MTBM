@@ -7,6 +7,7 @@ import logbookRoutes from './routes/logbook.js'
 import otpRoutes from './routes/otp.js'
 import repairAlertsRoutes from './routes/repairAlerts.js'
 import chatRoutes from './routes/chat.js'
+import adminRoutes from './routes/admin.js'
 import { env, requireEnv } from './lib/env.js'
 import { connectDb } from './lib/db.js'
 
@@ -51,6 +52,7 @@ async function main() {
   app.use('/api/otp', otpRoutes)
   app.use('/api/repair-alerts', repairAlertsRoutes)
   app.use('/api/chat', chatRoutes)
+  app.use('/api/admin', adminRoutes)
 
   // Minimal error handler
   app.use((err, _req, res, _next) => {

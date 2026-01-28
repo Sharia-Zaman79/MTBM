@@ -57,7 +57,7 @@ router.post('/signup', async (req, res) => {
   const normalizedPhotoUrl = String(photoUrl || '').trim()
   const normalizedEmail = String(email || '').trim().toLowerCase()
 
-  if (!['engineer', 'technician'].includes(normalizedRole)) {
+  if (!['engineer', 'technician', 'admin'].includes(normalizedRole)) {
     return res.status(400).json({ message: 'Invalid role' })
   }
   if (!normalizedFullName) return res.status(400).json({ message: 'Full name is required' })
@@ -101,7 +101,7 @@ router.post('/login', async (req, res) => {
 
   if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' })
   if (!password) return res.status(400).json({ message: 'Password is required' })
-  if (!['engineer', 'technician'].includes(normalizedRole)) {
+  if (!['engineer', 'technician', 'admin'].includes(normalizedRole)) {
     return res.status(400).json({ message: 'Role is required' })
   }
 
@@ -121,7 +121,7 @@ router.post('/google', async (req, res) => {
     const normalizedRole = String(role || '').trim()
 
     if (!credential) return res.status(400).json({ message: 'Google credential is required' })
-    if (!['engineer', 'technician'].includes(normalizedRole)) {
+    if (!['engineer', 'technician', 'admin'].includes(normalizedRole)) {
       return res.status(400).json({ message: 'Role is required' })
     }
     if (!googleClient) {

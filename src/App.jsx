@@ -12,6 +12,7 @@ import EngineerSensors from './pages/engineer/Sensors';
 import LogBook from './pages/engineer/LogBook';
 import EngineerCallTechnician from './pages/engineer/CallTechnician';
 import TechnicianDashboard from './pages/technician/TechnicianDashboard';
+import AdminDashboard from './pages/admin/Dashboard';
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,8 @@ function App() {
             <Route path="/engineer/call-technician" element={<EngineerCallTechnician />} />
             {/* Technician Dashboard Route */}
             <Route path="/technician" element={<TechnicianDashboard />} />
+            {/* Admin Dashboard Route */}
+            <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </Router>
         <Toaster position="top-center" />

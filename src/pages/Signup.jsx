@@ -27,6 +27,8 @@ const Signup = () => {
 		switch (accountType) {
 			case "technician":
 				return "Technician"
+			case "admin":
+				return "Admin"
 			case "engineer":
 			default:
 				return "Engineer"
@@ -140,7 +142,8 @@ const Signup = () => {
 			return
 		}
 
-		if (!otpVerified) {
+		// Admin doesn't need email verification
+		if (accountType !== 'admin' && !otpVerified) {
 			toast.error("Please verify your email with OTP first")
 			return
 		}
@@ -212,7 +215,7 @@ const Signup = () => {
 							type="button"
 							onClick={() => setAccountType("technician")}
 							className={
-								"h-9 rounded-md px-6 " +
+								"h-9 rounded-md px-4 " +
 								(accountType === "technician"
 									? "bg-[#5B89B1] text-white hover:bg-[#4a7294]"
 									: "bg-neutral-200 text-neutral-900 hover:bg-neutral-300")
@@ -223,12 +226,23 @@ const Signup = () => {
 							type="button"
 							onClick={() => setAccountType("engineer")}
 							className={
-								"h-9 rounded-md px-6 " +
+								"h-9 rounded-md px-4 " +
 								(accountType === "engineer"
 									? "bg-[#5B89B1] text-white hover:bg-[#4a7294]"
 									: "bg-neutral-200 text-neutral-900 hover:bg-neutral-300")
 							}>
 							Engineer
+						</Button>
+						<Button
+							type="button"
+							onClick={() => setAccountType("admin")}
+							className={
+								"h-9 rounded-md px-4 " +
+								(accountType === "admin"
+									? "bg-purple-600 text-white hover:bg-purple-700"
+									: "bg-neutral-200 text-neutral-900 hover:bg-neutral-300")
+							}>
+							Admin
 						</Button>
 					</div>
 				</div>
@@ -284,10 +298,10 @@ const Signup = () => {
 										onChange={(e) => setEmail(e.target.value)}
 										required
 										autoComplete="email"
-										disabled={otpVerified}
+										disabled={otpVerified && accountType !== 'admin'}
 									/>
 								</div>
-								{!otpVerified && (
+								{accountType !== 'admin' && !otpVerified && (
 									<Button
 										type="button"
 										onClick={handleSendOtp}
@@ -297,12 +311,15 @@ const Signup = () => {
 										{sendingOtp ? "Sending..." : otpSent ? "Resend OTP" : "Send Verification Code"}
 									</Button>
 								)}
-								{otpVerified && (
+								{accountType !== 'admin' && otpVerified && (
 									<p className="text-xs text-green-600 font-medium mt-1">✓ Email verified</p>
+								)}
+								{accountType === 'admin' && (
+									<p className="text-xs text-purple-600 font-medium mt-1">Admin accounts don't require email verification</p>
 								)}
 							</div>
 
-							{otpSent && !otpVerified && (
+							{accountType !== 'admin' && otpSent && !otpVerified && (
 								<div className="space-y-2">
 									<label className="text-xs font-semibold text-neutral-800">Enter Verification Code</label>
 									<div className="relative">
