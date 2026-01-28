@@ -62,6 +62,51 @@ export async function startConversation(userId, message = '') {
   return res.json()
 }
 
+// Send image to user (admin)
+export async function sendImage(userId, file) {
+  const formData = new FormData()
+  formData.append('image', file)
+
+  const res = await fetch(`${API_URL}/messages/${userId}/image`, {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: formData,
+  })
+  if (!res.ok) {
+    throw new Error('Failed to send image')
+  }
+  return res.json()
+}
+
+// Send voice to user (admin)
+export async function sendVoice(userId, audioBlob, duration) {
+  const formData = new FormData()
+  formData.append('voice', audioBlob, 'voice.webm')
+  formData.append('duration', duration.toString())
+
+  const res = await fetch(`${API_URL}/messages/${userId}/voice`, {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: formData,
+  })
+  if (!res.ok) {
+    throw new Error('Failed to send voice')
+  }
+  return res.json()
+}
+
+// Delete message
+export async function deleteMessage(messageId) {
+  const res = await fetch(`${API_URL}/messages/${messageId}`, {
+    method: 'DELETE',
+    headers: headers(),
+  })
+  if (!res.ok) {
+    throw new Error('Failed to delete message')
+  }
+  return res.json()
+}
+
 // User APIs (for engineers/technicians)
 
 // Get messages from admin
@@ -88,6 +133,39 @@ export async function sendUserMessage(message, adminId = null) {
   })
   if (!res.ok) {
     throw new Error('Failed to send message')
+  }
+  return res.json()
+}
+
+// Send image to admin (user)
+export async function sendUserImage(file) {
+  const formData = new FormData()
+  formData.append('image', file)
+
+  const res = await fetch(`${API_URL}/user/messages/image`, {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: formData,
+  })
+  if (!res.ok) {
+    throw new Error('Failed to send image')
+  }
+  return res.json()
+}
+
+// Send voice to admin (user)
+export async function sendUserVoice(audioBlob, duration) {
+  const formData = new FormData()
+  formData.append('voice', audioBlob, 'voice.webm')
+  formData.append('duration', duration.toString())
+
+  const res = await fetch(`${API_URL}/user/messages/voice`, {
+    method: 'POST',
+    headers: getAuthHeader(),
+    body: formData,
+  })
+  if (!res.ok) {
+    throw new Error('Failed to send voice')
   }
   return res.json()
 }

@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { adminApi } from "@/lib/adminApi";
-import { loadCurrentUser, clearCurrentUser } from "@/lib/auth";
+import { loadCurrentUser, clearCurrentUser, API_BASE_URL } from "@/lib/auth";
 import { toast } from "sonner";
 import * as adminChatApi from "@/lib/adminChatApi";
 import {
@@ -19,7 +21,87 @@ import {
   TrendingUp,
   Activity,
   MessageCircle,
+  Smile,
+  Paperclip,
+  Image,
+  MapPin,
+  Link2,
+  Mic,
+  Square,
+  Play,
+  Pause,
+  Send,
+  X,
+  Trash2,
 } from "lucide-react";
+
+// Common emojis
+const EMOJI_LIST = [
+  "😀", "😂", "😍", "🥰", "😊", "😎", "🤔", "😅",
+  "👍", "👎", "👏", "🙌", "🔥", "❤️", "💯", "✅",
+  "😢", "😭", "😱", "🤯", "😤", "🙄", "😴", "🤒",
+  "👋", "🤝", "✌️", "🤞", "💪", "🛠️", "⚙️", "🔧",
+];
+
+// Voice Player Component
+function VoicePlayer({ src, duration, isMe }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const audioRef = useRef(null);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) audioRef.current.pause();
+      else audioRef.current.play();
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleEnded = () => { setIsPlaying(false); setCurrentTime(0); };
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, []);
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const formatDur = (s) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+
+  return (
+    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg min-w-[160px] ${isMe ? "bg-purple-700" : "bg-neutral-700"}`}>
+      <audio ref={audioRef} src={src} preload="metadata" />
+      <button onClick={togglePlay} className={`w-7 h-7 rounded-full flex items-center justify-center ${isMe ? "bg-purple-800" : "bg-neutral-600"}`}>
+        {isPlaying ? <Pause className="w-3.5 h-3.5 text-white" /> : <Play className="w-3.5 h-3.5 text-white ml-0.5" />}
+      </button>
+      <div className="flex-1">
+        <div className={`h-1 rounded-full overflow-hidden ${isMe ? "bg-purple-800" : "bg-neutral-600"}`}>
+          <div className="h-full bg-white transition-all" style={{ width: `${progress}%` }} />
+        </div>
+        <span className="text-[10px] text-white/70">{formatDur(isPlaying ? currentTime : duration)}</span>
+      </div>
+    </div>
+  );
+}
+
+// Message content with link detection
+function MessageContent({ message }) {
+  if (!message) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = message.split(urlRegex);
+  return (
+    <p className="text-sm whitespace-pre-wrap break-words">
+      {parts.map((part, i) => urlRegex.test(part) ? (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-300 underline hover:text-blue-200">{part}</a>
+      ) : <span key={i}>{part}</span>)}
+    </p>
+  );
+}
 
 // Stats Card Component
 function StatsCard({ icon, label, value, subtext, color = "orange" }) {
@@ -49,7 +131,7 @@ function StatsCard({ icon, label, value, subtext, color = "orange" }) {
 }
 
 // User Card Component
-function UserCard({ user, type, onChat }) {
+function UserCard({ user, type, onChat, unreadCount = 0 }) {
   const isEngineer = type === "engineer";
   const stats = user.stats || {};
 
@@ -87,11 +169,16 @@ function UserCard({ user, type, onChat }) {
           <Button
             size="sm"
             variant="outline"
-            className="h-7 px-2 text-xs border-purple-500 text-purple-400 hover:bg-purple-500/20"
+            className="h-7 px-2 text-xs border-purple-500 text-purple-400 hover:bg-purple-500/20 relative"
             onClick={handleStartChat}
           >
             <MessageCircle className="w-3.5 h-3.5 mr-1" />
             Chat
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </Button>
         </div>
       </div>
@@ -158,6 +245,49 @@ export default function AdminDashboard() {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingIntervalRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatMessages]);
+
+  // Fetch unread counts for all users
+  const fetchUnreadCounts = async () => {
+    try {
+      const data = await adminChatApi.getConversations();
+      const counts = {};
+      (data.conversations || []).forEach(conv => {
+        if (conv.unreadCount > 0) {
+          counts[conv._id] = conv.unreadCount;
+        }
+      });
+      setUnreadCounts(counts);
+    } catch (err) {
+      console.error("Error fetching unread counts:", err);
+    }
+  };
+
+  // Poll for unread counts
+  useEffect(() => {
+    fetchUnreadCounts();
+    const interval = setInterval(fetchUnreadCounts, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Handle starting chat with a user
   const handleStartChat = async (user) => {
@@ -167,6 +297,8 @@ export default function AdminDashboard() {
       await adminChatApi.startConversation(user._id);
       const data = await adminChatApi.getMessages(user._id);
       setChatMessages(data.messages || []);
+      // Clear unread count for this user
+      setUnreadCounts(prev => ({ ...prev, [user._id]: 0 }));
     } catch (err) {
       console.error("Error starting chat:", err);
       toast.error("Failed to start chat");
@@ -188,6 +320,128 @@ export default function AdminDashboard() {
       toast.error("Failed to send message");
     }
   };
+
+  // Emoji handler
+  const handleEmojiClick = (emoji) => {
+    setChatInput(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  // Image upload
+  const handleImageUpload = () => {
+    fileInputRef.current?.click();
+    setShowAttachMenu(false);
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !chatUser) return;
+    if (!file.type.startsWith('image/')) { alert('Please select an image'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert('Image must be less than 5MB'); return; }
+    setChatLoading(true);
+    try {
+      await adminChatApi.sendImage(chatUser._id, file);
+      const data = await adminChatApi.getMessages(chatUser._id);
+      setChatMessages(data.messages || []);
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      toast.error("Failed to upload image");
+    } finally {
+      setChatLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Location share
+  const handleShareLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const url = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+          setChatInput(prev => prev + ` 📍 Location: ${url}`);
+          setShowAttachMenu(false);
+        },
+        () => alert("Unable to get location")
+      );
+    }
+  };
+
+  // Link share
+  const handleShareLink = () => {
+    const link = prompt("Enter URL to share:");
+    if (link) setChatInput(prev => prev + ` 🔗 ${link}`);
+    setShowAttachMenu(false);
+  };
+
+  // Voice recording
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(blob);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingDuration(0);
+      recordingIntervalRef.current = setInterval(() => setRecordingDuration(p => p + 1), 1000);
+    } catch (err) {
+      alert("Unable to access microphone");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordingIntervalRef.current) { clearInterval(recordingIntervalRef.current); recordingIntervalRef.current = null; }
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      if (mediaRecorderRef.current.stream) mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+    }
+    setIsRecording(false);
+    setAudioBlob(null);
+    setRecordingDuration(0);
+    if (recordingIntervalRef.current) { clearInterval(recordingIntervalRef.current); recordingIntervalRef.current = null; }
+  };
+
+  const sendVoiceMessage = async () => {
+    if (!audioBlob || !chatUser) return;
+    setChatLoading(true);
+    try {
+      await adminChatApi.sendVoice(chatUser._id, audioBlob, recordingDuration);
+      setAudioBlob(null);
+      setRecordingDuration(0);
+      const data = await adminChatApi.getMessages(chatUser._id);
+      setChatMessages(data.messages || []);
+    } catch (err) {
+      console.error("Error sending voice:", err);
+      toast.error("Failed to send voice message");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  const handleDeleteMessage = async (msgId) => {
+    if (!confirm("Delete this message?")) return;
+    try {
+      await adminChatApi.deleteMessage(msgId);
+      setChatMessages(prev => prev.filter(m => m._id !== msgId));
+    } catch (err) {
+      console.error("Error deleting:", err);
+    }
+  };
+
+  const formatDuration = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   // Poll for new messages
   useEffect(() => {
@@ -487,7 +741,7 @@ export default function AdminDashboard() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {engineers.map((engineer) => (
-                <UserCard key={engineer._id} user={engineer} type="engineer" onChat={handleStartChat} />
+                <UserCard key={engineer._id} user={engineer} type="engineer" onChat={handleStartChat} unreadCount={unreadCounts[engineer._id] || 0} />
               ))}
               {engineers.length === 0 && (
                 <p className="text-neutral-500 col-span-full text-center py-8">No engineers found</p>
@@ -522,7 +776,7 @@ export default function AdminDashboard() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {technicians.map((technician) => (
-                <UserCard key={technician._id} user={technician} type="technician" onChat={handleStartChat} />
+                <UserCard key={technician._id} user={technician} type="technician" onChat={handleStartChat} unreadCount={unreadCounts[technician._id] || 0} />
               ))}
               {technicians.length === 0 && (
                 <p className="text-neutral-500 col-span-full text-center py-8">No technicians found</p>
@@ -732,66 +986,182 @@ export default function AdminDashboard() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => { setChatUser(null); setChatMessages([]); setChatInput(""); }}
+                onClick={() => { setChatUser(null); setChatMessages([]); setChatInput(""); setAudioBlob(null); cancelRecording(); }}
                 className="text-white hover:bg-purple-700"
               >
-                ✕
+                <X className="w-5 h-5" />
               </Button>
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {chatLoading ? (
-                <div className="text-center text-neutral-500 py-8">Loading...</div>
-              ) : chatMessages.length === 0 ? (
-                <div className="text-center text-neutral-500 py-8">
-                  <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No messages yet</p>
-                  <p className="text-sm">Start the conversation!</p>
-                </div>
-              ) : (
-                chatMessages.map((msg) => {
-                  const isAdmin = msg.senderRole === "admin";
-                  return (
-                    <div key={msg._id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
-                      <div
-                        className={`max-w-[75%] rounded-lg p-3 ${
-                          isAdmin
-                            ? "bg-purple-600 text-white"
-                            : "bg-neutral-800 text-white"
-                        }`}
-                      >
-                        <p className="text-sm">{msg.message}</p>
-                        <span className={`text-xs mt-1 block ${isAdmin ? "text-purple-200" : "text-neutral-500"}`}>
-                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </span>
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-3">
+                {chatLoading ? (
+                  <div className="text-center text-neutral-500 py-8">Loading...</div>
+                ) : chatMessages.length === 0 ? (
+                  <div className="text-center text-neutral-500 py-8">
+                    <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No messages yet</p>
+                    <p className="text-sm">Start the conversation!</p>
+                  </div>
+                ) : (
+                  chatMessages.map((msg) => {
+                    const isAdmin = msg.senderRole === "admin";
+                    return (
+                      <div key={msg._id} className={`flex ${isAdmin ? "justify-end" : "justify-start"} group`}>
+                        <div
+                          className={`max-w-[75%] rounded-lg p-3 relative ${
+                            isAdmin
+                              ? "bg-purple-600 text-white"
+                              : "bg-neutral-800 text-white"
+                          }`}
+                        >
+                          {/* Message Content */}
+                          {msg.messageType === 'voice' ? (
+                            <VoicePlayer src={msg.voiceUrl} duration={msg.voiceDuration} isOwn={isAdmin} />
+                          ) : msg.messageType === 'image' ? (
+                            <div>
+                              <img 
+                                src={msg.imageUrl} 
+                                alt="Shared" 
+                                className="max-w-full rounded cursor-pointer hover:opacity-90" 
+                                onClick={() => window.open(msg.imageUrl, '_blank')}
+                              />
+                              {msg.message && <p className="text-sm mt-2"><MessageContent message={msg.message} /></p>}
+                            </div>
+                          ) : (
+                            <MessageContent message={msg.message} />
+                          )}
+                          <span className={`text-xs mt-1 block ${isAdmin ? "text-purple-200" : "text-neutral-500"}`}>
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                          {/* Delete button for own messages */}
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDeleteMessage(msg._id)}
+                              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </ScrollArea>
+
+            {/* Hidden file input */}
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+
+            {/* Voice Preview */}
+            {audioBlob && !isRecording && (
+              <div className="p-3 border-t border-neutral-700 bg-neutral-800">
+                <div className="flex items-center gap-3">
+                  <audio src={URL.createObjectURL(audioBlob)} controls className="flex-1 h-8" />
+                  <Button size="sm" variant="ghost" onClick={cancelRecording} className="text-red-400">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" onClick={sendVoiceMessage} className="bg-purple-600">
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Recording UI */}
+            {isRecording && (
+              <div className="p-3 border-t border-neutral-700 bg-red-900/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                    <span className="text-red-400 font-medium">Recording {formatDuration(recordingDuration)}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={cancelRecording} className="text-red-400">
+                      <X className="w-4 h-4 mr-1" /> Cancel
+                    </Button>
+                    <Button size="sm" onClick={stopRecording} className="bg-red-600">
+                      <Square className="w-4 h-4 mr-1" /> Stop
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Chat Input */}
-            <div className="p-4 border-t border-neutral-700">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-                  placeholder="Type a message..."
-                  className="flex-1 px-3 py-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={!chatInput.trim()}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  Send
-                </Button>
+            {!isRecording && !audioBlob && (
+              <div className="p-4 border-t border-neutral-700">
+                <div className="flex items-center gap-2">
+                  {/* Emoji Picker */}
+                  <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-neutral-400 hover:text-yellow-400 p-2">
+                        <Smile className="w-5 h-5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-2 bg-neutral-800 border-neutral-700" side="top">
+                      <div className="grid grid-cols-8 gap-1">
+                        {EMOJI_LIST.map((emoji) => (
+                          <button
+                            key={emoji}
+                            onClick={() => handleEmojiClick(emoji)}
+                            className="text-xl hover:bg-neutral-700 rounded p-1"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Attachment Menu */}
+                  <Popover open={showAttachMenu} onOpenChange={setShowAttachMenu}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="text-neutral-400 hover:text-purple-400 p-2">
+                        <Paperclip className="w-5 h-5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2 bg-neutral-800 border-neutral-700" side="top">
+                      <div className="space-y-1">
+                        <button onClick={handleImageUpload} className="w-full flex items-center gap-2 p-2 rounded hover:bg-neutral-700 text-white">
+                          <Image className="w-4 h-4 text-green-400" /> Photo
+                        </button>
+                        <button onClick={handleShareLocation} className="w-full flex items-center gap-2 p-2 rounded hover:bg-neutral-700 text-white">
+                          <MapPin className="w-4 h-4 text-red-400" /> Location
+                        </button>
+                        <button onClick={handleShareLink} className="w-full flex items-center gap-2 p-2 rounded hover:bg-neutral-700 text-white">
+                          <Link2 className="w-4 h-4 text-blue-400" /> Link
+                        </button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Text Input */}
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                    placeholder="Type a message..."
+                    className="flex-1 px-3 py-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+
+                  {/* Voice / Send Button */}
+                  {chatInput.trim() ? (
+                    <Button onClick={handleSendMessage} className="bg-purple-600 hover:bg-purple-700 p-2">
+                      <Send className="w-5 h-5" />
+                    </Button>
+                  ) : (
+                    <Button onClick={startRecording} variant="ghost" className="text-neutral-400 hover:text-red-400 p-2">
+                      <Mic className="w-5 h-5" />
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}

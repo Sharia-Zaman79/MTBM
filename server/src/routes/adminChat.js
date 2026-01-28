@@ -311,4 +311,193 @@ router.post('/start/:userId', verifyUser, verifyAdmin, async (req, res) => {
   }
 })
 
+// Send image from admin to user
+router.post('/messages/:userId/image', verifyUser, verifyAdmin, upload.single('image'), async (req, res) => {
+  try {
+    const { userId } = req.params
+    const file = req.file
+
+    if (!file) {
+      return res.status(400).json({ message: 'No image provided' })
+    }
+
+    const participant = await User.findById(userId).select('-passwordHash')
+    if (!participant) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const newMessage = new AdminMessage({
+      participantId: participant._id,
+      participantRole: participant.role,
+      participantName: participant.fullName,
+      participantEmail: participant.email,
+      adminId: req.user._id,
+      adminName: req.user.fullName,
+      senderId: req.user._id,
+      senderRole: 'admin',
+      senderName: req.user.fullName,
+      messageType: 'image',
+      imageUrl: `/uploads/admin-chat/${file.filename}`,
+    })
+
+    await newMessage.save()
+    res.status(201).json({ message: 'Image sent', data: newMessage })
+  } catch (err) {
+    console.error('Error sending image:', err)
+    res.status(500).json({ message: 'Failed to send image' })
+  }
+})
+
+// Send voice from admin to user
+router.post('/messages/:userId/voice', verifyUser, verifyAdmin, upload.single('voice'), async (req, res) => {
+  try {
+    const { userId } = req.params
+    const file = req.file
+    const duration = parseInt(req.body.duration) || 0
+
+    if (!file) {
+      return res.status(400).json({ message: 'No voice file provided' })
+    }
+
+    const participant = await User.findById(userId).select('-passwordHash')
+    if (!participant) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const newMessage = new AdminMessage({
+      participantId: participant._id,
+      participantRole: participant.role,
+      participantName: participant.fullName,
+      participantEmail: participant.email,
+      adminId: req.user._id,
+      adminName: req.user.fullName,
+      senderId: req.user._id,
+      senderRole: 'admin',
+      senderName: req.user.fullName,
+      messageType: 'voice',
+      voiceUrl: `/uploads/admin-chat/${file.filename}`,
+      voiceDuration: duration,
+    })
+
+    await newMessage.save()
+    res.status(201).json({ message: 'Voice sent', data: newMessage })
+  } catch (err) {
+    console.error('Error sending voice:', err)
+    res.status(500).json({ message: 'Failed to send voice' })
+  }
+})
+
+// Send image from user to admin
+router.post('/user/messages/image', verifyUser, upload.single('image'), async (req, res) => {
+  try {
+    const file = req.file
+
+    if (!file) {
+      return res.status(400).json({ message: 'No image provided' })
+    }
+
+    // Find admin
+    const existingChat = await AdminMessage.findOne({ participantId: req.user._id }).sort({ createdAt: -1 })
+    let admin
+    if (existingChat) {
+      admin = await User.findById(existingChat.adminId).select('-passwordHash')
+    } else {
+      admin = await User.findOne({ role: 'admin' }).select('-passwordHash')
+    }
+
+    if (!admin) {
+      return res.status(404).json({ message: 'No admin available' })
+    }
+
+    const newMessage = new AdminMessage({
+      participantId: req.user._id,
+      participantRole: req.user.role,
+      participantName: req.user.fullName,
+      participantEmail: req.user.email,
+      adminId: admin._id,
+      adminName: admin.fullName,
+      senderId: req.user._id,
+      senderRole: req.user.role,
+      senderName: req.user.fullName,
+      messageType: 'image',
+      imageUrl: `/uploads/admin-chat/${file.filename}`,
+    })
+
+    await newMessage.save()
+    res.status(201).json({ message: 'Image sent', data: newMessage })
+  } catch (err) {
+    console.error('Error sending image:', err)
+    res.status(500).json({ message: 'Failed to send image' })
+  }
+})
+
+// Send voice from user to admin
+router.post('/user/messages/voice', verifyUser, upload.single('voice'), async (req, res) => {
+  try {
+    const file = req.file
+    const duration = parseInt(req.body.duration) || 0
+
+    if (!file) {
+      return res.status(400).json({ message: 'No voice file provided' })
+    }
+
+    // Find admin
+    const existingChat = await AdminMessage.findOne({ participantId: req.user._id }).sort({ createdAt: -1 })
+    let admin
+    if (existingChat) {
+      admin = await User.findById(existingChat.adminId).select('-passwordHash')
+    } else {
+      admin = await User.findOne({ role: 'admin' }).select('-passwordHash')
+    }
+
+    if (!admin) {
+      return res.status(404).json({ message: 'No admin available' })
+    }
+
+    const newMessage = new AdminMessage({
+      participantId: req.user._id,
+      participantRole: req.user.role,
+      participantName: req.user.fullName,
+      participantEmail: req.user.email,
+      adminId: admin._id,
+      adminName: admin.fullName,
+      senderId: req.user._id,
+      senderRole: req.user.role,
+      senderName: req.user.fullName,
+      messageType: 'voice',
+      voiceUrl: `/uploads/admin-chat/${file.filename}`,
+      voiceDuration: duration,
+    })
+
+    await newMessage.save()
+    res.status(201).json({ message: 'Voice sent', data: newMessage })
+  } catch (err) {
+    console.error('Error sending voice:', err)
+    res.status(500).json({ message: 'Failed to send voice' })
+  }
+})
+
+// Delete message
+router.delete('/messages/:messageId', verifyUser, async (req, res) => {
+  try {
+    const { messageId } = req.params
+    const message = await AdminMessage.findById(messageId)
+
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found' })
+    }
+
+    // Only sender can delete their own message
+    if (message.senderId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Cannot delete this message' })
+    }
+
+    await AdminMessage.findByIdAndDelete(messageId)
+    res.json({ message: 'Message deleted' })
+  } catch (err) {
+    console.error('Error deleting message:', err)
+    res.status(500).json({ message: 'Failed to delete message' })
+  }
+})
+
 export default router
