@@ -16,7 +16,7 @@ import {
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
-import UserBadge from "@/components/UserBadge";
+import { TechnicianProfilePopover } from "@/components/TechnicianProfile";
 import { Bell, Trash2, X, LogOut } from "lucide-react";
 import {
   Popover,
@@ -420,7 +420,7 @@ export default function SensorsPage() {
             buttonClassName="text-orange-400 hover:text-orange-300"
           />
           <AlertsPopover />
-          <UserBadge className="ml-1" />
+          <TechnicianProfilePopover className="ml-1" />
           <Button
             variant="destructive"
             className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"

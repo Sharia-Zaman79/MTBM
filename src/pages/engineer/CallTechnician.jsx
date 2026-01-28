@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, LogOut, Trash2, X, MessageCircle, Star, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
-import UserBadge from "@/components/UserBadge";
+import { TechnicianProfilePopover } from "@/components/TechnicianProfile";
 import { repairAlertsApi } from "@/lib/repairAlertsApi";
 import { useEngineerNotifications } from "@/lib/useEngineerNotifications";
 import ChatBox from "@/components/ChatBox";
@@ -453,7 +453,7 @@ export default function EngineerCallTechnician() {
 
           <AlertsPopover />
 
-          <UserBadge className="ml-1" />
+          <TechnicianProfilePopover className="ml-1" />
 
           <Button
             variant="destructive"
