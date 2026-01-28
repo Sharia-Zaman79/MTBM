@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { adminApi } from "@/lib/adminApi";
 import { loadCurrentUser, clearCurrentUser } from "@/lib/auth";
 import { toast } from "sonner";
+import * as adminChatApi from "@/lib/adminChatApi";
 import {
   Users,
   Wrench,
@@ -17,6 +18,7 @@ import {
   Star,
   TrendingUp,
   Activity,
+  MessageCircle,
 } from "lucide-react";
 
 // Stats Card Component
@@ -47,9 +49,15 @@ function StatsCard({ icon, label, value, subtext, color = "orange" }) {
 }
 
 // User Card Component
-function UserCard({ user, type }) {
+function UserCard({ user, type, onChat }) {
   const isEngineer = type === "engineer";
   const stats = user.stats || {};
+
+  const handleStartChat = () => {
+    if (onChat) {
+      onChat(user);
+    }
+  };
 
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 hover:border-neutral-700 transition-colors">
@@ -69,12 +77,23 @@ function UserCard({ user, type }) {
             <p className="text-xs text-neutral-500">{user.email}</p>
           </div>
         </div>
-        {stats.avgRating && (
-          <div className="flex items-center gap-1 text-yellow-400">
-            <Star className="w-3.5 h-3.5 fill-current" />
-            <span className="text-xs font-medium">{stats.avgRating}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {stats.avgRating && (
+            <div className="flex items-center gap-1 text-yellow-400">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span className="text-xs font-medium">{stats.avgRating}</span>
+            </div>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 px-2 text-xs border-purple-500 text-purple-400 hover:bg-purple-500/20"
+            onClick={handleStartChat}
+          >
+            <MessageCircle className="w-3.5 h-3.5 mr-1" />
+            Chat
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2 mt-3">
@@ -133,6 +152,56 @@ export default function AdminDashboard() {
   const [monthlyReport, setMonthlyReport] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  
+  // Chat state
+  const [chatUser, setChatUser] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+
+  // Handle starting chat with a user
+  const handleStartChat = async (user) => {
+    setChatUser(user);
+    setChatLoading(true);
+    try {
+      await adminChatApi.startConversation(user._id);
+      const data = await adminChatApi.getMessages(user._id);
+      setChatMessages(data.messages || []);
+    } catch (err) {
+      console.error("Error starting chat:", err);
+      toast.error("Failed to start chat");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  // Send message in chat
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || !chatUser) return;
+    try {
+      await adminChatApi.sendMessage(chatUser._id, chatInput.trim());
+      setChatInput("");
+      const data = await adminChatApi.getMessages(chatUser._id);
+      setChatMessages(data.messages || []);
+    } catch (err) {
+      console.error("Error sending message:", err);
+      toast.error("Failed to send message");
+    }
+  };
+
+  // Poll for new messages
+  useEffect(() => {
+    if (!chatUser) return;
+    const interval = setInterval(async () => {
+      try {
+        const data = await adminChatApi.getMessages(chatUser._id);
+        setChatMessages(data.messages || []);
+      } catch (err) {
+        console.error("Error polling messages:", err);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [chatUser]);
 
   // Check if user is admin
   useEffect(() => {
@@ -418,7 +487,7 @@ export default function AdminDashboard() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {engineers.map((engineer) => (
-                <UserCard key={engineer._id} user={engineer} type="engineer" />
+                <UserCard key={engineer._id} user={engineer} type="engineer" onChat={handleStartChat} />
               ))}
               {engineers.length === 0 && (
                 <p className="text-neutral-500 col-span-full text-center py-8">No engineers found</p>
@@ -453,7 +522,7 @@ export default function AdminDashboard() {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {technicians.map((technician) => (
-                <UserCard key={technician._id} user={technician} type="technician" />
+                <UserCard key={technician._id} user={technician} type="technician" onChat={handleStartChat} />
               ))}
               {technicians.length === 0 && (
                 <p className="text-neutral-500 col-span-full text-center py-8">No technicians found</p>
@@ -638,6 +707,94 @@ export default function AdminDashboard() {
           * { color: black !important; }
         }
       `}</style>
+
+      {/* Chat Modal */}
+      {chatUser && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-lg h-[600px] flex flex-col">
+            {/* Chat Header */}
+            <div className="p-4 border-b border-neutral-700 flex items-center justify-between bg-purple-600 rounded-t-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                  {chatUser.photoUrl ? (
+                    <img src={chatUser.photoUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <span className="text-lg font-semibold text-white">
+                      {chatUser.fullName?.charAt(0)?.toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">{chatUser.fullName}</h3>
+                  <p className="text-xs text-purple-200 capitalize">{chatUser.role}</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setChatUser(null); setChatMessages([]); setChatInput(""); }}
+                className="text-white hover:bg-purple-700"
+              >
+                ✕
+              </Button>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {chatLoading ? (
+                <div className="text-center text-neutral-500 py-8">Loading...</div>
+              ) : chatMessages.length === 0 ? (
+                <div className="text-center text-neutral-500 py-8">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No messages yet</p>
+                  <p className="text-sm">Start the conversation!</p>
+                </div>
+              ) : (
+                chatMessages.map((msg) => {
+                  const isAdmin = msg.senderRole === "admin";
+                  return (
+                    <div key={msg._id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[75%] rounded-lg p-3 ${
+                          isAdmin
+                            ? "bg-purple-600 text-white"
+                            : "bg-neutral-800 text-white"
+                        }`}
+                      >
+                        <p className="text-sm">{msg.message}</p>
+                        <span className={`text-xs mt-1 block ${isAdmin ? "text-purple-200" : "text-neutral-500"}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Chat Input */}
+            <div className="p-4 border-t border-neutral-700">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                  placeholder="Type a message..."
+                  className="flex-1 px-3 py-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!chatInput.trim()}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  Send
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

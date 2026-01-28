@@ -11,6 +11,7 @@ import { clearCurrentUser } from "@/lib/auth";
 import { useEngineerNotifications } from "@/lib/useEngineerNotifications";
 import { repairAlertsApi } from "@/lib/repairAlertsApi";
 import ChatBox from "@/components/ChatBox";
+import { UserAdminChat } from "@/components/AdminChatBox";
 import { RatingModal, RatingDisplay } from "@/components/RatingModal";
 import {
   Popover,
@@ -751,6 +752,9 @@ function DashboardContent() {
           onRated={(rating) => handleRated(ratingAlert._id, rating)}
         />
       )}
+
+      {/* Admin Chat */}
+      <UserAdminChat />
     </div>
   );
 }

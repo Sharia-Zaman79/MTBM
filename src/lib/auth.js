@@ -1,7 +1,7 @@
 const CURRENT_USER_STORAGE_KEY = 'mtbmCurrentUser'
 const TOKEN_STORAGE_KEY = 'mtbmAuthToken'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 async function apiRequest(path, options = {}) {
   const token = loadAuthToken()
@@ -33,6 +33,11 @@ export const setAuthToken = (token) => {
 
 export const loadAuthToken = () => {
   return localStorage.getItem(TOKEN_STORAGE_KEY)
+}
+
+export const getAuthHeader = () => {
+  const token = loadAuthToken()
+  return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
 export const clearAuthToken = () => {

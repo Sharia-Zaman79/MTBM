@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { chatApi, repairAlertsApi } from "@/lib/repairAlertsApi";
 import { toast } from "sonner";
 import ChatBox from "@/components/ChatBox";
+import { UserAdminChat } from "@/components/AdminChatBox";
 import { RatingDisplay } from "@/components/RatingModal";
 import {
   Popover,
@@ -643,6 +644,9 @@ const TechnicianDashboard = () => {
           onClose={() => setActiveChatAlert(null)}
         />
       )}
+
+      {/* Admin Chat */}
+      <UserAdminChat />
     </div>
   );
 };
