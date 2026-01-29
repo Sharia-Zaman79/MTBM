@@ -34,6 +34,7 @@ import {
   X,
   Trash2,
 } from "lucide-react";
+import { AdminProfilePopover } from "@/components/AdminProfile";
 
 // Common emojis
 const EMOJI_LIST = [
@@ -582,10 +583,8 @@ export default function AdminDashboard() {
             </div>
           </Link>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-neutral-400">
-            Welcome, <span className="text-white font-medium">{currentUser?.fullName}</span>
-          </span>
+        <div className="flex items-center gap-4">
+          <AdminProfilePopover />
           <Button
             variant="ghost"
             size="icon"
