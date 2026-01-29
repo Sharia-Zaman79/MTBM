@@ -104,7 +104,7 @@ function MessageContent({ message }) {
 }
 
 // Stats Card Component
-function StatsCard({ icon, label, value, subtext, color = "orange" }) {
+function StatsCard({ icon, label, value, subtext, color = "orange", onClick }) {
   const colorClasses = {
     orange: "bg-orange-500/20 text-orange-400",
     blue: "bg-blue-500/20 text-blue-400",
@@ -114,18 +114,34 @@ function StatsCard({ icon, label, value, subtext, color = "orange" }) {
     purple: "bg-purple-500/20 text-purple-400",
   };
 
+  const content = (
+    <div className="flex items-center gap-3">
+      <div className={`w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs text-neutral-500">{label}</p>
+        <p className="text-2xl font-bold text-white">{value}</p>
+        {subtext && <p className="text-xs text-neutral-400">{subtext}</p>}
+      </div>
+    </div>
+  );
+
+  if (onClick) {
+    return (
+      <button 
+        type="button"
+        onClick={onClick}
+        className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 text-left w-full hover:border-neutral-600 hover:bg-neutral-800/50 transition-all cursor-pointer"
+      >
+        {content}
+      </button>
+    );
+  }
+
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-lg ${colorClasses[color]} flex items-center justify-center`}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-xs text-neutral-500">{label}</p>
-          <p className="text-2xl font-bold text-white">{value}</p>
-          {subtext && <p className="text-xs text-neutral-400">{subtext}</p>}
-        </div>
-      </div>
+      {content}
     </div>
   );
 }
@@ -642,24 +658,28 @@ export default function AdminDashboard() {
                 label="Total Alerts"
                 value={overviewStats.totalAlerts}
                 color="orange"
+                onClick={() => navigate("/admin/alerts")}
               />
               <StatsCard
                 icon={<Clock className="w-5 h-5" />}
                 label="Pending"
                 value={overviewStats.pendingAlerts}
                 color="yellow"
+                onClick={() => navigate("/admin/alerts?status=pending")}
               />
               <StatsCard
                 icon={<TrendingUp className="w-5 h-5" />}
                 label="In Progress"
                 value={overviewStats.inProgressAlerts}
                 color="blue"
+                onClick={() => navigate("/admin/alerts?status=in-progress")}
               />
               <StatsCard
                 icon={<CheckCircle className="w-5 h-5" />}
                 label="Resolved"
                 value={overviewStats.resolvedAlerts}
                 color="green"
+                onClick={() => navigate("/admin/alerts?status=resolved")}
               />
             </div>
 
