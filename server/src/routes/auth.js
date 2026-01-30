@@ -183,77 +183,125 @@ router.post('/forgot-password', async (req, res) => {
   const user = await User.findOne({ email: normalizedEmail })
   if (!user) {
     // Don't reveal if email exists (security best practice)
-    return res.json({ message: 'If email exists, reset link will be sent' })
+    return res.json({ message: 'If email exists, OTP will be sent' })
   }
 
-  // Generate reset token (valid for 1 hour)
-  const resetToken = crypto.randomBytes(32).toString('hex')
-  const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex')
-  const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+  // Generate 6-digit OTP
+  const otp = crypto.randomInt(100000, 999999).toString()
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
 
-  await User.updateOne(
-    { _id: user._id },
-    { resetToken: resetTokenHash, resetTokenExpires }
-  )
-
-  const resetUrl = `${env.frontendUrl.replace(/\/$/, '')}/forgot-password?token=${resetToken}`
+  // Store OTP for password reset
+  await OTP.create({
+    email: normalizedEmail,
+    otp,
+    expiresAt,
+    verified: false,
+    purpose: 'password-reset',
+  })
 
   if (emailReady) {
     try {
       await transporter.sendMail({
-        from: env.gmailEmail,
+        from: `"MTBM System" <${env.gmailEmail}>`,
         to: user.email,
-        subject: 'Reset your MTBM password',
-        text: `Hi ${user.fullName || 'there'},\n\nUse this link to reset your password: ${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, you can ignore this email.`,
+        subject: 'Your MTBM Password Reset Code',
         html: `
-          <p>Hi ${user.fullName || 'there'},</p>
-          <p>Use this link to reset your password (expires in 1 hour):</p>
-          <p><a href="${resetUrl}" style="background-color: #5B89B1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
-          <p style="color: #666; font-size: 12px;">If you didn't request this, you can ignore this email.</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #5B89B1 0%, #4a7294 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">MTBM Dashboard</h1>
+            </div>
+            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e0e0e0;">
+              <h2 style="color: #333; margin-top: 0;">Password Reset</h2>
+              <p style="color: #666; font-size: 16px;">Hi ${user.fullName || 'there'},</p>
+              <p style="color: #666; font-size: 16px;">Your password reset code is:</p>
+              <div style="background: white; padding: 20px; text-align: center; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 25px 0; border: 2px dashed #5B89B1; border-radius: 8px; color: #5B89B1;">
+                ${otp}
+              </div>
+              <p style="color: #999; font-size: 14px; margin-top: 25px;">This code will expire in <strong>10 minutes</strong>.</p>
+              <p style="color: #999; font-size: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">If you didn't request this code, please ignore this email.</p>
+            </div>
+          </div>
         `,
       })
-      console.log(`Password reset email sent to ${user.email}`)
+      console.log(`Password reset OTP sent to ${user.email}`)
     } catch (err) {
-      console.error('Failed to send reset email:', err.message)
-      // Still respond generically so reset UX isn't blocked
+      console.error('Failed to send reset OTP email:', err.message)
+      return res.status(500).json({ message: 'Failed to send OTP. Please try again.' })
     }
   } else {
-    // Fallback: log the reset URL for dev
-    console.log(`Reset URL (email not configured): ${resetUrl}`)
+    // Fallback: log the OTP for dev
+    console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
+    console.log(`📧 [DEV MODE] Password Reset OTP for ${normalizedEmail}`)
+    console.log(`🔐 CODE: ${otp}`)
+    console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`)
   }
 
-  return res.json({ message: 'If email exists, reset link will be sent' })
+  return res.json({ message: 'OTP sent successfully', emailSent: true })
+})
+
+router.post('/verify-reset-otp', async (req, res) => {
+  const { email, otp } = req.body ?? {}
+  const normalizedEmail = String(email || '').trim().toLowerCase()
+  const normalizedOtp = String(otp || '').trim()
+
+  if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' })
+  if (!normalizedOtp) return res.status(400).json({ message: 'OTP is required' })
+
+  const otpRecord = await OTP.findOne({
+    email: normalizedEmail,
+    otp: normalizedOtp,
+    verified: false,
+    expiresAt: { $gt: new Date() },
+  }).sort({ createdAt: -1 })
+
+  if (!otpRecord) {
+    return res.status(400).json({ message: 'Invalid or expired OTP' })
+  }
+
+  // Mark as verified but don't delete yet - will be used for password reset
+  await OTP.updateOne({ _id: otpRecord._id }, { verified: true })
+
+  return res.json({ message: 'OTP verified successfully', verified: true })
 })
 
 router.post('/reset-password', async (req, res) => {
-  const { token, newPassword } = req.body ?? {}
+  const { email, otp, newPassword } = req.body ?? {}
+  const normalizedEmail = String(email || '').trim().toLowerCase()
+  const normalizedOtp = String(otp || '').trim()
   const normalizedPassword = String(newPassword || '').trim()
 
-  if (!token) return res.status(400).json({ message: 'Reset token is required' })
+  if (!normalizedEmail) return res.status(400).json({ message: 'Email is required' })
+  if (!normalizedOtp) return res.status(400).json({ message: 'OTP is required' })
   if (!normalizedPassword) return res.status(400).json({ message: 'New password is required' })
   if (normalizedPassword.length < 6) {
     return res.status(400).json({ message: 'Password must be at least 6 characters' })
   }
 
-  const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex')
-  const user = await User.findOne({
-    resetToken: resetTokenHash,
-    resetTokenExpires: { $gt: new Date() },
-  })
+  // Find verified OTP
+  const otpRecord = await OTP.findOne({
+    email: normalizedEmail,
+    otp: normalizedOtp,
+    verified: true,
+    expiresAt: { $gt: new Date() },
+  }).sort({ createdAt: -1 })
 
+  if (!otpRecord) {
+    return res.status(400).json({ message: 'Invalid or expired OTP. Please request a new one.' })
+  }
+
+  const user = await User.findOne({ email: normalizedEmail })
   if (!user) {
-    return res.status(400).json({ message: 'Invalid or expired reset token' })
+    return res.status(400).json({ message: 'User not found' })
   }
 
   const passwordHash = await bcrypt.hash(normalizedPassword, 10)
   await User.updateOne(
     { _id: user._id },
-    {
-      passwordHash,
-      resetToken: undefined,
-      resetTokenExpires: undefined,
-    }
+    { passwordHash }
   )
+
+  // Delete used OTP
+  await OTP.deleteOne({ _id: otpRecord._id })
 
   return res.json({ message: 'Password reset successful' })
 })
