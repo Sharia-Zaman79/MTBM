@@ -186,7 +186,7 @@ function UserCard({ user, type, onChat, unreadCount = 0 }) {
           <Button
             size="sm"
             variant="outline"
-            className="h-7 px-2 text-xs border-purple-500 text-purple-400 hover:bg-purple-500/20 relative"
+            className="h-7 px-3 text-xs bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white border-0 shadow-lg shadow-purple-500/25 relative"
             onClick={handleStartChat}
           >
             <MessageCircle className="w-3.5 h-3.5 mr-1" />
@@ -632,7 +632,7 @@ export default function AdminDashboard() {
                 variant="outline"
                 size="sm"
                 onClick={loadData}
-                className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border-0 shadow-lg shadow-cyan-500/20"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
@@ -752,7 +752,7 @@ export default function AdminDashboard() {
                   "Resolved Issues": e.stats?.resolvedIssues || 0,
                   "Avg Response (min)": e.stats?.avgResponseTime || 0,
                 })), "engineers_report")}
-                className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white border-0 shadow-lg shadow-blue-500/20"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
@@ -787,7 +787,7 @@ export default function AdminDashboard() {
                   "Avg Fix Time (min)": t.stats?.avgFixTime || 0,
                   "Rating": t.stats?.avgRating || "N/A",
                 })), "technicians_report")}
-                className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+                className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white border-0 shadow-lg shadow-orange-500/20"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export CSV
@@ -832,7 +832,7 @@ export default function AdminDashboard() {
                   variant="outline"
                   size="sm"
                   onClick={loadMonthlyReport}
-                  className="border-neutral-700 text-neutral-300 hover:bg-neutral-800"
+                  className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white border-0 shadow-lg shadow-emerald-500/20"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Generate
@@ -841,7 +841,7 @@ export default function AdminDashboard() {
                   variant="outline"
                   size="sm"
                   onClick={exportToPDF}
-                  className="border-neutral-700 text-neutral-300 hover:bg-neutral-800 print:hidden"
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 text-white border-0 shadow-lg shadow-purple-500/20 print:hidden"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Export PDF
@@ -882,7 +882,7 @@ export default function AdminDashboard() {
                       variant="ghost"
                       size="sm"
                       onClick={() => exportToCSV(monthlyReport.technicianReport, "technician_monthly_report")}
-                      className="text-neutral-400 hover:text-white print:hidden"
+                      className="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 hover:text-orange-300 print:hidden"
                     >
                       <Download className="w-4 h-4 mr-1" />
                       CSV
@@ -927,7 +927,7 @@ export default function AdminDashboard() {
                       variant="ghost"
                       size="sm"
                       onClick={() => exportToCSV(monthlyReport.engineerReport, "engineer_monthly_report")}
-                      className="text-neutral-400 hover:text-white print:hidden"
+                      className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300 print:hidden"
                     >
                       <Download className="w-4 h-4 mr-1" />
                       CSV
