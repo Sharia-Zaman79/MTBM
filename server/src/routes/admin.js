@@ -178,8 +178,14 @@ router.get('/technicians', verifyAdmin, async (req, res) => {
 router.get('/reports/monthly', verifyAdmin, async (req, res) => {
   try {
     const { month, year } = req.query
-    const targetMonth = parseInt(month) || new Date().getMonth()
-    const targetYear = parseInt(year) || new Date().getFullYear()
+    const monthNum = Number(month)
+    const yearNum = Number(year)
+    const targetMonth = Number.isInteger(monthNum) && monthNum >= 0 && monthNum <= 11
+      ? monthNum
+      : new Date().getMonth()
+    const targetYear = Number.isInteger(yearNum) && yearNum >= 1970
+      ? yearNum
+      : new Date().getFullYear()
     
     const startDate = new Date(targetYear, targetMonth, 1)
     const endDate = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59)
@@ -272,6 +278,108 @@ router.get('/reports/monthly', verifyAdmin, async (req, res) => {
   } catch (err) {
     console.error('Error generating monthly report:', err)
     res.status(500).json({ message: 'Failed to generate report' })
+  }
+})
+
+// Get monthly report for a specific engineer or technician
+router.get('/reports/monthly/user', verifyAdmin, async (req, res) => {
+  try {
+    const { month, year, userId } = req.query
+    if (!userId) {
+      return res.status(400).json({ message: 'userId is required' })
+    }
+
+    const monthNum = Number(month)
+    const yearNum = Number(year)
+    const targetMonth = Number.isInteger(monthNum) && monthNum >= 0 && monthNum <= 11
+      ? monthNum
+      : new Date().getMonth()
+    const targetYear = Number.isInteger(yearNum) && yearNum >= 1970
+      ? yearNum
+      : new Date().getFullYear()
+
+    const startDate = new Date(targetYear, targetMonth, 1)
+    const endDate = new Date(targetYear, targetMonth + 1, 0, 23, 59, 59)
+
+    const user = await User.findById(userId).select('-passwordHash').lean()
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+    if (user.role !== 'engineer' && user.role !== 'technician') {
+      return res.status(400).json({ message: 'User must be an engineer or technician' })
+    }
+
+    const baseDateFilter = { createdAt: { $gte: startDate, $lte: endDate } }
+    const alerts = await RepairAlert.find({
+      ...baseDateFilter,
+      ...(user.role === 'engineer'
+        ? { engineerId: user._id }
+        : { technicianId: user._id }),
+    })
+      .sort({ createdAt: -1 })
+      .lean()
+
+    const period = startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+
+    let stats = {}
+    if (user.role === 'engineer') {
+      const accepted = alerts.filter(a => a.acceptedAt)
+      let avgResponseTimeMin = 0
+      if (accepted.length > 0) {
+        const total = accepted.reduce((sum, a) => sum + (new Date(a.acceptedAt) - new Date(a.createdAt)), 0)
+        avgResponseTimeMin = Math.round(total / accepted.length / 60000)
+      }
+
+      stats = {
+        totalIssuesReported: alerts.length,
+        resolvedIssues: alerts.filter(a => a.status === 'resolved').length,
+        criticalIssues: alerts.filter(a => a.priority === 'critical').length,
+        highIssues: alerts.filter(a => a.priority === 'high').length,
+        mediumIssues: alerts.filter(a => a.priority === 'medium').length,
+        lowIssues: alerts.filter(a => a.priority === 'low').length,
+        avgResponseTime: `${avgResponseTimeMin} min`,
+      }
+    } else {
+      const completed = alerts.filter(a => a.status === 'resolved')
+      const withFixTime = completed.filter(a => a.acceptedAt && a.resolvedAt)
+      let avgFixTimeMin = 0
+      if (withFixTime.length > 0) {
+        const total = withFixTime.reduce((sum, a) => sum + (new Date(a.resolvedAt) - new Date(a.acceptedAt)), 0)
+        avgFixTimeMin = Math.round(total / withFixTime.length / 60000)
+      }
+
+      const rated = alerts.filter(a => a.rating)
+      const avgRating = rated.length > 0
+        ? Number((rated.reduce((sum, a) => sum + a.rating, 0) / rated.length).toFixed(1))
+        : null
+
+      stats = {
+        tasksAssigned: alerts.length,
+        tasksCompleted: completed.length,
+        tasksInProgress: alerts.filter(a => a.status === 'in-progress').length,
+        avgFixTime: `${avgFixTimeMin} min`,
+        successRate: alerts.length > 0 ? `${Math.round((completed.length / alerts.length) * 100)}%` : '0%',
+        avgRating,
+      }
+    }
+
+    res.json({
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+      summary: {
+        period,
+        totalAlerts: alerts.length,
+      },
+      stats,
+      alerts,
+    })
+  } catch (err) {
+    console.error('Error generating monthly user report:', err)
+    res.status(500).json({ message: 'Failed to generate user report' })
   }
 })
 

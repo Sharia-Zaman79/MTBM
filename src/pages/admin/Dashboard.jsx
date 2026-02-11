@@ -254,8 +254,11 @@ export default function AdminDashboard() {
   const [engineers, setEngineers] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [monthlyReport, setMonthlyReport] = useState(null);
+  const [monthlyUserReport, setMonthlyUserReport] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [reportScope, setReportScope] = useState("overall"); // overall | engineer | technician
+  const [selectedReportUserId, setSelectedReportUserId] = useState("");
   
   // Chat state
   const [chatUser, setChatUser] = useState(null);
@@ -515,11 +518,35 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadMonthlyUserReport = async () => {
+    if (!selectedReportUserId) {
+      setMonthlyUserReport(null);
+      return;
+    }
+    try {
+      const report = await adminApi.getMonthlyUserReport(selectedReportUserId, selectedMonth, selectedYear);
+      setMonthlyUserReport(report);
+    } catch (err) {
+      console.error("Error loading monthly user report:", err);
+      toast.error("Failed to load user report");
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "reports") {
-      loadMonthlyReport();
+      if (reportScope === "overall") {
+        loadMonthlyReport();
+      } else {
+        loadMonthlyUserReport();
+      }
     }
-  }, [activeTab, selectedMonth, selectedYear]);
+  }, [activeTab, selectedMonth, selectedYear, reportScope, selectedReportUserId]);
+
+  useEffect(() => {
+    // Keep selected user in sync when switching scope
+    setMonthlyUserReport(null);
+    setSelectedReportUserId("");
+  }, [reportScope]);
 
   const handleLogout = () => {
     clearCurrentUser();
@@ -811,6 +838,30 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-semibold">Monthly Maintenance Summary Report</h2>
               <div className="flex items-center gap-3">
                 <select
+                  value={reportScope}
+                  onChange={(e) => setReportScope(e.target.value)}
+                  className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="overall">Overall (All)</option>
+                  <option value="engineer">Per Engineer</option>
+                  <option value="technician">Per Technician</option>
+                </select>
+
+                {reportScope !== "overall" && (
+                  <select
+                    value={selectedReportUserId}
+                    onChange={(e) => setSelectedReportUserId(e.target.value)}
+                    className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm min-w-[220px]"
+                  >
+                    <option value="">Select {reportScope}...</option>
+                    {(reportScope === "engineer" ? engineers : technicians).map((u) => (
+                      <option key={u._id} value={u._id}>
+                        {u.fullName}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                   className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm"
@@ -831,7 +882,17 @@ export default function AdminDashboard() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={loadMonthlyReport}
+                  onClick={() => {
+                    if (reportScope === "overall") {
+                      loadMonthlyReport();
+                    } else {
+                      if (!selectedReportUserId) {
+                        toast.error(`Please select a ${reportScope}`);
+                        return;
+                      }
+                      loadMonthlyUserReport();
+                    }
+                  }}
                   className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white border-0 shadow-lg shadow-emerald-500/20"
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
@@ -959,6 +1020,121 @@ export default function AdminDashboard() {
                         {(!monthlyReport.engineerReport || monthlyReport.engineerReport.length === 0) && (
                           <tr>
                             <td colSpan={6} className="text-center py-4 text-neutral-500">No data available</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {reportScope !== "overall" && monthlyUserReport && (
+              <div className="space-y-6" id="user-report-content">
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 print:bg-gray-100 print:border-gray-300">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {monthlyUserReport.user?.fullName} ({monthlyUserReport.user?.role})
+                      </h3>
+                      <p className="text-sm text-neutral-400 print:text-gray-600">
+                        {monthlyUserReport.user?.email} • {monthlyUserReport.summary?.period}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const rows = (monthlyUserReport.alerts || []).map((a) => ({
+                          Subsystem: a.subsystem,
+                          Issue: a.issue,
+                          Priority: a.priority,
+                          Status: a.status,
+                          "Created At": a.createdAt ? new Date(a.createdAt).toLocaleString() : "",
+                          "Accepted At": a.acceptedAt ? new Date(a.acceptedAt).toLocaleString() : "",
+                          "Resolved At": a.resolvedAt ? new Date(a.resolvedAt).toLocaleString() : "",
+                          Technician: a.technicianName || "",
+                          Engineer: a.engineerName || "",
+                          Rating: a.rating ?? "",
+                        }));
+                        exportToCSV(rows, `${monthlyUserReport.user?.role}_monthly_report_${monthlyUserReport.user?.fullName?.replace(/\s+/g, "_")}`);
+                      }}
+                      className="bg-neutral-800 text-neutral-200 hover:bg-neutral-700 print:hidden"
+                    >
+                      <Download className="w-4 h-4 mr-1" />
+                      CSV
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-white print:text-black">{monthlyUserReport.summary?.totalAlerts || 0}</p>
+                      <p className="text-sm text-neutral-400 print:text-gray-600">Total Alerts</p>
+                    </div>
+                    {monthlyUserReport.user?.role === "engineer" ? (
+                      <>
+                        <div className="text-center">
+                          <p className="text-3xl font-bold text-green-400 print:text-green-600">{monthlyUserReport.stats?.resolvedIssues || 0}</p>
+                          <p className="text-sm text-neutral-400 print:text-gray-600">Resolved</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-3xl font-bold text-red-400 print:text-red-600">{monthlyUserReport.stats?.criticalIssues || 0}</p>
+                          <p className="text-sm text-neutral-400 print:text-gray-600">Critical</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-3xl font-bold text-blue-400 print:text-blue-600">{monthlyUserReport.stats?.avgResponseTime || "0 min"}</p>
+                          <p className="text-sm text-neutral-400 print:text-gray-600">Avg Response</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-center">
+                          <p className="text-3xl font-bold text-green-400 print:text-green-600">{monthlyUserReport.stats?.tasksCompleted || 0}</p>
+                          <p className="text-sm text-neutral-400 print:text-gray-600">Completed</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-3xl font-bold text-blue-400 print:text-blue-600">{monthlyUserReport.stats?.successRate || "0%"}</p>
+                          <p className="text-sm text-neutral-400 print:text-gray-600">Success Rate</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-3xl font-bold text-orange-400 print:text-orange-600">{monthlyUserReport.stats?.avgFixTime || "0 min"}</p>
+                          <p className="text-sm text-neutral-400 print:text-gray-600">Avg Fix Time</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 print:bg-gray-100 print:border-gray-300">
+                  <h3 className="font-semibold text-lg mb-4">Alerts</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-neutral-700 print:border-gray-400">
+                          <th className="text-left py-2 px-3 text-neutral-400 print:text-gray-600">Subsystem</th>
+                          <th className="text-left py-2 px-3 text-neutral-400 print:text-gray-600">Issue</th>
+                          <th className="text-center py-2 px-3 text-neutral-400 print:text-gray-600">Priority</th>
+                          <th className="text-center py-2 px-3 text-neutral-400 print:text-gray-600">Status</th>
+                          <th className="text-center py-2 px-3 text-neutral-400 print:text-gray-600">Created</th>
+                          <th className="text-center py-2 px-3 text-neutral-400 print:text-gray-600">Accepted</th>
+                          <th className="text-center py-2 px-3 text-neutral-400 print:text-gray-600">Resolved</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(monthlyUserReport.alerts || []).map((a) => (
+                          <tr key={a._id} className="border-b border-neutral-800 print:border-gray-300">
+                            <td className="py-2 px-3">{a.subsystem}</td>
+                            <td className="py-2 px-3">{a.issue}</td>
+                            <td className="text-center py-2 px-3 capitalize">{a.priority}</td>
+                            <td className="text-center py-2 px-3 capitalize">{a.status}</td>
+                            <td className="text-center py-2 px-3">{a.createdAt ? new Date(a.createdAt).toLocaleDateString() : ""}</td>
+                            <td className="text-center py-2 px-3">{a.acceptedAt ? new Date(a.acceptedAt).toLocaleDateString() : ""}</td>
+                            <td className="text-center py-2 px-3">{a.resolvedAt ? new Date(a.resolvedAt).toLocaleDateString() : ""}</td>
+                          </tr>
+                        ))}
+                        {(!monthlyUserReport.alerts || monthlyUserReport.alerts.length === 0) && (
+                          <tr>
+                            <td colSpan={7} className="text-center py-4 text-neutral-500">No data available</td>
                           </tr>
                         )}
                       </tbody>

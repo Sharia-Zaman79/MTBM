@@ -46,6 +46,16 @@ export const adminApi = {
     return apiRequest(`/api/admin/reports/monthly${query ? `?${query}` : ''}`)
   },
 
+  // Get monthly report for a specific engineer/technician
+  getMonthlyUserReport: async (userId, month, year) => {
+    const params = new URLSearchParams()
+    if (userId) params.append('userId', userId)
+    if (month !== undefined) params.append('month', month)
+    if (year !== undefined) params.append('year', year)
+    const query = params.toString()
+    return apiRequest(`/api/admin/reports/monthly/user${query ? `?${query}` : ''}`)
+  },
+
   // Get all alerts
   getAlerts: async (status, priority, limit) => {
     const params = new URLSearchParams()
