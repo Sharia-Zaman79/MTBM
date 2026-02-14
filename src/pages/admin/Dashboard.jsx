@@ -510,6 +510,8 @@ export default function AdminDashboard() {
 
   const loadMonthlyReport = async () => {
     try {
+      // Clear any per-user report when generating overall report
+      setMonthlyUserReport(null);
       const report = await adminApi.getMonthlyReport(selectedMonth, selectedYear);
       setMonthlyReport(report);
     } catch (err) {
@@ -521,9 +523,13 @@ export default function AdminDashboard() {
   const loadMonthlyUserReport = async () => {
     if (!selectedReportUserId) {
       setMonthlyUserReport(null);
+      // Also clear overall report so we don't show overall data in per-user mode
+      setMonthlyReport(null);
       return;
     }
     try {
+      // Clear overall report when generating per-user report
+      setMonthlyReport(null);
       const report = await adminApi.getMonthlyUserReport(selectedReportUserId, selectedMonth, selectedYear);
       setMonthlyUserReport(report);
     } catch (err) {
@@ -544,6 +550,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Keep selected user in sync when switching scope
+    setMonthlyReport(null);
     setMonthlyUserReport(null);
     setSelectedReportUserId("");
   }, [reportScope]);
@@ -596,7 +603,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-950">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-950 print:hidden">
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <img
@@ -624,7 +631,7 @@ export default function AdminDashboard() {
       </header>
 
       {/* Navigation Tabs */}
-      <div className="border-b border-neutral-800 bg-neutral-950/50">
+      <div className="border-b border-neutral-800 bg-neutral-950/50 print:hidden">
         <div className="flex gap-1 px-6">
           {[
             { id: "overview", label: "Overview", icon: Activity },
@@ -836,7 +843,7 @@ export default function AdminDashboard() {
           <div className="space-y-6 print:text-black print:bg-white">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <h2 className="text-xl font-semibold">Monthly Maintenance Summary Report</h2>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 print:hidden">
                 <select
                   value={reportScope}
                   onChange={(e) => setReportScope(e.target.value)}
@@ -910,7 +917,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {monthlyReport && (
+            {reportScope === "overall" && monthlyReport && (
               <div className="space-y-6" id="report-content">
                 {/* Summary */}
                 <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 print:bg-gray-100 print:border-gray-300">
