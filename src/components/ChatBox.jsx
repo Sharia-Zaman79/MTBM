@@ -430,7 +430,7 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 w-[400px] h-[520px] bg-neutral-950 border border-neutral-800 rounded-xl shadow-2xl flex flex-col z-50 overflow-hidden">
+    <div className="fixed bottom-0 right-0 sm:bottom-4 sm:right-4 w-full sm:w-[400px] h-[100dvh] sm:h-[520px] bg-neutral-950 border border-neutral-800 sm:rounded-xl shadow-2xl flex flex-col z-50 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-neutral-900 border-b border-neutral-800">
         <div className="flex items-center gap-3">

@@ -867,7 +867,7 @@ export default function MessengerPanel({ isOpen, onClose }) {
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0) + (adminConv.unreadCount || 0);
 
   return (
-    <div className="fixed bottom-4 right-4 w-[400px] h-[600px] bg-neutral-950 border border-neutral-800 rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden">
+    <div className="fixed bottom-0 right-0 sm:bottom-4 sm:right-4 w-full sm:w-[400px] h-[100dvh] sm:h-[600px] bg-neutral-950 border border-neutral-800 sm:rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden">
       {/* Top bar (only on list view) */}
       {view === "list" && (
         <div className="flex items-center justify-between px-4 py-3 bg-neutral-900 border-b border-neutral-800">

@@ -195,9 +195,9 @@ const Signup = () => {
 	return (
 		<div className="min-h-screen w-full bg-white text-neutral-900">
 			<header className="w-full bg-neutral-900/80">
-				<div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
+				<div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 flex-wrap">
 					<Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-						<div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800">
+						<div className="h-8 w-8 sm:h-10 sm:w-10 overflow-hidden rounded-full bg-neutral-800">
 							<img
 								src="/assets/mtbm/logo.png"
 								alt="MTBM logo"
@@ -205,12 +205,12 @@ const Signup = () => {
 							/>
 						</div>
 						<div className="leading-tight">
-							<div className="text-lg font-semibold text-white">MTBM</div>
+							<div className="text-base sm:text-lg font-semibold text-white">MTBM</div>
 							<div className="text-xs text-neutral-300">Dashboard System</div>
 						</div>
 					</Link>
 
-					<div className="flex items-center gap-3">
+					<div className="flex items-center gap-2 sm:gap-3">
 						<Button
 							type="button"
 							onClick={() => setAccountType("technician")}
@@ -248,15 +248,15 @@ const Signup = () => {
 				</div>
 			</header>
 
-			<main className="mx-auto flex w-full max-w-6xl items-center justify-center px-6 py-10">
+			<main className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 sm:px-6 py-6 sm:py-10">
 				<Card className="w-full max-w-xl overflow-hidden border-none bg-neutral-200 shadow-none">
-					<CardHeader className="relative bg-slate-800 px-8 py-6 text-white">
+					<CardHeader className="relative bg-slate-800 px-6 sm:px-8 py-5 sm:py-6 text-white">
 						<div className="flex items-start gap-3">
 							<div className="mt-1 grid h-8 w-8 place-content-center rounded-md bg-white/10">
 								<Wrench className="h-5 w-5" />
 							</div>
 							<div>
-								<CardTitle className="text-4xl font-extrabold leading-none">Sign Up</CardTitle>
+								<CardTitle className="text-2xl sm:text-4xl font-extrabold leading-none">Sign Up</CardTitle>
 								<div className="mt-1 text-sm text-white/80">{accountLabel} Account</div>
 							</div>
 						</div>
@@ -264,11 +264,11 @@ const Signup = () => {
 						<img
 							src="/assets/mtbm/bolt.png"
 							alt=""
-							className="pointer-events-none absolute -right-4 -top-6 h-28 w-28 rotate-12 opacity-95"
+							className="pointer-events-none absolute -right-4 -top-6 h-20 w-20 sm:h-28 sm:w-28 rotate-12 opacity-95"
 						/>
 					</CardHeader>
 
-					<CardContent className="px-10 py-8">
+					<CardContent className="px-4 sm:px-10 py-6 sm:py-8">
 						<form className="space-y-5" onSubmit={handleSubmit}>
 							<div className="space-y-2">
 								<label className="text-xs font-semibold text-neutral-800">Full Name</label>

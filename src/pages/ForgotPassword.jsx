@@ -251,7 +251,7 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen w-full bg-white text-neutral-900">
       <header className="w-full bg-neutral-900/80">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-6 py-4">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 py-3 sm:py-4">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="h-10 w-10 overflow-hidden rounded-full bg-neutral-800">
               <img
@@ -268,15 +268,15 @@ const ForgotPassword = () => {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-6xl items-center justify-center px-6 py-10">
+      <main className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 sm:px-6 py-6 sm:py-10">
         <Card className="w-full max-w-xl overflow-hidden border-none bg-neutral-200 shadow-none">
-          <CardHeader className="relative bg-slate-800 px-8 py-6 text-white">
+          <CardHeader className="relative bg-slate-800 px-5 sm:px-8 py-5 sm:py-6 text-white">
             <div className="flex items-start gap-3">
               <div className="mt-1 grid h-8 w-8 place-content-center rounded-md bg-white/10">
                 <stepInfo.icon className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle className="text-4xl font-extrabold leading-none">
+                <CardTitle className="text-2xl sm:text-4xl font-extrabold leading-none">
                   {stepInfo.title}
                 </CardTitle>
                 <div className="mt-1 text-sm text-white/80">
@@ -308,7 +308,7 @@ const ForgotPassword = () => {
             )}
           </CardHeader>
 
-          <CardContent className="px-10 py-8">
+          <CardContent className="px-4 sm:px-10 py-6 sm:py-8">
             {/* Step 1: Email */}
             {step === "email" && (
               <form className="space-y-5" onSubmit={handleRequestOtp}>
@@ -360,7 +360,7 @@ const ForgotPassword = () => {
                         value={digit}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className="h-12 w-12 rounded-md border-neutral-400 bg-neutral-100 text-center text-xl font-bold"
+                        className="h-10 w-10 sm:h-12 sm:w-12 rounded-md border-neutral-400 bg-neutral-100 text-center text-lg sm:text-xl font-bold"
                       />
                     ))}
                   </div>

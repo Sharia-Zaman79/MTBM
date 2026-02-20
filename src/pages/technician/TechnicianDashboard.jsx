@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Bell, Settings, Trash2, X, Loader2, MessageCircle, Star, LogOut } from "lucide-react";
+import { Bell, Settings, Trash2, X, Loader2, MessageCircle, Star, LogOut, Menu } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { TechnicianProfilePopover } from "@/components/TechnicianProfile";
 import { loadCurrentUser, clearCurrentUser } from "@/lib/auth";
@@ -109,6 +109,7 @@ const TechnicianDashboard = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Chat state
   const [activeChatAlert, setActiveChatAlert] = useState(null);
@@ -336,9 +337,9 @@ const TechnicianDashboard = () => {
     <div className="min-h-screen w-full bg-black text-white">
       {/* Header */}
       <header className="w-full border-b border-neutral-800 bg-neutral-900/50">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-800">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 overflow-hidden rounded-full bg-neutral-800">
               <img
                 src="/assets/mtbm/logo.png"
                 alt="MTBM logo"
@@ -346,16 +347,16 @@ const TechnicianDashboard = () => {
               />
             </div>
             <div>
-              <h1 className="text-lg font-bold">Bored Tunnelers</h1>
-              <p className="text-xs text-neutral-400">Technician Dashboard</p>
+              <h1 className="text-base sm:text-lg font-bold">Bored Tunnelers</h1>
+              <p className="text-xs text-neutral-400 hidden sm:block">Technician Dashboard</p>
             </div>
           </Link>
 
-          {/* Navigation Tabs */}
-          <div className="flex items-center gap-4">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-2 lg:gap-4">
             <button
               onClick={() => setActiveTab("repair-alerts")}
-              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+              className={`px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-semibold transition-colors ${
                 activeTab === "repair-alerts"
                   ? "bg-blue-600 text-white"
                   : "text-neutral-400 hover:text-white"
@@ -365,7 +366,7 @@ const TechnicianDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab("component-wear")}
-              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+              className={`px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-semibold transition-colors ${
                 activeTab === "component-wear"
                   ? "bg-blue-600 text-white"
                   : "text-neutral-400 hover:text-white"
@@ -375,7 +376,7 @@ const TechnicianDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab("repair-jobs")}
-              className={`px-4 py-2 rounded-md text-sm font-semibold transition-colors ${
+              className={`px-3 lg:px-4 py-2 rounded-md text-xs lg:text-sm font-semibold transition-colors ${
                 activeTab === "repair-jobs"
                   ? "bg-blue-600 text-white"
                   : "text-neutral-400 hover:text-white"
@@ -383,36 +384,67 @@ const TechnicianDashboard = () => {
             >
               Repair Jobs
             </button>
-
-            {/* Alerts and Settings Icons */}
-            <div className="ml-8">
+            <div className="ml-4 lg:ml-8">
               <AlertsPopover
                 alerts={repairAlerts}
                 onClear={handleClearAlertHistory}
                 onRemove={handleRemoveAlert}
               />
             </div>
-
-            {/* Profile Popover */}
             <TechnicianProfilePopover className="ml-2" />
-
-            {/* Logout Button */}
             <button
               onClick={() => {
                 clearCurrentUser();
                 window.location.href = "/login";
               }}
-              className="ml-4 flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold transition-colors hover:bg-red-700"
+              className="ml-2 lg:ml-4 flex items-center gap-2 rounded-md bg-red-600 px-3 lg:px-4 py-2 text-xs lg:text-sm font-semibold transition-colors hover:bg-red-700"
             >
               <LogOut size={16} />
               Logout
             </button>
           </div>
+
+          {/* Mobile Navigation */}
+          <div className="flex md:hidden items-center gap-1 sm:gap-2">
+            <AlertsPopover
+              alerts={repairAlerts}
+              onClear={handleClearAlertHistory}
+              onRemove={handleRemoveAlert}
+            />
+            <button className="p-2 text-white hover:bg-neutral-800 rounded-lg" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+        {/* Mobile Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-neutral-800 bg-neutral-900/95 px-4 py-3 space-y-1">
+            {["repair-alerts", "component-wear", "repair-jobs"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => { setActiveTab(tab); setMobileMenuOpen(false); }}
+                className={`block w-full text-left rounded-md px-4 py-2.5 text-sm font-semibold transition-colors ${
+                  activeTab === tab ? "bg-blue-600 text-white" : "text-neutral-300 hover:bg-neutral-800"
+                }`}
+              >
+                {tab === "repair-alerts" ? "Repair Alerts" : tab === "component-wear" ? "Component Wear" : "Repair Jobs"}
+              </button>
+            ))}
+            <div className="flex items-center gap-3 px-4 py-2.5 border-t border-neutral-800 mt-2 pt-3">
+              <TechnicianProfilePopover />
+              <button
+                className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300"
+                onClick={() => { clearCurrentUser(); window.location.href = "/login"; }}
+              >
+                <LogOut className="h-4 w-4" /> Logout
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto w-full max-w-7xl px-6 py-10">
+      <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-10">
         {/* Repair Alerts Tab */}
         {activeTab === "repair-alerts" && (
           <div className="space-y-6">
@@ -440,7 +472,7 @@ const TechnicianDashboard = () => {
                 repairAlerts.map((alert) => (
                   <div
                     key={alert.id}
-                    className="flex items-center justify-between rounded-lg bg-neutral-700 px-6 py-4"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 rounded-lg bg-neutral-700 px-4 sm:px-6 py-4"
                   >
                     <div>
                       <div className="flex items-center gap-2">
@@ -556,7 +588,7 @@ const TechnicianDashboard = () => {
                     </div>
 
                     {/* Main Content Grid */}
-                    <div className="grid grid-cols-2 gap-8 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-4">
                       {/* Left Side */}
                       <div className="space-y-2">
                         <p className="text-sm text-neutral-300">
@@ -585,7 +617,7 @@ const TechnicianDashboard = () => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                       <button
                         onClick={() => {
                           setActiveChatAlert({

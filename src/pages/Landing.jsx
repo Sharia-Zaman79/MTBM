@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
+import { Menu, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import Toast from "@/components/ui/toast"
@@ -18,6 +19,7 @@ const Landing = () => {
   )
 
   const [activeTab, setActiveTab] = useState("overview")
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [expandedSections, setExpandedSections] = useState({})
   const location = useLocation()
   const [toastMessage, setToastMessage] = useState(location.state?.message || '')
@@ -33,8 +35,8 @@ const Landing = () => {
     <div className="min-h-screen w-full bg-black text-white">
       <Toast message={toastMessage} onClose={() => setToastMessage('')} />
       <header className="w-full bg-neutral-900/80">
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-6 py-4">
-          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-neutral-800">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-4 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="h-8 w-8 sm:h-10 sm:w-10 shrink-0 overflow-hidden rounded-full bg-neutral-800">
             <img
               src="/assets/mtbm/logo.png"
               alt="MTBM logo"
@@ -42,8 +44,9 @@ const Landing = () => {
             />
           </div>
 
-          <nav className="flex-1 overflow-x-auto">
-            <div className="mx-auto flex min-w-max items-center justify-center gap-3">
+          {/* Desktop nav */}
+          <nav className="hidden md:flex flex-1 overflow-x-auto">
+            <div className="mx-auto flex min-w-max items-center justify-center gap-2 lg:gap-3">
               {tabs.map((tab) => {
                 const isActive = tab.key === activeTab
                 return (
@@ -52,7 +55,7 @@ const Landing = () => {
                     type="button"
                     onClick={() => setActiveTab(tab.key)}
                     className={
-                      "h-9 rounded-md px-5 text-sm font-semibold transition-colors " +
+                      "h-9 rounded-md px-3 lg:px-5 text-xs lg:text-sm font-semibold transition-colors " +
                       (isActive
                         ? "bg-[#5B89B1] text-black"
                         : "bg-neutral-200 text-neutral-900 hover:bg-neutral-300")
@@ -64,21 +67,57 @@ const Landing = () => {
             </div>
           </nav>
 
+          <div className="flex-1 md:flex-none" />
+
           <Button
             asChild
-            className="h-9 rounded-md bg-[#5B89B1] px-6 text-black hover:bg-[#4a7294]">
-            <Link to="/login">Sign in to dashboard</Link>
+            className="hidden sm:inline-flex h-9 rounded-md bg-[#5B89B1] px-4 lg:px-6 text-sm text-black hover:bg-[#4a7294]">
+            <Link to="/login">Sign in</Link>
           </Button>
+
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden p-2 text-white hover:bg-neutral-800 rounded-lg"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
+
+        {/* Mobile menu dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-neutral-800 px-4 py-3 space-y-2">
+            {tabs.map((tab) => {
+              const isActive = tab.key === activeTab
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => { setActiveTab(tab.key); setMobileMenuOpen(false); }}
+                  className={
+                    "block w-full text-left rounded-md px-4 py-2 text-sm font-semibold transition-colors " +
+                    (isActive
+                      ? "bg-[#5B89B1] text-black"
+                      : "text-neutral-300 hover:bg-neutral-800")
+                  }>
+                  {tab.label}
+                </button>
+              )
+            })}
+            <Link to="/login" className="block w-full text-center rounded-md px-4 py-2 text-sm font-semibold bg-[#5B89B1] text-black hover:bg-[#4a7294]" onClick={() => setMobileMenuOpen(false)}>
+              Sign in to dashboard
+            </Link>
+          </div>
+        )}
       </header>
 
       <main className="w-full">
         {activeTab === "overview" && (
           <div className="w-full">
             <div className="mx-auto w-full max-w-7xl px-6 py-10">
-              <section className="grid gap-8 md:grid-cols-2 md:items-center">
-                <div className="pt-8 group cursor-pointer">
-                  <h1 className="text-2xl font-extrabold text-neutral-400 md:text-3xl transition-transform duration-300 group-hover:scale-150 origin-left">
+              <section className="grid gap-6 sm:gap-8 md:grid-cols-2 md:items-center">
+                <div className="pt-4 sm:pt-8 group cursor-pointer">
+                  <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-400 md:text-3xl transition-transform duration-300 md:group-hover:scale-110 origin-left">
                     Bangladesh&apos;s 1st home-
                     <br />
                     grown Micro Tunnel Boring
@@ -98,11 +137,11 @@ const Landing = () => {
                   </h1>
                 </div>
 
-                <div className="flex justify-end group cursor-pointer">
+                <div className="flex justify-center md:justify-end group cursor-pointer">
                   <img
                     src="/assets/mtbm/landing/overview-hero.png.jpeg"
                     alt="MTBM"
-                    className="w-full max-w-xl transition-transform duration-300 group-hover:scale-150 origin-right"
+                    className="w-full max-w-xl transition-transform duration-300 md:group-hover:scale-110 origin-right"
                   />
                 </div>
               </section>
@@ -167,7 +206,7 @@ const Landing = () => {
           <section className="w-full">
             <div className="mx-auto w-full max-w-7xl px-6 py-10">
               <div className="flex flex-col items-center text-center">
-                <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
+                <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                   <span className="text-orange-500">NAVIGATION</span>
                   <br />
                   <span className="text-neutral-200">SYSTEM</span>
@@ -230,9 +269,9 @@ const Landing = () => {
         )}
 
         {activeTab === "propulsion" && (
-          <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <section className="grid gap-6 sm:gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center px-4 sm:px-6">
             <div className="flex flex-col items-center justify-center text-center">
-              <h1 className="text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                 <span className="text-neutral-500">PRO</span>
                 <span className="text-orange-500">PULSION</span>
               </h1>
@@ -275,9 +314,9 @@ const Landing = () => {
         )}
 
         {activeTab === "cutterhead" && (
-          <section className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <section className="grid gap-6 sm:gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center px-4 sm:px-6">
             <div className="flex flex-col items-center justify-center text-center">
-              <h1 className="text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                 <span className="text-neutral-500">CUTTER</span>
                 <span className="text-orange-500">HEAD</span>
               </h1>
@@ -319,9 +358,9 @@ const Landing = () => {
         )}
 
         {activeTab === "muck" && (
-          <section className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:items-center">
+          <section className="grid gap-6 sm:gap-10 lg:grid-cols-[1fr_1.4fr] lg:items-center px-4 sm:px-6">
             <div className="flex flex-col items-center justify-center text-center">
-              <h1 className="text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight animate-in fade-in slide-in-from-left-12 duration-700">
                 <span className="text-orange-500">MUCK</span>
                 <span className="text-neutral-500"> REMOVAL</span>
                 <br />

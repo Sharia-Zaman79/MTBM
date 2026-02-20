@@ -603,21 +603,21 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800 bg-neutral-950 print:hidden">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-800 bg-neutral-950 print:hidden">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
             <img
               src="/assets/mtbm/logo.png"
               alt="MTBM Logo"
-              className="h-10 w-10 rounded-full"
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full"
             />
             <div>
-              <span className="font-bold text-xl">MTBM</span>
-              <span className="text-neutral-500 text-sm ml-2">Admin Dashboard</span>
+              <span className="font-bold text-base sm:text-xl">MTBM</span>
+              <span className="text-neutral-500 text-xs sm:text-sm ml-1 sm:ml-2 hidden sm:inline">Admin Dashboard</span>
             </div>
           </Link>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <AdminProfilePopover />
           <Button
             variant="ghost"
@@ -632,7 +632,7 @@ export default function AdminDashboard() {
 
       {/* Navigation Tabs */}
       <div className="border-b border-neutral-800 bg-neutral-950/50 print:hidden">
-        <div className="flex gap-1 px-6">
+        <div className="flex gap-1 px-4 sm:px-6 overflow-x-auto">
           {[
             { id: "overview", label: "Overview", icon: Activity },
             { id: "engineers", label: "Engineers", icon: Users },
@@ -642,7 +642,7 @@ export default function AdminDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? "border-orange-500 text-white"
                   : "border-transparent text-neutral-400 hover:text-white"
@@ -656,7 +656,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <main className="p-6">
+      <main className="p-4 sm:p-6">
         {/* Overview Tab */}
         {activeTab === "overview" && overviewStats && (
           <div className="space-y-6">
@@ -843,11 +843,11 @@ export default function AdminDashboard() {
           <div className="space-y-6 print:text-black print:bg-white">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <h2 className="text-xl font-semibold">Monthly Maintenance Summary Report</h2>
-              <div className="flex items-center gap-3 print:hidden">
+              <div className="flex items-center gap-2 sm:gap-3 print:hidden flex-wrap">
                 <select
                   value={reportScope}
                   onChange={(e) => setReportScope(e.target.value)}
-                  className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm"
+                  className="bg-neutral-800 border border-neutral-700 rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm"
                 >
                   <option value="overall">Overall (All)</option>
                   <option value="engineer">Per Engineer</option>
@@ -1166,8 +1166,8 @@ export default function AdminDashboard() {
 
       {/* Chat Modal */}
       {chatUser && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-lg h-[600px] flex flex-col">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-neutral-900 border border-neutral-700 rounded-t-xl sm:rounded-xl w-full sm:max-w-lg h-[85vh] sm:h-[600px] flex flex-col">
             {/* Chat Header */}
             <div className="p-4 border-b border-neutral-700 flex items-center justify-between bg-purple-600 rounded-t-xl">
               <div className="flex items-center gap-3">

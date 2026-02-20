@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Bell, Trash2, X, MessageCircle, Star, LogOut } from "lucide-react";
+import { CheckCircle2, Bell, Trash2, X, MessageCircle, Star, LogOut, Menu } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
@@ -258,6 +258,7 @@ function AlertItem({ alert, onRemove }) {
 
 function DashboardContent() {
   const [selectedSensor, setSelectedSensor] = useState("Temperature");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [controls, setControls] = useState({
     propulsion: true,
     driveMotor: true,
@@ -454,23 +455,25 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Row 1: Header */}
-      <header className="flex items-center justify-between px-4 lg:px-8 py-3 lg:py-4 border-b border-gray-800">
-        <div className="flex items-center gap-3 lg:gap-4">
-          <Link to="/" className="flex items-center gap-3 lg:gap-4 hover:opacity-80 transition-opacity">
+      <header className="flex items-center justify-between px-3 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-4 border-b border-gray-800">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 lg:gap-4 hover:opacity-80 transition-opacity">
             <img
               src="/assets/mtbm/logo.png"
               alt="MTBM Logo"
-              className="h-8 w-8 lg:h-10 lg:w-10 rounded-full"
+              className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 rounded-full"
             />
-            <span className="font-bold text-base lg:text-xl">
+            <span className="font-bold text-sm sm:text-base lg:text-xl">
               MTBM
             </span>
           </Link>
-          <span className="text-gray-400 text-sm lg:text-base">
+          <span className="text-gray-400 text-xs sm:text-sm lg:text-base hidden sm:inline">
             TBM Control Panel
           </span>
         </div>
-        <nav className="flex items-center gap-2 lg:gap-4">
+
+        {/* Desktop nav */}
+        <nav className="hidden lg:flex items-center gap-2 lg:gap-4">
           <Button
             variant="outline"
             className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 text-xs lg:text-sm px-3 lg:px-4"
@@ -511,10 +514,48 @@ function DashboardContent() {
             <LogOut className="h-5 w-5" />
           </Button>
         </nav>
+
+        {/* Mobile nav icons */}
+        <div className="flex lg:hidden items-center gap-1 sm:gap-2">
+          <AlertsPopover />
+          <Button
+            variant="destructive"
+            className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 h-8"
+            onClick={handleStop}
+          >
+            STOP
+          </Button>
+          <button
+            className="p-2 text-white hover:bg-gray-800 rounded-lg"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </header>
 
+      {/* Mobile menu dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-b border-gray-800 bg-gray-900/95 px-4 py-3 space-y-1 z-50">
+          <Link to="/engineer" className="block w-full text-left rounded-md px-4 py-2.5 text-sm font-semibold bg-gray-800 text-white" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+          <Link to="/engineer/navigation" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Navigation</Link>
+          <Link to="/engineer/sensors" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Sensors</Link>
+          <Link to="/engineer/logbook" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Log Book</Link>
+          <div className="px-4 py-2.5"><CallTechnicianAction buttonVariant="ghost" buttonClassName="text-orange-400 hover:text-orange-300 w-full justify-start p-0" /></div>
+          <div className="flex items-center gap-3 px-4 py-2.5">
+            <TechnicianProfilePopover />
+            <button
+              className="flex items-center gap-2 text-sm text-gray-300 hover:text-white"
+              onClick={() => { clearCurrentUser(); window.location.href = "/login"; }}
+            >
+              <LogOut className="h-4 w-4" /> Logout
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Row 2: Status, TBM Image, Controls */}
-      <div className="flex-1 grid grid-cols-[200px_1fr_200px] lg:grid-cols-[250px_1fr_250px] xl:grid-cols-[300px_1fr_300px] gap-4 lg:gap-6 p-4 lg:p-8 border-b border-gray-800">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-[180px_1fr_180px] lg:grid-cols-[250px_1fr_250px] xl:grid-cols-[300px_1fr_300px] gap-4 lg:gap-6 p-3 sm:p-4 lg:p-8 border-b border-gray-800">
         {/* Left Column: System Status */}
         <div className="flex flex-col justify-center gap-6 lg:gap-8">
           <StatusItem title="All Systems Check" status="Normal" />
@@ -562,7 +603,7 @@ function DashboardContent() {
       </div>
 
       {/* Row 3: Sensor Selection and Data */}
-      <div className="grid grid-cols-[200px_1fr] lg:grid-cols-[250px_1fr] xl:grid-cols-[300px_1fr] gap-4 lg:gap-6 p-4 lg:p-8">
+      <div className="grid grid-cols-1 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr] xl:grid-cols-[300px_1fr] gap-4 lg:gap-6 p-3 sm:p-4 lg:p-8">
         {/* Left: Selection Panel */}
         <div className="bg-black rounded-lg p-4 lg:p-6 border border-gray-800">
           <div className="flex items-center justify-between mb-4 lg:mb-6">
@@ -679,10 +720,10 @@ function DashboardContent() {
       </div>
 
       {/* Floating Messenger Button */}
-      <div className="fixed bottom-6 right-6 z-40">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
         <Button
           onClick={() => setMessengerOpen(true)}
-          className="h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg"
+          className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg"
         >
           <MessageCircle className="h-6 w-6" />
           {unreadMsgCount > 0 && (

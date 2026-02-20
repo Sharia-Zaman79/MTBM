@@ -28,6 +28,7 @@ import {
   RotateCcw,
   ShieldCheck,
   LogOut,
+  Menu,
 } from "lucide-react";
 import {
   Popover,
@@ -199,6 +200,7 @@ function AlertItem({ alert, onRemove }) {
 export default function NavigationPage() {
   const navigate = useNavigate();
   const chainageRef = useRef(1250.5);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [imuData, setImuData] = useState({
     pitch: 1.2,
@@ -313,59 +315,48 @@ export default function NavigationPage() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 lg:px-8 py-3 lg:py-4 border-b border-gray-800">
-        <div className="flex items-center gap-3 lg:gap-4">
-          <Link to="/" className="flex items-center gap-3 lg:gap-4 hover:opacity-80 transition-opacity">
-            <img
-              src="/assets/mtbm/logo.png"
-              alt="MTBM Logo"
-              className="h-8 w-8 lg:h-10 lg:w-10 rounded-full"
-            />
-            <span className="font-bold text-base lg:text-xl">MTBM</span>
+      <header className="flex items-center justify-between px-3 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-4 border-b border-gray-800">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 lg:gap-4 hover:opacity-80 transition-opacity">
+            <img src="/assets/mtbm/logo.png" alt="MTBM Logo" className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 rounded-full" />
+            <span className="font-bold text-sm sm:text-base lg:text-xl">MTBM</span>
           </Link>
-          <span className="text-gray-400 text-sm lg:text-base">
-            IMU Navigation System
-          </span>
+          <span className="text-gray-400 text-xs sm:text-sm lg:text-base hidden sm:inline">IMU Navigation System</span>
         </div>
-        <nav className="flex items-center gap-2 lg:gap-4">
-          <Link to="/engineer">
-            <Button variant="ghost">Dashboard</Button>
-          </Link>
-          <Button
-            variant="outline"
-            className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 text-xs lg:text-sm px-3 lg:px-4"
-          >
-            Navigation
-          </Button>
-          <Link to="/engineer/sensors">
-            <Button variant="ghost">Sensors</Button>
-          </Link>
-          <Link to="/engineer/logbook">
-            <Button variant="ghost">Log Book</Button>
-          </Link>
-          <CallTechnicianAction
-            buttonVariant="ghost"
-            buttonClassName="text-orange-400 hover:text-orange-300"
-          />
+        {/* Desktop nav */}
+        <nav className="hidden lg:flex items-center gap-2 lg:gap-4">
+          <Link to="/engineer"><Button variant="ghost">Dashboard</Button></Link>
+          <Button variant="outline" className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 text-xs lg:text-sm px-3 lg:px-4">Navigation</Button>
+          <Link to="/engineer/sensors"><Button variant="ghost">Sensors</Button></Link>
+          <Link to="/engineer/logbook"><Button variant="ghost">Log Book</Button></Link>
+          <CallTechnicianAction buttonVariant="ghost" buttonClassName="text-orange-400 hover:text-orange-300" />
           <AlertsPopover />
           <TechnicianProfilePopover className="ml-1" />
-          <Button
-            variant="destructive"
-            className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"
-            onClick={handleStop}
-          >
-            STOP
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-gray-300 hover:text-white"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
+          <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6" onClick={handleStop}>STOP</Button>
+          <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white" onClick={handleLogout}><LogOut className="h-5 w-5" /></Button>
         </nav>
+        {/* Mobile nav */}
+        <div className="flex lg:hidden items-center gap-1 sm:gap-2">
+          <AlertsPopover />
+          <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 h-8" onClick={handleStop}>STOP</Button>
+          <button className="p-2 text-white hover:bg-gray-800 rounded-lg" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </header>
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-b border-gray-800 bg-gray-900/95 px-4 py-3 space-y-1 z-50">
+          <Link to="/engineer" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+          <Link to="/engineer/navigation" className="block w-full text-left rounded-md px-4 py-2.5 text-sm font-semibold bg-gray-800 text-white" onClick={() => setMobileMenuOpen(false)}>Navigation</Link>
+          <Link to="/engineer/sensors" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Sensors</Link>
+          <Link to="/engineer/logbook" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Log Book</Link>
+          <div className="px-4 py-2.5"><CallTechnicianAction buttonVariant="ghost" buttonClassName="text-orange-400 hover:text-orange-300 w-full justify-start p-0" /></div>
+          <div className="flex items-center gap-3 px-4 py-2.5">
+            <TechnicianProfilePopover />
+            <button className="flex items-center gap-2 text-sm text-gray-300 hover:text-white" onClick={handleLogout}><LogOut className="h-4 w-4" /> Logout</button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 p-4 lg:p-8 flex flex-col gap-6">

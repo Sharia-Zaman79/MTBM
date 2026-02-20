@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Bell, LogOut, Trash2, X, MessageCircle, Star, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Bell, LogOut, Trash2, X, MessageCircle, Star, Clock, CheckCircle, AlertCircle, Menu } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
 import { TechnicianProfilePopover } from "@/components/TechnicianProfile";
@@ -266,6 +266,7 @@ function CallTechnicianModal({ isOpen, onClose, onSubmit }) {
 export default function EngineerCallTechnician() {
   const navigate = useNavigate();
   const { addAlert } = useAlerts();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [myRequests, setMyRequests] = useState([]);
@@ -416,63 +417,46 @@ export default function EngineerCallTechnician() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 lg:px-8 py-3 lg:py-4 border-b border-gray-800">
-        <div className="flex items-center gap-3 lg:gap-4">
-          <Link to="/" className="flex items-center gap-3 lg:gap-4 hover:opacity-80 transition-opacity">
-            <img
-              src="/assets/mtbm/logo.png"
-              alt="MTBM Logo"
-              className="h-8 w-8 lg:h-10 lg:w-10 rounded-full"
-            />
-            <span className="font-bold text-base lg:text-xl">MTBM</span>
+      <header className="flex items-center justify-between px-3 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-4 border-b border-gray-800">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 lg:gap-4 hover:opacity-80 transition-opacity">
+            <img src="/assets/mtbm/logo.png" alt="MTBM Logo" className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 rounded-full" />
+            <span className="font-bold text-sm sm:text-base lg:text-xl">MTBM</span>
           </Link>
-          <span className="text-gray-400 text-sm lg:text-base">
-            Call Technician
-          </span>
+          <span className="text-gray-400 text-xs sm:text-sm lg:text-base hidden sm:inline">Call Technician</span>
         </div>
-
-        <nav className="flex items-center gap-2 lg:gap-4">
-          <Link to="/engineer">
-            <Button variant="ghost">Dashboard</Button>
-          </Link>
-          <Link to="/engineer/navigation">
-            <Button variant="ghost">Navigation</Button>
-          </Link>
-          <Link to="/engineer/sensors">
-            <Button variant="ghost">Sensors</Button>
-          </Link>
-          <Link to="/engineer/logbook">
-            <Button variant="ghost">Log Book</Button>
-          </Link>
-          <Button
-            variant="outline"
-            className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 text-xs lg:text-sm px-3 lg:px-4"
-          >
-            Call Technician
-          </Button>
-
+        <nav className="hidden lg:flex items-center gap-2 lg:gap-4">
+          <Link to="/engineer"><Button variant="ghost">Dashboard</Button></Link>
+          <Link to="/engineer/navigation"><Button variant="ghost">Navigation</Button></Link>
+          <Link to="/engineer/sensors"><Button variant="ghost">Sensors</Button></Link>
+          <Link to="/engineer/logbook"><Button variant="ghost">Log Book</Button></Link>
+          <Button variant="outline" className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700 text-xs lg:text-sm px-3 lg:px-4">Call Technician</Button>
           <AlertsPopover />
-
           <TechnicianProfilePopover className="ml-1" />
-
-          <Button
-            variant="destructive"
-            className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6"
-            onClick={handleStop}
-          >
-            STOP
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-gray-300 hover:text-white"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
+          <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs lg:text-sm px-4 lg:px-6" onClick={handleStop}>STOP</Button>
+          <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white" onClick={handleLogout}><LogOut className="h-5 w-5" /></Button>
         </nav>
+        <div className="flex lg:hidden items-center gap-1 sm:gap-2">
+          <AlertsPopover />
+          <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 h-8" onClick={handleStop}>STOP</Button>
+          <button className="p-2 text-white hover:bg-gray-800 rounded-lg" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </header>
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-b border-gray-800 bg-gray-900/95 px-4 py-3 space-y-1 z-50">
+          <Link to="/engineer" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+          <Link to="/engineer/navigation" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Navigation</Link>
+          <Link to="/engineer/sensors" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Sensors</Link>
+          <Link to="/engineer/logbook" className="block w-full text-left rounded-md px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-800" onClick={() => setMobileMenuOpen(false)}>Log Book</Link>
+          <Link to="/engineer/call-technician" className="block w-full text-left rounded-md px-4 py-2.5 text-sm font-semibold bg-gray-800 text-white" onClick={() => setMobileMenuOpen(false)}>Call Technician</Link>
+          <div className="flex items-center gap-3 px-4 py-2.5">
+            <TechnicianProfilePopover />
+            <button className="flex items-center gap-2 text-sm text-gray-300 hover:text-white" onClick={handleLogout}><LogOut className="h-4 w-4" /> Logout</button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 p-4 lg:p-8 flex flex-col gap-6">
@@ -513,9 +497,9 @@ export default function EngineerCallTechnician() {
                     key={request._id} 
                     className="bg-zinc-900 rounded-lg border border-zinc-800 p-4"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
                           <h3 className="font-semibold text-white">{request.subsystem}</h3>
                           <span className={`text-xs px-2 py-0.5 rounded-full border ${statusBadge.color}`}>
                             <StatusIcon className="w-3 h-3 inline mr-1" />
@@ -526,7 +510,7 @@ export default function EngineerCallTechnician() {
                           </span>
                         </div>
                         <p className="text-sm text-gray-400 mb-2">{request.issue}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                           <span>Created {formatTime(request.createdAt)}</span>
                           {request.technicianName && (
                             <span>Technician: <span className="text-gray-300">{request.technicianName}</span></span>

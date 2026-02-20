@@ -374,7 +374,7 @@ export function AdminChatBox({ currentUser }) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg bg-purple-600 hover:bg-purple-700"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 rounded-full w-12 h-12 sm:w-14 sm:h-14 shadow-lg bg-purple-600 hover:bg-purple-700"
       >
         <MessageCircle className="w-6 h-6" />
       </Button>
@@ -382,9 +382,9 @@ export function AdminChatBox({ currentUser }) {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 h-[550px] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50">
+    <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[550px] bg-white dark:bg-gray-800 sm:rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-purple-600 text-white rounded-t-lg flex items-center justify-between">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-purple-600 text-white sm:rounded-t-lg flex items-center justify-between">
         {selectedUser ? (
           <div className="flex items-center gap-2">
             <button onClick={handleBack} className="p-1 hover:bg-purple-700 rounded">
@@ -812,7 +812,7 @@ export function UserAdminChat({ currentUser }) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg bg-green-600 hover:bg-green-700 relative"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 rounded-full w-12 h-12 sm:w-14 sm:h-14 shadow-lg bg-green-600 hover:bg-green-700 relative"
       >
         <MessageCircle className="w-6 h-6" />
         {unreadCount > 0 && (
@@ -825,9 +825,9 @@ export function UserAdminChat({ currentUser }) {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 h-[550px] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50">
+    <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[550px] bg-white dark:bg-gray-800 sm:rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col z-50">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-green-600 text-white rounded-t-lg flex items-center justify-between">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-green-600 text-white sm:rounded-t-lg flex items-center justify-between">
         <div>
           <h3 className="font-semibold">Chat with Admin</h3>
           <p className="text-xs text-green-200">Support & Assistance</p>

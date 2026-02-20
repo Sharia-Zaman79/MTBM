@@ -140,16 +140,16 @@ const Login = () => {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-6xl items-center justify-center px-6 py-10">
+      <main className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 sm:px-6 py-6 sm:py-10">
         <Card className="w-full max-w-4xl border-none bg-neutral-200 text-neutral-900 shadow-none">
           <CardHeader className="pb-0">
-            <CardTitle className="text-3xl font-bold text-center">Welcome!</CardTitle>
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-center">Welcome!</CardTitle>
             <p className="text-center text-sm text-neutral-600">Please enter your details</p>
           </CardHeader>
 
           <CardContent className="pt-6">
             <div className="grid gap-8 md:grid-cols-2 md:items-center">
-              <div className="space-y-4 md:px-6">
+              <div className="space-y-4 sm:px-4 md:px-6">
                 {GOOGLE_CLIENT_ID ? (
                   <div
                     id="google-signin-button"
@@ -174,7 +174,7 @@ const Login = () => {
 
                 <div className="pb-4">
                   <p className="text-sm font-semibold text-neutral-800 mb-3">Select Your Role:</p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       type="button"
                       onClick={() => setSelectedRole('engineer')}
@@ -259,7 +259,7 @@ const Login = () => {
                 </p>
               </div>
 
-              <div className="md:px-6">
+              <div className="hidden md:block md:px-6">
                 <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-neutral-300">
                   <img
                     src="/assets/mtbm/login-hero.jpg"

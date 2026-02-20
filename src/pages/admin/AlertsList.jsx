@@ -96,7 +96,7 @@ function AlertCard({ alert }) {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
         <div className="flex items-center gap-2 text-neutral-400">
           <User className="w-4 h-4" />
           <span>Engineer: {alert.engineerName || "Unknown"}</span>
@@ -208,15 +208,15 @@ export default function AlertsList() {
     <div className="min-h-screen bg-neutral-950 text-white">
       {/* Header */}
       <header className="bg-neutral-900 border-b border-neutral-800 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link to="/admin">
               <Button variant="ghost" size="icon" className="text-neutral-400 hover:text-white">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-xl font-bold flex items-center gap-2">
+              <h1 className="text-base sm:text-xl font-bold flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-orange-400" />
                 {getPageTitle()}
               </h1>
@@ -250,8 +250,8 @@ export default function AlertsList() {
 
       {/* Filter Tabs */}
       <div className="bg-neutral-900/50 border-b border-neutral-800">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center gap-1 overflow-x-auto py-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-hide">
             {[
               { key: "all", label: "All", icon: AlertTriangle, color: "orange" },
               { key: "pending", label: "Pending", icon: Clock, color: "yellow" },
@@ -295,7 +295,7 @@ export default function AlertsList() {
       </div>
 
       {/* Alerts List */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <RefreshCw className="w-8 h-8 animate-spin text-orange-400" />
@@ -311,7 +311,7 @@ export default function AlertsList() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredAlerts.map((alert) => (
               <AlertCard key={alert._id} alert={alert} />
             ))}
