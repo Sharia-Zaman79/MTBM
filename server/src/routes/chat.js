@@ -8,6 +8,7 @@ import Message from '../models/Message.js'
 import RepairAlert from '../models/RepairAlert.js'
 import { User } from '../models/User.js'
 import { env } from '../lib/env.js'
+import { touchPresence, listActive } from '../lib/presence.js'
 
 // Setup uploads directory for chat images and voice
 const chatUploadsDir = path.join(process.cwd(), 'uploads', 'chat')
@@ -257,6 +258,126 @@ router.post('/:alertId/voice', verifyUser, verifyAlertAccess, (req, res) => {
       res.status(500).json({ message: 'Failed to send voice message' })
     }
   })
+})
+
+// Presence heartbeat (used to show who's active in this alert chat)
+router.post('/:alertId/presence', verifyUser, verifyAlertAccess, async (req, res) => {
+  try {
+    const { alertId } = req.params
+    const roomKey = `repair-alert:${alertId}`
+
+    touchPresence(roomKey, {
+      userId: req.user._id,
+      name: req.user.fullName || req.user.email,
+      role: req.isEngineer ? 'engineer' : 'technician',
+    })
+
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('Presence heartbeat error:', err)
+    res.status(500).json({ message: 'Failed to update presence' })
+  }
+})
+
+// Get active users in this alert chat
+router.get('/:alertId/active', verifyUser, verifyAlertAccess, async (req, res) => {
+  try {
+    const { alertId } = req.params
+    const roomKey = `repair-alert:${alertId}`
+    const activeUsers = listActive(roomKey)
+    res.json({ activeUsers })
+  } catch (err) {
+    console.error('Get active users error:', err)
+    res.status(500).json({ message: 'Failed to fetch active users' })
+  }
+})
+
+// Get all conversations for the current user (Messenger-style list)
+router.get('/conversations/list', verifyUser, async (req, res) => {
+  try {
+    const userId = req.user._id.toString()
+    const userRole = req.user.role?.toLowerCase()
+
+    // Find all repair alerts where this user is involved & chat is available
+    let alertFilter = {}
+    if (userRole === 'engineer') {
+      alertFilter = { engineerId: req.user._id, status: { $ne: 'pending' } }
+    } else if (userRole === 'technician') {
+      alertFilter = { technicianId: req.user._id }
+    }
+
+    const alerts = await RepairAlert.find(alertFilter).sort({ updatedAt: -1 })
+
+    // For each alert build a conversation entry with last message + unread count
+    const conversations = []
+
+    for (const alert of alerts) {
+      // Determine the "other person"
+      let otherUserId, otherName, otherRole
+      if (userRole === 'engineer') {
+        otherUserId = alert.technicianId
+        otherName = alert.technicianName || 'Technician'
+        otherRole = 'technician'
+      } else {
+        otherUserId = alert.engineerId
+        otherName = alert.engineerName || 'Engineer'
+        otherRole = 'engineer'
+      }
+
+      // Get the other user's profile photo
+      let otherPhotoUrl = ''
+      if (otherUserId) {
+        const otherUser = await User.findById(otherUserId).select('photoUrl fullName')
+        if (otherUser) {
+          otherPhotoUrl = otherUser.photoUrl || ''
+          otherName = otherUser.fullName || otherName
+        }
+      }
+
+      // Get the last message
+      const lastMsg = await Message.findOne({ repairAlertId: alert._id })
+        .sort({ createdAt: -1 })
+        .limit(1)
+
+      // Get unread count
+      const myRole = userRole === 'engineer' ? 'engineer' : 'technician'
+      const unreadCount = await Message.countDocuments({
+        repairAlertId: alert._id,
+        senderRole: { $ne: myRole },
+        isRead: false,
+      })
+
+      conversations.push({
+        type: 'repair',
+        alertId: alert._id,
+        subsystem: alert.subsystem,
+        issue: alert.issue,
+        status: alert.status,
+        priority: alert.priority,
+        otherUserId: otherUserId?.toString() || null,
+        otherName,
+        otherRole,
+        otherPhotoUrl,
+        lastMessage: lastMsg ? {
+          message: lastMsg.message,
+          messageType: lastMsg.messageType,
+          senderName: lastMsg.senderName,
+          senderRole: lastMsg.senderRole,
+          createdAt: lastMsg.createdAt,
+        } : null,
+        unreadCount,
+        updatedAt: lastMsg?.createdAt || alert.updatedAt,
+      })
+    }
+
+    // Sort by most recent message
+    conversations.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+
+    res.json({ conversations })
+  } catch (err) {
+    console.error('Error fetching conversations:', err)
+    res.status(500).json({ message: 'Failed to fetch conversations' })
+  }
 })
 
 // Get unread message count for user

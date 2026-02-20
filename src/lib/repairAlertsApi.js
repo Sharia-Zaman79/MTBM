@@ -141,6 +141,11 @@ export const profileApi = {
 
 // Chat API
 export const chatApi = {
+  // Get Messenger-style conversation list
+  getConversations: async () => {
+    return apiRequest('/api/chat/conversations/list')
+  },
+
   // Get messages for a repair alert
   getMessages: async (alertId, since = null) => {
     const params = new URLSearchParams()
@@ -211,6 +216,18 @@ export const chatApi = {
     return apiRequest(`/api/chat/${alertId}/message/${messageId}`, {
       method: 'DELETE',
     })
+  },
+
+  // Send presence heartbeat
+  sendPresence: async (alertId) => {
+    return apiRequest(`/api/chat/${alertId}/presence`, {
+      method: 'POST',
+    })
+  },
+
+  // Get active users in a chat
+  getActiveUsers: async (alertId) => {
+    return apiRequest(`/api/chat/${alertId}/active`)
   },
 }
 

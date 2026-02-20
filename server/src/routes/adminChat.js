@@ -7,6 +7,7 @@ import crypto from 'crypto'
 import AdminMessage from '../models/AdminMessage.js'
 import { User } from '../models/User.js'
 import { env } from '../lib/env.js'
+import { touchPresence, listActive } from '../lib/presence.js'
 
 // Setup uploads directory
 const chatUploadsDir = path.join(process.cwd(), 'uploads', 'admin-chat')
@@ -59,6 +60,90 @@ const verifyAdmin = (req, res, next) => {
   }
   next()
 }
+
+// Presence heartbeat for admin viewing a specific participant conversation
+router.post('/presence/:userId', verifyUser, verifyAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params
+    const roomKey = `admin-chat:${req.user._id.toString()}:${userId}`
+    touchPresence(roomKey, {
+      userId: req.user._id,
+      name: req.user.fullName || req.user.email,
+      role: 'admin',
+    })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('Admin presence heartbeat error:', err)
+    res.status(500).json({ message: 'Failed to update presence' })
+  }
+})
+
+// Presence heartbeat for a user chatting with admin
+router.post('/user/presence', verifyUser, async (req, res) => {
+  try {
+    // Resolve admin similarly to how messages are routed
+    let admin
+    const existingChat = await AdminMessage.findOne({ participantId: req.user._id }).sort({ createdAt: -1 })
+    if (existingChat) {
+      admin = await User.findById(existingChat.adminId).select('-passwordHash')
+    } else {
+      admin = await User.findOne({ role: 'admin' }).select('-passwordHash')
+    }
+
+    if (!admin) {
+      return res.status(404).json({ message: 'No admin available' })
+    }
+
+    const roomKey = `admin-chat:${admin._id.toString()}:${req.user._id.toString()}`
+    touchPresence(roomKey, {
+      userId: req.user._id,
+      name: req.user.fullName || req.user.email,
+      role: req.user.role?.toLowerCase() || 'user',
+    })
+
+    res.json({ ok: true, adminId: admin._id })
+  } catch (err) {
+    console.error('User presence heartbeat error:', err)
+    res.status(500).json({ message: 'Failed to update presence' })
+  }
+})
+
+// Active users for an admin<->participant conversation (admin view)
+router.get('/active/:userId', verifyUser, verifyAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params
+    const roomKey = `admin-chat:${req.user._id.toString()}:${userId}`
+    const activeUsers = listActive(roomKey)
+    res.json({ activeUsers })
+  } catch (err) {
+    console.error('Admin active users error:', err)
+    res.status(500).json({ message: 'Failed to fetch active users' })
+  }
+})
+
+// Active users for a participant chatting with admin (user view)
+router.get('/user/active', verifyUser, async (req, res) => {
+  try {
+    let admin
+    const existingChat = await AdminMessage.findOne({ participantId: req.user._id }).sort({ createdAt: -1 })
+    if (existingChat) {
+      admin = await User.findById(existingChat.adminId).select('-passwordHash')
+    } else {
+      admin = await User.findOne({ role: 'admin' }).select('-passwordHash')
+    }
+
+    if (!admin) {
+      return res.status(404).json({ message: 'No admin available' })
+    }
+
+    const roomKey = `admin-chat:${admin._id.toString()}:${req.user._id.toString()}`
+    const activeUsers = listActive(roomKey)
+    res.json({ activeUsers, adminId: admin._id })
+  } catch (err) {
+    console.error('User active users error:', err)
+    res.status(500).json({ message: 'Failed to fetch active users' })
+  }
+})
 
 // Get conversations list for admin
 router.get('/conversations', verifyUser, verifyAdmin, async (req, res) => {

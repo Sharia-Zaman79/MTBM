@@ -9,9 +9,8 @@ import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
 import { TechnicianProfilePopover } from "@/components/TechnicianProfile";
 import { clearCurrentUser } from "@/lib/auth";
 import { useEngineerNotifications } from "@/lib/useEngineerNotifications";
-import { repairAlertsApi } from "@/lib/repairAlertsApi";
-import ChatBox from "@/components/ChatBox";
-import { UserAdminChat } from "@/components/AdminChatBox";
+import { repairAlertsApi, chatApi } from "@/lib/repairAlertsApi";
+import MessengerPanel from "@/components/MessengerPanel";
 import { RatingModal, RatingDisplay } from "@/components/RatingModal";
 import {
   Popover,
@@ -106,9 +105,19 @@ function AlertsPopover() {
   const { alerts, clearAlerts, removeAlert } = useAlerts();
   const visibleAlerts = alerts.filter((a) => a?.type !== "repair");
   const alertCount = visibleAlerts.length;
+  const [seenCount, setSeenCount] = useState(0);
+  const unseenCount = Math.max(0, alertCount - seenCount);
+
+  // When new alerts come in, don't auto-mark as seen
+  // When popover opens, mark all as seen
+  const handleOpenChange = (open) => {
+    if (open) {
+      setSeenCount(alertCount);
+    }
+  };
 
   return (
-    <Popover>
+    <Popover onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -116,9 +125,9 @@ function AlertsPopover() {
           className="relative text-gray-300 hover:text-white"
         >
           <Bell className="h-5 w-5" />
-          {alertCount > 0 && (
+          {unseenCount > 0 && (
             <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs flex items-center justify-center font-bold">
-              {alertCount > 99 ? "99+" : alertCount}
+              {unseenCount > 99 ? "99+" : unseenCount}
             </span>
           )}
         </Button>
@@ -258,8 +267,8 @@ function DashboardContent() {
 
   // Active requests state for chat
   const [activeRequests, setActiveRequests] = useState([]);
-  const [showRequestsPanel, setShowRequestsPanel] = useState(false);
-  const [activeChatAlert, setActiveChatAlert] = useState(null);
+  const [messengerOpen, setMessengerOpen] = useState(false);
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
   const [ratingAlert, setRatingAlert] = useState(null);
 
   // Enable engineer notifications for when technicians accept problems
@@ -285,20 +294,32 @@ function DashboardContent() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleOpenChat = (request) => {
-    setActiveChatAlert({
-      id: request._id,
-      info: {
-        subsystem: request.subsystem,
-        issue: request.issue,
-        status: request.status,
-        engineerName: request.engineerName,
-        technicianName: request.technicianName,
-        priority: request.priority,
+  // Fetch real unread message count from API (chat + admin)
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const chatData = await chatApi.getUnreadCount();
+        let adminUnread = 0;
+        try {
+          const { getUnreadCount } = await import('@/lib/adminChatApi');
+          const adminData = await getUnreadCount();
+          adminUnread = adminData.unreadCount || 0;
+        } catch {}
+        setUnreadMsgCount((chatData.unreadCount || 0) + adminUnread);
+      } catch (err) {
+        console.error('Error fetching unread count:', err);
       }
-    });
-    setShowRequestsPanel(false);
-  };
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Clear unread badge when messenger is opened
+  useEffect(() => {
+    if (messengerOpen) setUnreadMsgCount(0);
+  }, [messengerOpen]);
 
   const handleRated = (alertId, rating) => {
     setActiveRequests(prev => prev.map(r => 
@@ -657,91 +678,23 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Floating Active Chats Button */}
-      {activeRequests.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-40">
-          <Popover open={showRequestsPanel} onOpenChange={setShowRequestsPanel}>
-            <PopoverTrigger asChild>
-              <Button
-                className="h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg"
-              >
-                <MessageCircle className="h-6 w-6" />
-                {activeRequests.length > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs flex items-center justify-center font-bold">
-                    {activeRequests.length}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="w-80 p-0 bg-zinc-900 border-zinc-700"
-              align="end"
-              side="top"
-            >
-              <div className="px-4 py-3 border-b border-zinc-700">
-                <h4 className="font-semibold text-white">Active Requests</h4>
-                <p className="text-xs text-zinc-400">Chat with technicians</p>
-              </div>
-              <ScrollArea className="max-h-[300px]">
-                {activeRequests.map((request) => (
-                  <div
-                    key={request._id}
-                    className="px-4 py-3 border-b border-zinc-800 hover:bg-zinc-800/50"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h5 className="font-medium text-white text-sm truncate">
-                          {request.subsystem}
-                        </h5>
-                        <p className="text-xs text-zinc-400 truncate">{request.issue}</p>
-                        <p className="text-xs text-blue-400 mt-1">
-                          {request.technicianName || "Waiting..."}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-1 ml-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleOpenChat(request)}
-                          className="bg-blue-600 hover:bg-blue-700 text-xs h-7"
-                        >
-                          <MessageCircle className="w-3 h-3 mr-1" />
-                          Chat
-                        </Button>
-                        {request.status === 'resolved' && !request.rating && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setRatingAlert(request);
-                              setShowRequestsPanel(false);
-                            }}
-                            className="border-yellow-500 text-yellow-400 text-xs h-7"
-                          >
-                            <Star className="w-3 h-3 mr-1" />
-                            Rate
-                          </Button>
-                        )}
-                        {request.rating && (
-                          <RatingDisplay rating={request.rating} size="sm" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
+      {/* Floating Messenger Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <Button
+          onClick={() => setMessengerOpen(true)}
+          className="h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg"
+        >
+          <MessageCircle className="h-6 w-6" />
+          {unreadMsgCount > 0 && (
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs flex items-center justify-center font-bold">
+              {unreadMsgCount > 99 ? "99+" : unreadMsgCount}
+            </span>
+          )}
+        </Button>
+      </div>
 
-      {/* Chat Box */}
-      {activeChatAlert && (
-        <ChatBox
-          alertId={activeChatAlert.id}
-          alertInfo={activeChatAlert.info}
-          onClose={() => setActiveChatAlert(null)}
-        />
-      )}
+      {/* Messenger Panel */}
+      <MessengerPanel isOpen={messengerOpen} onClose={() => setMessengerOpen(false)} />
 
       {/* Rating Modal */}
       {ratingAlert && (
@@ -752,9 +705,6 @@ function DashboardContent() {
           onRated={(rating) => handleRated(ratingAlert._id, rating)}
         />
       )}
-
-      {/* Admin Chat */}
-      <UserAdminChat />
     </div>
   );
 }

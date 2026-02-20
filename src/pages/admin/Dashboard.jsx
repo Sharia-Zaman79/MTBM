@@ -1220,14 +1220,14 @@ export default function AdminDashboard() {
                         >
                           {/* Message Content */}
                           {msg.messageType === 'voice' ? (
-                            <VoicePlayer src={msg.voiceUrl} duration={msg.voiceDuration} isOwn={isAdmin} />
+                            <VoicePlayer src={msg.voiceUrl?.startsWith('http') ? msg.voiceUrl : `${API_BASE_URL}${msg.voiceUrl}`} duration={msg.voiceDuration} isMe={isAdmin} />
                           ) : msg.messageType === 'image' ? (
                             <div>
                               <img 
-                                src={msg.imageUrl} 
+                                src={msg.imageUrl?.startsWith('http') ? msg.imageUrl : `${API_BASE_URL}${msg.imageUrl}`} 
                                 alt="Shared" 
                                 className="max-w-full rounded cursor-pointer hover:opacity-90" 
-                                onClick={() => window.open(msg.imageUrl, '_blank')}
+                                onClick={() => window.open(msg.imageUrl?.startsWith('http') ? msg.imageUrl : `${API_BASE_URL}${msg.imageUrl}`, '_blank')}
                               />
                               {msg.message && <p className="text-sm mt-2"><MessageContent message={msg.message} /></p>}
                             </div>
