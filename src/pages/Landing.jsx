@@ -71,6 +71,11 @@ const Landing = () => {
 
           <Button
             asChild
+            className="hidden sm:inline-flex h-9 rounded-md bg-orange-500 px-4 lg:px-5 text-sm text-white hover:bg-orange-600">
+            <a href="mailto:contact@mtbm.com?subject=MTBM%20Meeting%20Request">Book a Meeting</a>
+          </Button>
+          <Button
+            asChild
             className="hidden sm:inline-flex h-9 rounded-md bg-[#5B89B1] px-4 lg:px-6 text-sm text-black hover:bg-[#4a7294]">
             <Link to="/login">Sign in</Link>
           </Button>
@@ -104,6 +109,9 @@ const Landing = () => {
                 </button>
               )
             })}
+            <a href="mailto:contact@mtbm.com?subject=MTBM%20Meeting%20Request" className="block w-full text-center rounded-md px-4 py-2 text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600" onClick={() => setMobileMenuOpen(false)}>
+              Book a Meeting
+            </a>
             <Link to="/login" className="block w-full text-center rounded-md px-4 py-2 text-sm font-semibold bg-[#5B89B1] text-black hover:bg-[#4a7294]" onClick={() => setMobileMenuOpen(false)}>
               Sign in to dashboard
             </Link>
@@ -189,6 +197,7 @@ const Landing = () => {
                 </div>
               </div>
             </section>
+
           </div>
         )}
 
