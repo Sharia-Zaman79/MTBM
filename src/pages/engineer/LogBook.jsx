@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, LogOut, Trash2, X, Calendar, Menu } from "lucide-react";
 import { useAlerts } from "@/lib/alert-store";
 import { toast } from "sonner";
+import { API_BASE_URL } from "@/lib/auth";
 import CallTechnicianAction from "@/components/engineer/CallTechnicianAction";
 import { TechnicianProfilePopover } from "@/components/TechnicianProfile";
 import {
@@ -564,7 +565,6 @@ export default function LogBookPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const itemsPerPage = 10;
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
     let isActive = true;

@@ -39,7 +39,7 @@ const EMOJI_LIST = [
   "👋","🤝","✌️","🤞","💪","🛠️","⚙️","🔧",
 ];
 
-const API_URL = API_BASE_URL || "http://localhost:5000";
+const API_URL = API_BASE_URL;
 
 // ─── Voice Player ───────────────────────────────────────────
 function VoicePlayer({ src, duration, isMe }) {

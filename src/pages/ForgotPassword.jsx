@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom"
 import { Mail, Lock, ArrowLeft, KeyRound, CheckCircle } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { toast } from "sonner"
+import { API_BASE_URL } from "@/lib/auth"
 
 const ForgotPassword = () => {
   const navigate = useNavigate()
@@ -19,8 +20,6 @@ const ForgotPassword = () => {
   const [resendTimer, setResendTimer] = useState(0)
   
   const otpRefs = useRef([])
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
   // Resend timer countdown
   useEffect(() => {

@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import authRoutes from './routes/auth.js'
 import uploadRoutes from './routes/uploads.js'
 import logbookRoutes from './routes/logbook.js'
@@ -55,6 +56,20 @@ async function main() {
   app.use('/api/chat', chatRoutes)
   app.use('/api/admin', adminRoutes)
   app.use('/api/admin-chat', adminChatRoutes)
+
+  // ─── Serve frontend in production ───────────────────────────
+  const __dirname = path.dirname(fileURLToPath(import.meta.url))
+  const distPath = path.join(__dirname, '../../dist')
+
+  app.use(express.static(distPath))
+
+  // SPA fallback – any non-API GET request serves index.html
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next()
+    }
+    res.sendFile(path.join(distPath, 'index.html'))
+  })
 
   // Minimal error handler
   app.use((err, _req, res, _next) => {

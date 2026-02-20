@@ -8,6 +8,7 @@
     "dev:frontend": "vite",
     "dev:backend": "npm run dev --prefix server",
     "build": "vite build",
+    "render-build": "npm install --include=dev && npm run build && cd server && npm install",
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "concurrently \"npm run preview\" \"npm run start:backend\"",

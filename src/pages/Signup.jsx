@@ -6,7 +6,7 @@ import { Building2, Image, Lock, Mail, User, Wrench } from "lucide-react"
 import { useMemo, useRef, useState } from "react"
 import { useNavigate } from 'react-router-dom'
 import { toast } from "sonner"
-import { signup, uploadAvatar } from "@/lib/auth"
+import { signup, uploadAvatar, API_BASE_URL } from "@/lib/auth"
 
 const Signup = () => {
 	const [accountType, setAccountType] = useState("engineer")
@@ -52,10 +52,9 @@ const Signup = () => {
 
 		setSendingOtp(true)
 		try {
-			const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
-			console.log('Sending OTP to:', apiUrl)
+			console.log('Sending OTP to:', API_BASE_URL)
 			
-			const response = await fetch(`${apiUrl}/api/otp/send-otp`, {
+			const response = await fetch(`${API_BASE_URL}/api/otp/send-otp`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email: normalizedEmail }),
@@ -95,10 +94,9 @@ const Signup = () => {
 
 		setVerifyingOtp(true)
 		try {
-			const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 			console.log('Verifying OTP...')
 			
-			const response = await fetch(`${apiUrl}/api/otp/verify-otp`, {
+			const response = await fetch(`${API_BASE_URL}/api/otp/verify-otp`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email: normalizedEmail, otp: normalizedOtp }),

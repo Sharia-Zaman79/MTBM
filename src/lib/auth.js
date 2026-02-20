@@ -1,7 +1,11 @@
 const CURRENT_USER_STORAGE_KEY = 'mtbmCurrentUser'
 const TOKEN_STORAGE_KEY = 'mtbmAuthToken'
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+// In production (same-origin deploy) use '' so API calls are relative.
+// In dev, fall back to localhost:5000 where the Express server runs.
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ??
+  (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '')
 
 async function apiRequest(path, options = {}) {
   const token = loadAuthToken()
