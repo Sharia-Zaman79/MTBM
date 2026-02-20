@@ -6,7 +6,7 @@ import {
 import { Button } from './ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import * as adminChatApi from '../lib/adminChatApi'
-import { API_BASE_URL } from '../lib/auth'
+import { API_BASE_URL, normalizeMediaUrl } from '../lib/auth'
 
 // Common emojis for quick access
 const EMOJI_LIST = [
@@ -460,10 +460,10 @@ export function AdminChatBox({ currentUser }) {
                         </button>
                       )}
                       {msg.messageType === 'image' && msg.imageUrl && (
-                        <img src={`${API_BASE_URL.replace('/api', '')}${msg.imageUrl}`} alt="Shared" className="max-w-full rounded mb-2 cursor-pointer" onClick={() => window.open(`${API_BASE_URL.replace('/api', '')}${msg.imageUrl}`, '_blank')} />
+                        <img src={normalizeMediaUrl(msg.imageUrl)} alt="Shared" className="max-w-full rounded mb-2 cursor-pointer" onClick={() => window.open(normalizeMediaUrl(msg.imageUrl), '_blank')} />
                       )}
                       {msg.messageType === 'voice' && msg.voiceUrl && (
-                        <VoicePlayer src={`${API_BASE_URL.replace('/api', '')}${msg.voiceUrl}`} duration={msg.voiceDuration || 0} isMe={isAdmin} />
+                        <VoicePlayer src={normalizeMediaUrl(msg.voiceUrl)} duration={msg.voiceDuration || 0} isMe={isAdmin} />
                       )}
                       {msg.message && <MessageContent message={msg.message} />}
                       <span className={`text-xs mt-1 block ${isAdmin ? 'text-purple-200' : 'text-gray-500'}`}>{formatTime(msg.createdAt)}</span>
@@ -868,10 +868,10 @@ export function UserAdminChat({ currentUser }) {
                       )}
                       {!isMe && <p className="text-xs font-medium mb-1 text-green-600 dark:text-green-400">Admin</p>}
                       {msg.messageType === 'image' && msg.imageUrl && (
-                        <img src={`${API_BASE_URL.replace('/api', '')}${msg.imageUrl}`} alt="Shared" className="max-w-full rounded mb-2 cursor-pointer" onClick={() => window.open(`${API_BASE_URL.replace('/api', '')}${msg.imageUrl}`, '_blank')} />
+                        <img src={normalizeMediaUrl(msg.imageUrl)} alt="Shared" className="max-w-full rounded mb-2 cursor-pointer" onClick={() => window.open(normalizeMediaUrl(msg.imageUrl), '_blank')} />
                       )}
                       {msg.messageType === 'voice' && msg.voiceUrl && (
-                        <VoicePlayer src={`${API_BASE_URL.replace('/api', '')}${msg.voiceUrl}`} duration={msg.voiceDuration || 0} isMe={isMe} />
+                        <VoicePlayer src={normalizeMediaUrl(msg.voiceUrl)} duration={msg.voiceDuration || 0} isMe={isMe} />
                       )}
                       {msg.message && <MessageContent message={msg.message} />}
                       <span className={`text-xs mt-1 block ${isMe ? 'text-green-200' : 'text-gray-500'}`}>{formatTime(msg.createdAt)}</span>

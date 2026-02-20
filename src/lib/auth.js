@@ -7,6 +7,25 @@ export const API_BASE_URL =
   import.meta.env.VITE_API_URL ??
   (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '')
 
+/**
+ * Normalise any media URL (avatar, chat image, voice) so it works on
+ * every host (localhost during dev, Render in production, etc.).
+ *
+ * – External https:// URLs (Google profile pics, etc.) → returned as-is
+ * – Full http://localhost:…/uploads/… URLs → stripped to /uploads/…
+ * – Relative paths like /uploads/… → prefixed with API_BASE_URL
+ */
+export function normalizeMediaUrl(raw) {
+  if (!raw) return ''
+  let url = raw
+  // Strip any http://localhost:XXXX prefix that might be stored in the DB
+  url = url.replace(/^https?:\/\/localhost(:\d+)?/, '')
+  // If it's an external URL (Google etc.) return as-is
+  if (url.startsWith('http')) return url
+  // Relative path – prefix with API_BASE_URL ('' in production)
+  return `${API_BASE_URL}${url}`
+}
+
 async function apiRequest(path, options = {}) {
   const token = loadAuthToken()
 

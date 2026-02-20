@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { chatApi } from "@/lib/repairAlertsApi";
-import { loadCurrentUser, API_BASE_URL } from "@/lib/auth";
+import { loadCurrentUser, API_BASE_URL, normalizeMediaUrl } from "@/lib/auth";
 import {
   MessageCircle,
   Send,
@@ -488,10 +488,10 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
               const isImage = msg.messageType === 'image' && msg.imageUrl;
               const isVoice = msg.messageType === 'voice' && msg.voiceUrl;
               const imageFullUrl = isImage
-                ? (msg.imageUrl.startsWith('http') ? msg.imageUrl : `${API_BASE_URL}${msg.imageUrl}`)
+                ? normalizeMediaUrl(msg.imageUrl)
                 : null;
               const voiceFullUrl = isVoice
-                ? (msg.voiceUrl.startsWith('http') ? msg.voiceUrl : `${API_BASE_URL}${msg.voiceUrl}`)
+                ? normalizeMediaUrl(msg.voiceUrl)
                 : null;
 
               return (

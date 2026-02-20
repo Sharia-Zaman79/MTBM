@@ -19,7 +19,7 @@ import {
   AlertTriangle,
   FileText,
 } from "lucide-react";
-import { loadCurrentUser, setCurrentUser } from "@/lib/auth";
+import { loadCurrentUser, setCurrentUser, normalizeMediaUrl } from "@/lib/auth";
 import { profileApi } from "@/lib/repairAlertsApi";
 import { adminApi } from "@/lib/adminApi";
 import { toast } from "sonner";
@@ -78,7 +78,7 @@ function EditProfileModal({ isOpen, onClose, user, onSave }) {
     setUploading(true);
     try {
       const result = await profileApi.uploadPhoto(file);
-      setPhotoUrl(result.url);
+      setPhotoUrl(result.path || result.url);
       toast.success("Photo uploaded!");
     } catch (err) {
       toast.error("Failed to upload photo: " + err.message);
@@ -139,7 +139,7 @@ function EditProfileModal({ isOpen, onClose, user, onSave }) {
               <div className="w-24 h-24 rounded-full bg-neutral-800 border-2 border-neutral-700 flex items-center justify-center overflow-hidden">
                 {photoUrl ? (
                   <img
-                    src={photoUrl}
+                    src={normalizeMediaUrl(photoUrl)}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
@@ -264,7 +264,7 @@ export function AdminProfilePopover({ className = "" }) {
             <div className="h-9 w-9 shrink-0 rounded-full bg-neutral-800 border border-purple-500/50 flex items-center justify-center overflow-hidden">
               {showPhoto ? (
                 <img
-                  src={photoUrl}
+                  src={normalizeMediaUrl(photoUrl)}
                   alt="Admin"
                   className="h-full w-full rounded-full object-cover"
                   onError={() => setImgError(true)}
@@ -290,7 +290,7 @@ export function AdminProfilePopover({ className = "" }) {
               <div className="w-14 h-14 rounded-full bg-neutral-800 border-2 border-purple-500/50 flex items-center justify-center overflow-hidden">
                 {showPhoto ? (
                   <img
-                    src={photoUrl}
+                    src={normalizeMediaUrl(photoUrl)}
                     alt="Admin"
                     className="w-full h-full object-cover"
                   />

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { chatApi } from "@/lib/repairAlertsApi";
 import * as adminChatApi from "@/lib/adminChatApi";
-import { loadCurrentUser, API_BASE_URL } from "@/lib/auth";
+import { loadCurrentUser, API_BASE_URL, normalizeMediaUrl } from "@/lib/auth";
 import {
   MessageCircle,
   Send,
@@ -38,8 +38,6 @@ const EMOJI_LIST = [
   "😢","😭","😱","🤯","😤","🙄","😴","🤒",
   "👋","🤝","✌️","🤞","💪","🛠️","⚙️","🔧",
 ];
-
-const API_URL = API_BASE_URL;
 
 // ─── Voice Player ───────────────────────────────────────────
 function VoicePlayer({ src, duration, isMe }) {
@@ -102,7 +100,7 @@ function Avatar({ name, photoUrl, size = 44, online, roleIcon }) {
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       {photoUrl ? (
-        <img src={photoUrl.startsWith("http") ? photoUrl : `${API_URL}${photoUrl}`} alt={name} className="w-full h-full rounded-full object-cover" />
+        <img src={normalizeMediaUrl(photoUrl)} alt={name} className="w-full h-full rounded-full object-cover" />
       ) : (
         <div className={`w-full h-full rounded-full ${colors[idx]} flex items-center justify-center`}>
           <span className="text-white font-semibold" style={{ fontSize: size * 0.35 }}>{initials}</span>
@@ -473,8 +471,8 @@ function ChatThread({ conv, onBack }) {
               const showDate = idx === 0 || fmtDate(messages[idx - 1]?.createdAt) !== fmtDate(msg.createdAt);
               const isImage = msg.messageType === "image" && msg.imageUrl;
               const isVoice = msg.messageType === "voice" && msg.voiceUrl;
-              const imgUrl = isImage ? (msg.imageUrl.startsWith("http") ? msg.imageUrl : `${API_URL}${msg.imageUrl}`) : null;
-              const vUrl = isVoice ? (msg.voiceUrl.startsWith("http") ? msg.voiceUrl : `${API_URL}${msg.voiceUrl}`) : null;
+              const imgUrl = isImage ? normalizeMediaUrl(msg.imageUrl) : null;
+              const vUrl = isVoice ? normalizeMediaUrl(msg.voiceUrl) : null;
 
               return (
                 <React.Fragment key={msg._id}>
@@ -708,8 +706,8 @@ function AdminChatThread({ onBack }) {
               const showDate = idx === 0 || fmtDate(messages[idx - 1]?.createdAt) !== fmtDate(msg.createdAt);
               const isImage = msg.messageType === "image" && msg.imageUrl;
               const isVoice = msg.messageType === "voice" && msg.voiceUrl;
-              const imgUrl = isImage ? (msg.imageUrl.startsWith("http") ? msg.imageUrl : `${API_URL}${msg.imageUrl}`) : null;
-              const vUrl = isVoice ? (msg.voiceUrl.startsWith("http") ? msg.voiceUrl : `${API_URL}${msg.voiceUrl}`) : null;
+              const imgUrl = isImage ? normalizeMediaUrl(msg.imageUrl) : null;
+              const vUrl = isVoice ? normalizeMediaUrl(msg.voiceUrl) : null;
 
               return (
                 <React.Fragment key={msg._id}>

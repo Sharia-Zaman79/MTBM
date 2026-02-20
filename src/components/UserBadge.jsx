@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { User } from "lucide-react";
-import { loadCurrentUser } from "@/lib/auth";
+import { loadCurrentUser, normalizeMediaUrl } from "@/lib/auth";
 
 const getDisplayName = (user) => {
   const fullName = (user?.fullName ?? "").trim();
@@ -30,7 +30,7 @@ const UserBadge = ({ className = "" }) => {
       <div className="h-9 w-9 shrink-0 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center">
         {showPhoto ? (
           <img
-            src={photoUrl}
+            src={normalizeMediaUrl(photoUrl)}
             alt="User"
             className="h-full w-full rounded-full object-cover"
             onError={() => setImgError(true)}

@@ -170,7 +170,7 @@ const Signup = () => {
 			let uploadedPhotoUrl
 			if (photoFile) {
 				const result = await uploadAvatar(photoFile)
-				uploadedPhotoUrl = result?.url
+				uploadedPhotoUrl = result?.path || result?.url
 			}
 
 			await signup({

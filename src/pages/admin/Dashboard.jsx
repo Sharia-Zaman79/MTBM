@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { adminApi } from "@/lib/adminApi";
-import { loadCurrentUser, clearCurrentUser, API_BASE_URL } from "@/lib/auth";
+import { loadCurrentUser, clearCurrentUser, API_BASE_URL, normalizeMediaUrl } from "@/lib/auth";
 import { toast } from "sonner";
 import * as adminChatApi from "@/lib/adminChatApi";
 import {
@@ -164,7 +164,7 @@ function UserCard({ user, type, onChat, unreadCount = 0 }) {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center overflow-hidden">
             {user.photoUrl ? (
-              <img src={user.photoUrl} alt="" className="w-full h-full object-cover" />
+              <img src={normalizeMediaUrl(user.photoUrl)} alt="" className="w-full h-full object-cover" />
             ) : (
               <span className="text-lg font-semibold text-neutral-400">
                 {user.fullName?.charAt(0)?.toUpperCase()}
@@ -1173,7 +1173,7 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                   {chatUser.photoUrl ? (
-                    <img src={chatUser.photoUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                    <img src={normalizeMediaUrl(chatUser.photoUrl)} alt="" className="w-full h-full rounded-full object-cover" />
                   ) : (
                     <span className="text-lg font-semibold text-white">
                       {chatUser.fullName?.charAt(0)?.toUpperCase()}
@@ -1220,14 +1220,14 @@ export default function AdminDashboard() {
                         >
                           {/* Message Content */}
                           {msg.messageType === 'voice' ? (
-                            <VoicePlayer src={msg.voiceUrl?.startsWith('http') ? msg.voiceUrl : `${API_BASE_URL}${msg.voiceUrl}`} duration={msg.voiceDuration} isMe={isAdmin} />
+                            <VoicePlayer src={normalizeMediaUrl(msg.voiceUrl)} duration={msg.voiceDuration} isMe={isAdmin} />
                           ) : msg.messageType === 'image' ? (
                             <div>
                               <img 
-                                src={msg.imageUrl?.startsWith('http') ? msg.imageUrl : `${API_BASE_URL}${msg.imageUrl}`} 
+                                src={normalizeMediaUrl(msg.imageUrl)} 
                                 alt="Shared" 
                                 className="max-w-full rounded cursor-pointer hover:opacity-90" 
-                                onClick={() => window.open(msg.imageUrl?.startsWith('http') ? msg.imageUrl : `${API_BASE_URL}${msg.imageUrl}`, '_blank')}
+                                onClick={() => window.open(normalizeMediaUrl(msg.imageUrl), '_blank')}
                               />
                               {msg.message && <p className="text-sm mt-2"><MessageContent message={msg.message} /></p>}
                             </div>
