@@ -719,6 +719,63 @@ function DashboardContent() {
         </div>
       </div>
 
+      {/* Row 4: Active Alerts with Rating */}
+      {activeRequests.length > 0 && (
+        <div className="p-3 sm:p-4 lg:p-8 border-t border-gray-800">
+          <h3 className="text-base lg:text-lg font-semibold mb-4">Active Requests</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+            {activeRequests.map((req) => {
+              const isResolved = req.status === 'resolved';
+              const isInProgress = req.status === 'in-progress';
+              return (
+                <div
+                  key={req._id}
+                  className={`bg-neutral-900 border rounded-xl p-4 ${
+                    isResolved ? 'border-green-800' : 'border-yellow-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-white text-sm">{req.subsystem}</h4>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      isResolved
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                    }`}>
+                      {isResolved ? '✓ Resolved' : '⏳ In Progress'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-2 line-clamp-2">{req.issue}</p>
+                  {req.technicianName && (
+                    <p className="text-xs text-gray-500 mb-3">
+                      Technician: <span className="text-gray-300">{req.technicianName}</span>
+                    </p>
+                  )}
+
+                  {/* Rating display if already rated */}
+                  {req.rating && (
+                    <div className="mb-2">
+                      <RatingDisplay rating={req.rating} size="sm" />
+                    </div>
+                  )}
+
+                  {/* Rate button for resolved & not yet rated */}
+                  {isResolved && !req.rating && (
+                    <Button
+                      size="sm"
+                      onClick={() => setRatingAlert(req)}
+                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs mt-1"
+                    >
+                      <Star className="w-3.5 h-3.5 mr-1.5" />
+                      Rate Technician
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Floating Messenger Button */}
       <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
         <Button
