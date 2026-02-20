@@ -1,11 +1,14 @@
 import { getAuthHeader, API_BASE_URL } from './auth'
 
-const API_URL = `/api/admin-chat`
+const API_URL = `${API_BASE_URL}/api/admin-chat`
 
-// Helper: build a URL with optional query params (works with relative paths)
+// Build a URL string with optional query params — avoids new URL() which
+// crashes in production when the base is a relative empty string.
 function buildUrl(path, params = {}) {
-  const qs = new URLSearchParams(params).toString()
-  return `${API_BASE_URL}${path}${qs ? `?${qs}` : ''}`
+  const qs = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v != null)
+  ).toString();
+  return qs ? `${path}?${qs}` : path;
 }
 
 // Get auth header helper
@@ -18,7 +21,7 @@ const headers = () => ({
 
 // Get all conversations for admin
 export async function getConversations() {
-  const res = await fetch(`${API_BASE_URL}${API_URL}/conversations`, {
+  const res = await fetch(`${API_URL}/conversations`, {
     headers: headers(),
   })
   if (!res.ok) {
@@ -29,8 +32,8 @@ export async function getConversations() {
 
 // Get messages with a specific user
 export async function getMessages(userId, since = null) {
-  const params = since ? { since } : {}
-  const res = await fetch(buildUrl(`${API_URL}/messages/${userId}`, params), {
+  const url = buildUrl(`${API_URL}/messages/${userId}`, { since });
+  const res = await fetch(url, {
     headers: headers(),
   })
   if (!res.ok) {
@@ -41,7 +44,7 @@ export async function getMessages(userId, since = null) {
 
 // Send message to user
 export async function sendMessage(userId, message) {
-  const res = await fetch(`${API_BASE_URL}${API_URL}/messages/${userId}`, {
+  const res = await fetch(`${API_URL}/messages/${userId}`, {
     method: 'POST',
     headers: headers(),
     body: JSON.stringify({ message }),
@@ -54,7 +57,7 @@ export async function sendMessage(userId, message) {
 
 // Start a new conversation
 export async function startConversation(userId, message = '') {
-  const res = await fetch(`${API_BASE_URL}${API_URL}/start/${userId}`, {
+  const res = await fetch(`${API_URL}/start/${userId}`, {
     method: 'POST',
     headers: headers(),
     body: JSON.stringify({ message }),
@@ -70,7 +73,7 @@ export async function sendImage(userId, file) {
   const formData = new FormData()
   formData.append('image', file)
 
-  const res = await fetch(`${API_BASE_URL}${API_URL}/messages/${userId}/image`, {
+  const res = await fetch(`${API_URL}/messages/${userId}/image`, {
     method: 'POST',
     headers: getAuthHeader(),
     body: formData,
@@ -87,7 +90,7 @@ export async function sendVoice(userId, audioBlob, duration) {
   formData.append('voice', audioBlob, 'voice.webm')
   formData.append('duration', duration.toString())
 
-  const res = await fetch(`${API_BASE_URL}${API_URL}/messages/${userId}/voice`, {
+  const res = await fetch(`${API_URL}/messages/${userId}/voice`, {
     method: 'POST',
     headers: getAuthHeader(),
     body: formData,
@@ -100,7 +103,7 @@ export async function sendVoice(userId, audioBlob, duration) {
 
 // Delete message
 export async function deleteMessage(messageId) {
-  const res = await fetch(`${API_BASE_URL}${API_URL}/messages/${messageId}`, {
+  const res = await fetch(`${API_URL}/messages/${messageId}`, {
     method: 'DELETE',
     headers: headers(),
   })
@@ -114,8 +117,8 @@ export async function deleteMessage(messageId) {
 
 // Get messages from admin
 export async function getUserMessages(since = null) {
-  const params = since ? { since } : {}
-  const res = await fetch(buildUrl(`${API_URL}/user/messages`, params), {
+  const url = buildUrl(`${API_URL}/user/messages`, { since });
+  const res = await fetch(url, {
     headers: headers(),
   })
   if (!res.ok) {
@@ -126,7 +129,7 @@ export async function getUserMessages(since = null) {
 
 // Send message to admin
 export async function sendUserMessage(message, adminId = null) {
-  const res = await fetch(`${API_BASE_URL}${API_URL}/user/messages`, {
+  const res = await fetch(`${API_URL}/user/messages`, {
     method: 'POST',
     headers: headers(),
     body: JSON.stringify({ message, adminId }),
@@ -142,7 +145,7 @@ export async function sendUserImage(file) {
   const formData = new FormData()
   formData.append('image', file)
 
-  const res = await fetch(`${API_BASE_URL}${API_URL}/user/messages/image`, {
+  const res = await fetch(`${API_URL}/user/messages/image`, {
     method: 'POST',
     headers: getAuthHeader(),
     body: formData,
@@ -159,7 +162,7 @@ export async function sendUserVoice(audioBlob, duration) {
   formData.append('voice', audioBlob, 'voice.webm')
   formData.append('duration', duration.toString())
 
-  const res = await fetch(`${API_BASE_URL}${API_URL}/user/messages/voice`, {
+  const res = await fetch(`${API_URL}/user/messages/voice`, {
     method: 'POST',
     headers: getAuthHeader(),
     body: formData,
@@ -172,7 +175,7 @@ export async function sendUserVoice(audioBlob, duration) {
 
 // Get unread count from admin
 export async function getUnreadCount() {
-  const res = await fetch(`${API_BASE_URL}${API_URL}/user/unread`, {
+  const res = await fetch(`${API_URL}/user/unread`, {
     headers: headers(),
   })
   if (!res.ok) {

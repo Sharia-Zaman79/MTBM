@@ -39,6 +39,8 @@ const EMOJI_LIST = [
   "👋","🤝","✌️","🤞","💪","🛠️","⚙️","🔧",
 ];
 
+// normalizeMediaUrl handles all media URL resolution
+
 // ─── Voice Player ───────────────────────────────────────────
 function VoicePlayer({ src, duration, isMe }) {
   const [isPlaying, setIsPlaying] = useState(false);

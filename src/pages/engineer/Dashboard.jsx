@@ -721,57 +721,43 @@ function DashboardContent() {
 
       {/* Row 4: Active Alerts with Rating */}
       {activeRequests.length > 0 && (
-        <div className="p-3 sm:p-4 lg:p-8 border-t border-gray-800">
-          <h3 className="text-base lg:text-lg font-semibold mb-4">Active Requests</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-            {activeRequests.map((req) => {
-              const isResolved = req.status === 'resolved';
-              const isInProgress = req.status === 'in-progress';
-              return (
-                <div
-                  key={req._id}
-                  className={`bg-neutral-900 border rounded-xl p-4 ${
-                    isResolved ? 'border-green-800' : 'border-yellow-800'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-white text-sm">{req.subsystem}</h4>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                      isResolved
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                    }`}>
-                      {isResolved ? '✓ Resolved' : '⏳ In Progress'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-2 line-clamp-2">{req.issue}</p>
-                  {req.technicianName && (
-                    <p className="text-xs text-gray-500 mb-3">
-                      Technician: <span className="text-gray-300">{req.technicianName}</span>
-                    </p>
-                  )}
-
-                  {/* Rating display if already rated */}
-                  {req.rating && (
-                    <div className="mb-2">
-                      <RatingDisplay rating={req.rating} size="sm" />
-                    </div>
-                  )}
-
-                  {/* Rate button for resolved & not yet rated */}
-                  {isResolved && !req.rating && (
-                    <Button
-                      size="sm"
-                      onClick={() => setRatingAlert(req)}
-                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs mt-1"
-                    >
-                      <Star className="w-3.5 h-3.5 mr-1.5" />
-                      Rate Technician
-                    </Button>
-                  )}
+        <div className="mt-4 lg:mt-6">
+          <h3 className="text-base lg:text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            <Star className="h-4 w-4 lg:h-5 lg:w-5 text-yellow-400" />
+            Active Requests
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {activeRequests.map((req) => (
+              <div key={req._id} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 hover:border-neutral-700 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium text-white text-sm truncate">{req.subsystem}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                    req.status === 'resolved'
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    {req.status === 'resolved' ? 'Resolved' : 'In Progress'}
+                  </span>
                 </div>
-              );
-            })}
+                <p className="text-xs text-neutral-400 mb-2 line-clamp-2">{req.issue}</p>
+                {req.technicianName && (
+                  <p className="text-xs text-neutral-500 mb-2">
+                    Technician: <span className="text-blue-400">{req.technicianName}</span>
+                  </p>
+                )}
+                {req.rating ? (
+                  <RatingDisplay rating={req.rating} />
+                ) : req.status === 'resolved' ? (
+                  <Button
+                    size="sm"
+                    onClick={() => setRatingAlert(req)}
+                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs"
+                  >
+                    <Star className="h-3 w-3 mr-1" /> Rate Technician
+                  </Button>
+                ) : null}
+              </div>
+            ))}
           </div>
         </div>
       )}

@@ -487,12 +487,8 @@ export function ChatBox({ alertId, alertInfo, onClose }) {
                 index === 0 || messages[index - 1]?.senderRole !== msg.senderRole;
               const isImage = msg.messageType === 'image' && msg.imageUrl;
               const isVoice = msg.messageType === 'voice' && msg.voiceUrl;
-              const imageFullUrl = isImage
-                ? normalizeMediaUrl(msg.imageUrl)
-                : null;
-              const voiceFullUrl = isVoice
-                ? normalizeMediaUrl(msg.voiceUrl)
-                : null;
+              const imageFullUrl = isImage ? normalizeMediaUrl(msg.imageUrl) : null;
+              const voiceFullUrl = isVoice ? normalizeMediaUrl(msg.voiceUrl) : null;
 
               return (
                 <div

@@ -8,22 +8,26 @@ export const API_BASE_URL =
   (window.location.hostname === 'localhost' ? 'http://localhost:5000' : '')
 
 /**
- * Normalise any media URL (avatar, chat image, voice) so it works on
- * every host (localhost during dev, Render in production, etc.).
+ * Normalise any media / image URL coming from the DB so it works on
+ * both localhost and the production same-origin deploy.
  *
- * – External https:// URLs (Google profile pics, etc.) → returned as-is
- * – Full http://localhost:…/uploads/… URLs → stripped to /uploads/…
- * – Relative paths like /uploads/… → prefixed with API_BASE_URL
+ * Handles:
+ *  - null / undefined / empty  → returns ''
+ *  - Full external https:// URLs (Google avatars etc.)  → pass-through
+ *  - URLs that still carry the old http://localhost:5000 prefix
+ *    (stored in DB before the fix)  → strips host, keeps /uploads/…
+ *  - Relative paths like /uploads/…  → prepends API_BASE_URL
  */
 export function normalizeMediaUrl(raw) {
-  if (!raw) return ''
-  let url = raw
-  // Strip any http://localhost:XXXX prefix that might be stored in the DB
-  url = url.replace(/^https?:\/\/localhost(:\d+)?/, '')
-  // If it's an external URL (Google etc.) return as-is
-  if (url.startsWith('http')) return url
-  // Relative path – prefix with API_BASE_URL ('' in production)
-  return `${API_BASE_URL}${url}`
+  if (!raw) return '';
+  // Full https URL (Google avatar, Cloudinary, etc.) — use as-is
+  if (raw.startsWith('https://')) return raw;
+  // Strip any old http://localhost:XXXX prefix that was persisted in the DB
+  const stripped = raw.replace(/^http:\/\/localhost:\d+/, '');
+  // Now it should be a relative path like /uploads/foo.jpg
+  if (stripped.startsWith('/')) return `${API_BASE_URL}${stripped}`;
+  // Fallback — return whatever we got
+  return raw;
 }
 
 async function apiRequest(path, options = {}) {
