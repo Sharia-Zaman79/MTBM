@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { Menu, X } from "lucide-react"
+import { Menu, X, Mail, MapPin } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import Toast from "@/components/ui/toast"
@@ -194,6 +194,29 @@ const Landing = () => {
                       sections simultaneously.
                     </p>
                   )}
+                </div>
+              </div>
+            </section>
+
+            {/* Contact & Address */}
+            <section className="w-full border-t border-neutral-800 bg-neutral-950">
+              <div className="mx-auto w-full max-w-7xl px-6 py-10">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
+                  <a
+                    href="mailto:bored.tunnelers.bd@gmail.com"
+                    className="flex items-center gap-3 text-neutral-300 hover:text-white transition-colors group"
+                  >
+                    <div className="h-10 w-10 rounded-full bg-neutral-800 group-hover:bg-[#5B89B1]/20 flex items-center justify-center transition-colors">
+                      <Mail className="h-5 w-5 text-[#5B89B1]" />
+                    </div>
+                    <span className="text-sm">bored.tunnelers.bd@gmail.com</span>
+                  </a>
+                  <div className="flex items-center gap-3 text-neutral-300">
+                    <div className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                      <MapPin className="h-5 w-5 text-[#5B89B1]" />
+                    </div>
+                    <span className="text-sm">116(Kha), Tejgaon Industrial Area, Dhaka, Bangladesh -1208</span>
+                  </div>
                 </div>
               </div>
             </section>
