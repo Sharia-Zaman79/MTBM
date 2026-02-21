@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { Menu, X, Mail, MapPin } from "lucide-react"
+import { Menu, X, Mail, MapPin, Calendar, Clock, User, Phone, MessageSquare } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import Toast from "@/components/ui/toast"
+import { API_BASE_URL } from "@/lib/auth"
 
 const Landing = () => {
   const tabs = useMemo(
@@ -23,6 +24,41 @@ const Landing = () => {
   const [expandedSections, setExpandedSections] = useState({})
   const location = useLocation()
   const [toastMessage, setToastMessage] = useState(location.state?.message || '')
+
+  // Meeting booking
+  const [meetingOpen, setMeetingOpen] = useState(false)
+  const [meetingLoading, setMeetingLoading] = useState(false)
+  const [meetingForm, setMeetingForm] = useState({
+    name: "", email: "", phone: "", preferredDate: "", preferredTime: "", message: ""
+  })
+
+  const handleMeetingChange = (e) => {
+    setMeetingForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleMeetingSubmit = async (e) => {
+    e.preventDefault()
+    setMeetingLoading(true)
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/meetings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(meetingForm),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setToastMessage("Meeting request sent! Check your email for confirmation.")
+        setMeetingOpen(false)
+        setMeetingForm({ name: "", email: "", phone: "", preferredDate: "", preferredTime: "", message: "" })
+      } else {
+        setToastMessage(data.message || "Failed to send. Please try again.")
+      }
+    } catch {
+      setToastMessage("Server is not reachable. Please try again later.")
+    } finally {
+      setMeetingLoading(false)
+    }
+  }
 
   const toggleSection = (sectionId) => {
     setExpandedSections((prev) => ({
@@ -70,9 +106,9 @@ const Landing = () => {
           <div className="flex-1 md:flex-none" />
 
           <Button
-            asChild
-            className="hidden sm:inline-flex h-9 rounded-md bg-orange-500 px-4 lg:px-5 text-sm text-white hover:bg-orange-600">
-            <a href="mailto:contact@mtbm.com?subject=MTBM%20Meeting%20Request">Book a Meeting</a>
+            onClick={() => setMeetingOpen(true)}
+            className="hidden sm:inline-flex h-9 rounded-md bg-orange-500 px-4 lg:px-5 text-sm text-white hover:bg-orange-600 cursor-pointer">
+            Book a Meeting
           </Button>
           <Button
             asChild
@@ -109,9 +145,9 @@ const Landing = () => {
                 </button>
               )
             })}
-            <a href="mailto:contact@mtbm.com?subject=MTBM%20Meeting%20Request" className="block w-full text-center rounded-md px-4 py-2 text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600" onClick={() => setMobileMenuOpen(false)}>
+            <button onClick={() => { setMeetingOpen(true); setMobileMenuOpen(false); }} className="block w-full text-center rounded-md px-4 py-2 text-sm font-semibold bg-orange-500 text-white hover:bg-orange-600">
               Book a Meeting
-            </a>
+            </button>
             <Link to="/login" className="block w-full text-center rounded-md px-4 py-2 text-sm font-semibold bg-[#5B89B1] text-black hover:bg-[#4a7294]" onClick={() => setMobileMenuOpen(false)}>
               Sign in to dashboard
             </Link>
@@ -435,6 +471,70 @@ const Landing = () => {
           </section>
         )}
       </main>
+
+      {/* Meeting Booking Modal */}
+      {meetingOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={() => setMeetingOpen(false)}>
+          <div
+            className="relative w-full max-w-md rounded-2xl bg-neutral-900 border border-neutral-700 p-6 sm:p-8 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setMeetingOpen(false)}
+              className="absolute right-4 top-4 text-neutral-400 hover:text-white transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <h2 className="text-xl font-bold text-white mb-1">Book a Meeting</h2>
+            <p className="text-sm text-neutral-400 mb-6">Fill in your details and we'll get back to you.</p>
+
+            <form onSubmit={handleMeetingSubmit} className="space-y-4">
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                <input name="name" type="text" required placeholder="Your Name *" value={meetingForm.name} onChange={handleMeetingChange}
+                  className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+              </div>
+
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                <input name="email" type="email" required placeholder="Your Email *" value={meetingForm.email} onChange={handleMeetingChange}
+                  className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+              </div>
+
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                <input name="phone" type="tel" placeholder="Phone (optional)" value={meetingForm.phone} onChange={handleMeetingChange}
+                  className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                  <input name="preferredDate" type="date" required value={meetingForm.preferredDate} onChange={handleMeetingChange}
+                    className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-3 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 [color-scheme:dark]" />
+                </div>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                  <input name="preferredTime" type="time" required value={meetingForm.preferredTime} onChange={handleMeetingChange}
+                    className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-3 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 [color-scheme:dark]" />
+                </div>
+              </div>
+
+              <div className="relative">
+                <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-neutral-500" />
+                <textarea name="message" placeholder="Message (optional)" rows={3} value={meetingForm.message} onChange={handleMeetingChange}
+                  className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 resize-none" />
+              </div>
+
+              <button type="submit" disabled={meetingLoading}
+                className="w-full rounded-lg bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                {meetingLoading ? "Sending..." : "Send Meeting Request"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -10,6 +10,7 @@ import repairAlertsRoutes from './routes/repairAlerts.js'
 import chatRoutes from './routes/chat.js'
 import adminRoutes from './routes/admin.js'
 import adminChatRoutes from './routes/adminChat.js'
+import meetingRoutes from './routes/meetings.js'
 import { env, requireEnv } from './lib/env.js'
 import { connectDb } from './lib/db.js'
 
@@ -56,6 +57,7 @@ async function main() {
   app.use('/api/chat', chatRoutes)
   app.use('/api/admin', adminRoutes)
   app.use('/api/admin-chat', adminChatRoutes)
+  app.use('/api/meetings', meetingRoutes)
 
   // ─── Serve frontend in production ───────────────────────────
   const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -78,26 +80,30 @@ async function main() {
   })
 
   // Try to start on the configured port; if it's busy, fall back to the next port
-  const startServer = async (portToTry, attempt = 1) => {
-    try {
-      await new Promise((resolve, reject) => {
-        const server = app.listen(portToTry, () => resolve(server))
-        server.on('error', reject)
-      })
+  const tryListen = (port) =>
+    new Promise((resolve, reject) => {
+      const srv = app
+        .listen(port, () => resolve({ server: srv, port }))
+        .on('error', reject)
+    })
 
-      return portToTry
-    } catch (err) {
-      if (err?.code === 'EADDRINUSE' && attempt === 1) {
-        const fallbackPort = portToTry + 1
-        console.warn(`Port ${portToTry} is in use. Retrying on ${fallbackPort}...`)
-        return startServer(fallbackPort, attempt + 1)
-      }
-
+  let runningPort = env.port
+  try {
+    const result = await tryListen(env.port)
+    runningPort = result.port
+    // keep server reference alive so Node doesn't exit
+    global.__mtbmServer = result.server
+  } catch (err) {
+    if (err?.code === 'EADDRINUSE') {
+      console.warn(`Port ${env.port} is in use. Retrying on ${env.port + 1}...`)
+      const result = await tryListen(env.port + 1)
+      runningPort = result.port
+      global.__mtbmServer = result.server
+    } else {
       throw err
     }
   }
 
-  const runningPort = await startServer(env.port)
   console.log(`MTBM server listening on http://localhost:${runningPort}`)
 
   if (runningPort !== env.port) {
