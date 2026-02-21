@@ -8,8 +8,22 @@ import { useAlerts } from '@/lib/alert-store'
  * Polls the backend every 5 seconds for status updates
  */
 export function useEngineerNotifications() {
-  // Track which alerts we've already notified about
-  const notifiedAlertsRef = useRef(new Set())
+  // Track which alerts we've already notified about — persist across reloads
+  const notifiedAlertsRef = useRef(() => {
+    try {
+      const saved = localStorage.getItem('mtbm_notified_alerts')
+      return saved ? new Set(JSON.parse(saved)) : new Set()
+    } catch { return new Set() }
+  })
+  // Lazy-init: call the function once
+  if (typeof notifiedAlertsRef.current === 'function') {
+    notifiedAlertsRef.current = notifiedAlertsRef.current()
+  }
+
+  const saveNotified = useCallback((set) => {
+    try { localStorage.setItem('mtbm_notified_alerts', JSON.stringify([...set])) } catch {}
+  }, [])
+
   const intervalRef = useRef(null)
   const { addAlert } = useAlerts()
 
@@ -48,6 +62,7 @@ export function useEngineerNotifications() {
             timestamp: alert.acceptedAt || alert.updatedAt,
           })
           notifiedAlertsRef.current.add(alertKey)
+          saveNotified(notifiedAlertsRef.current)
         }
 
         // Notify for resolved alerts
@@ -61,12 +76,13 @@ export function useEngineerNotifications() {
             timestamp: alert.resolvedAt || alert.updatedAt,
           })
           notifiedAlertsRef.current.add(alertKey)
+          saveNotified(notifiedAlertsRef.current)
         }
       }
     } catch (err) {
       // Silently fail - don't spam console for polling errors
     }
-  }, [addAlert])
+  }, [addAlert, saveNotified])
 
   useEffect(() => {
     const user = loadCurrentUser()

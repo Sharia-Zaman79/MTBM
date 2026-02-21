@@ -105,14 +105,18 @@ function AlertsPopover() {
   const { alerts, clearAlerts, removeAlert } = useAlerts();
   const visibleAlerts = alerts.filter((a) => a?.type !== "repair");
   const alertCount = visibleAlerts.length;
-  const [seenCount, setSeenCount] = useState(0);
+
+  // Persist seen count so badge stays cleared after reload
+  const [seenCount, setSeenCount] = useState(() => {
+    try { return Number(localStorage.getItem('mtbm_alert_seen') || 0); } catch { return 0; }
+  });
   const unseenCount = Math.max(0, alertCount - seenCount);
 
-  // When new alerts come in, don't auto-mark as seen
   // When popover opens, mark all as seen
   const handleOpenChange = (open) => {
     if (open) {
       setSeenCount(alertCount);
+      try { localStorage.setItem('mtbm_alert_seen', String(alertCount)); } catch {}
     }
   };
 
@@ -142,7 +146,7 @@ function AlertsPopover() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={clearAlerts}
+              onClick={() => { clearAlerts(); setSeenCount(0); try { localStorage.setItem('mtbm_alert_seen', '0'); } catch {} }}
               className="text-gray-400 hover:text-white h-8 px-2"
             >
               <Trash2 className="h-4 w-4 mr-1" />

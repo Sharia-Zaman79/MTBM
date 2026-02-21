@@ -3,12 +3,31 @@ import {
   useContext,
   useState,
   useCallback,
+  useEffect,
 } from "react";
+
+const ALERTS_STORAGE_KEY = 'mtbm_alerts';
+
+function loadPersistedAlerts() {
+  try {
+    const raw = localStorage.getItem(ALERTS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return parsed.map(a => ({ ...a, timestamp: new Date(a.timestamp) }));
+  } catch { return []; }
+}
+
+function persistAlerts(alerts) {
+  try { localStorage.setItem(ALERTS_STORAGE_KEY, JSON.stringify(alerts)); } catch {}
+}
 
 const AlertContext = createContext(undefined);
 
 export function AlertProvider({ children }) {
-  const [alerts, setAlerts] = useState([]);
+  const [alerts, setAlerts] = useState(loadPersistedAlerts);
+
+  // Sync to localStorage whenever alerts change
+  useEffect(() => { persistAlerts(alerts); }, [alerts]);
 
   const addAlert = useCallback((alert) => {
     const newAlert = {
