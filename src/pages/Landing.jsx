@@ -1,6 +1,22 @@
 import { useMemo, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { Menu, X, Mail, MapPin, Calendar, Clock, User, Phone, MessageSquare } from "lucide-react"
+import {
+  Menu,
+  X,
+  Mail,
+  MapPin,
+  Calendar,
+  Clock,
+  User,
+  Phone,
+  MessageSquare,
+  Check,
+  BadgePercent,
+  Wallet,
+  ShieldCheck,
+  Truck,
+  Timer,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import Toast from "@/components/ui/toast"
@@ -31,6 +47,12 @@ const Landing = () => {
   const [meetingForm, setMeetingForm] = useState({
     name: "", email: "", phone: "", preferredDate: "", preferredTime: "", message: ""
   })
+  const [rentalOpen, setRentalOpen] = useState(false)
+  const [serviceChatOpen, setServiceChatOpen] = useState(false)
+  const [serviceChatInput, setServiceChatInput] = useState("")
+  const [serviceChatMessages, setServiceChatMessages] = useState([
+    { role: "bot", text: "Hi! I’m the MTBM service assistant. Ask me anything about rentals, pricing, or support." }
+  ])
 
   const handleMeetingChange = (e) => {
     setMeetingForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -58,6 +80,54 @@ const Landing = () => {
     } finally {
       setMeetingLoading(false)
     }
+  }
+
+  const handleRentalCta = (packageName) => {
+    setMeetingForm((prev) => ({
+      ...prev,
+      message: `Interested in ${packageName} rental package. Please share availability, pricing, and next steps.`
+    }))
+    setMeetingOpen(true)
+  }
+
+  const getServiceReply = (question) => {
+    const q = question.toLowerCase()
+    if (q.includes("price") || q.includes("cost") || q.includes("rate")) {
+      return "Rental starts from monthly packages. We’ll share a detailed quote based on project length and site conditions."
+    }
+    if (q.includes("emi") || q.includes("installment")) {
+      return "Yes, EMI is available for 3-12 months depending on the package."
+    }
+    if (q.includes("support") || q.includes("engineer") || q.includes("training")) {
+      return "Onsite engineer support and operator training are included in Growth and Enterprise packages."
+    }
+    if (q.includes("delivery") || q.includes("setup") || q.includes("time")) {
+      return "We can deliver and set up within 72 hours after confirmation."
+    }
+    if (q.includes("location") || q.includes("site") || q.includes("dhaka")) {
+      return "We support projects across Bangladesh with nationwide delivery and setup."
+    }
+    return "Thanks for your question! Please share your project location and duration, and we’ll guide you further."
+  }
+
+  const handleServiceSend = (e) => {
+    e.preventDefault()
+    const text = serviceChatInput.trim()
+    if (!text) return
+    setServiceChatMessages((prev) => [
+      ...prev,
+      { role: "user", text },
+      { role: "bot", text: getServiceReply(text) },
+    ])
+    setServiceChatInput("")
+  }
+
+  const handleServiceQuick = (text) => {
+    setServiceChatMessages((prev) => [
+      ...prev,
+      { role: "user", text },
+      { role: "bot", text: getServiceReply(text) },
+    ])
   }
 
   const toggleSection = (sectionId) => {
@@ -234,10 +304,120 @@ const Landing = () => {
               </div>
             </section>
 
+            {/* Rental Option */}
+            {rentalOpen && (
+              <section className="w-full bg-neutral-950 border-t border-neutral-800">
+                <div className="mx-auto w-full max-w-7xl px-6 py-12">
+                  <>
+                    <div className="grid gap-6 lg:grid-cols-3">
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6 flex flex-col">
+                    <h3 className="text-lg font-bold">Starter Lease</h3>
+                    <p className="text-sm text-neutral-400 mt-1">Short-term pilot projects</p>
+                    <div className="mt-6 text-3xl font-extrabold text-white">৳ 7.5L<span className="text-xs font-semibold text-neutral-400">/month</span></div>
+                    <ul className="mt-6 space-y-3 text-sm text-neutral-300">
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Up to 30 days deployment</li>
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Remote monitoring dashboard</li>
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Operator training (2 days)</li>
+                    </ul>
+                    <div className="mt-6 rounded-xl bg-neutral-800/60 p-4 text-xs text-neutral-300">
+                      <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-orange-400" />EMI available for 3-6 months</div>
+                    </div>
+                    <Button
+                      onClick={() => handleRentalCta("Starter Lease")}
+                      className="mt-6 bg-orange-500 text-white hover:bg-orange-600"
+                    >
+                      Booking Now
+                    </Button>
+                  </div>
+
+                  <div className="rounded-2xl border border-orange-500/50 bg-gradient-to-b from-neutral-900 to-neutral-950 p-6 flex flex-col shadow-[0_0_40px_rgba(255,122,0,0.15)]">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold">Growth Lease</h3>
+                      <span className="rounded-full bg-orange-500/20 px-3 py-1 text-xs font-semibold text-orange-300">Most Popular</span>
+                    </div>
+                    <p className="text-sm text-neutral-400 mt-1">Standard utility & city projects</p>
+                    <div className="mt-6 text-3xl font-extrabold text-white">৳ 5.9L<span className="text-xs font-semibold text-neutral-400">/month</span></div>
+                    <ul className="mt-6 space-y-3 text-sm text-neutral-300">
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Up to 90 days deployment</li>
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Onsite engineer support</li>
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Spare kits included</li>
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Priority maintenance</li>
+                    </ul>
+                    <div className="mt-6 grid gap-3">
+                      <div className="rounded-xl bg-orange-500/10 border border-orange-500/40 p-4 text-xs text-orange-200">
+                        <div className="flex items-center gap-2"><BadgePercent className="h-4 w-4" />Special discount for government & NGO projects</div>
+                      </div>
+                      <div className="rounded-xl bg-neutral-800/60 p-4 text-xs text-neutral-300">
+                        <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-orange-400" />EMI available for 6-12 months</div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => handleRentalCta("Growth Lease")}
+                      className="mt-6 bg-orange-500 text-white hover:bg-orange-600"
+                    >
+                      Booking Now
+                    </Button>
+                  </div>
+
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6 flex flex-col">
+                    <h3 className="text-lg font-bold">Enterprise Lease</h3>
+                    <p className="text-sm text-neutral-400 mt-1">Large infrastructure programs</p>
+                    <div className="mt-6 text-3xl font-extrabold text-white">Custom<span className="text-xs font-semibold text-neutral-400">/month</span></div>
+                    <ul className="mt-6 space-y-3 text-sm text-neutral-300">
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Multi-site deployment</li>
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Dedicated field team</li>
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />Custom cutterhead setup</li>
+                      <li className="flex items-start gap-2"><Check className="h-4 w-4 text-orange-400 mt-0.5" />24/7 monitoring</li>
+                    </ul>
+                    <div className="mt-6 rounded-xl bg-neutral-800/60 p-4 text-xs text-neutral-300">
+                      <div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-orange-400" />EMI & milestone billing available</div>
+                    </div>
+                    <Button
+                      onClick={() => handleRentalCta("Enterprise Lease")}
+                      className="mt-6 bg-neutral-100 text-neutral-900 hover:bg-white"
+                    >
+                      Talk to Sales
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-10 grid gap-6 lg:grid-cols-3">
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6">
+                    <div className="flex items-center gap-3 text-sm text-neutral-200">
+                      <Truck className="h-5 w-5 text-orange-400" />
+                      Nationwide delivery & setup
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6">
+                    <div className="flex items-center gap-3 text-sm text-neutral-200">
+                      <ShieldCheck className="h-5 w-5 text-orange-400" />
+                      Safety compliance & insurance
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6">
+                    <div className="flex items-center gap-3 text-sm text-neutral-200">
+                      <Timer className="h-5 w-5 text-orange-400" />
+                      Fast deployment in 72 hours
+                    </div>
+                  </div>
+                </div>
+                  </>
+                </div>
+              </section>
+            )}
+
             {/* Contact & Address */}
             <section className="w-full border-t border-neutral-800 bg-neutral-950">
               <div className="mx-auto w-full max-w-7xl px-6 py-10">
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
+                  <div className="order-1 sm:order-none">
+                    <Button
+                      onClick={() => setRentalOpen((prev) => !prev)}
+                      className="h-9 rounded-md bg-[#5B89B1] px-4 text-sm text-black hover:bg-[#4a7294]"
+                    >
+                      {rentalOpen ? "Hide Rental Options" : "Rental Options"}
+                    </Button>
+                  </div>
                   <a
                     href="mailto:bored.tunnelers.bd@gmail.com"
                     className="flex items-center gap-3 text-neutral-300 hover:text-white transition-colors group"
@@ -253,9 +433,88 @@ const Landing = () => {
                     </div>
                     <span className="text-sm">116(Kha), Tejgaon Industrial Area, Dhaka, Bangladesh -1208</span>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setServiceChatOpen((prev) => !prev)}
+                    className="inline-flex items-center gap-2 rounded-md bg-neutral-800 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-700"
+                  >
+                    <MessageSquare className="h-4 w-4 text-orange-400" />
+                    Service
+                  </button>
                 </div>
               </div>
             </section>
+
+            {serviceChatOpen && (
+              <div className="fixed bottom-4 right-4 z-50 w-[92vw] max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                    <MessageSquare className="h-4 w-4 text-orange-400" />
+                    Service Assistant
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setServiceChatOpen(false)}
+                    className="text-neutral-400 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="max-h-72 space-y-3 overflow-y-auto px-4 py-3">
+                  {serviceChatMessages.map((msg, idx) => (
+                    <div
+                      key={`${msg.role}-${idx}`}
+                      className={
+                        "max-w-[85%] rounded-xl px-3 py-2 text-xs leading-5 " +
+                        (msg.role === "user"
+                          ? "ml-auto bg-[#5B89B1] text-black"
+                          : "bg-neutral-800 text-neutral-200")
+                      }
+                    >
+                      {msg.text}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap gap-2 px-4 pb-3">
+                  {[
+                    "Rental price?",
+                    "EMI available?",
+                    "Engineer support?",
+                    "Delivery time?",
+                  ].map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => handleServiceQuick(q)}
+                      className="rounded-full border border-neutral-700 px-3 py-1 text-[11px] text-neutral-300 hover:border-neutral-500"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+
+                <form onSubmit={handleServiceSend} className="border-t border-neutral-800 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={serviceChatInput}
+                      onChange={(e) => setServiceChatInput(e.target.value)}
+                      placeholder="Type your question..."
+                      className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-xs text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none"
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white hover:bg-orange-600"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
 
           </div>
         )}
