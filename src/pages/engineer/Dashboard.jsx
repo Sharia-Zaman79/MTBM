@@ -264,9 +264,9 @@ function DashboardContent() {
   const [selectedSensor, setSelectedSensor] = useState("Temperature");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [controls, setControls] = useState({
-    propulsion: true,
-    driveMotor: true,
-    jetPump: true,
+    propulsion: false,
+    driveMotor: false,
+    jetPump: false,
     slurryPump: false,
   });
 
@@ -336,7 +336,17 @@ function DashboardContent() {
   };
 
   const toggleControl = useCallback((key) => {
-    setControls((prev) => ({ ...prev, [key]: !prev[key] }));
+    setControls((prev) => {
+      const isCurrentlyOn = prev[key];
+      // Turn all off, then toggle the selected one
+      return {
+        propulsion: false,
+        driveMotor: false,
+        jetPump: false,
+        slurryPump: false,
+        [key]: !isCurrentlyOn,
+      };
+    });
   }, []);
 
   // Sensor data ranges for each type
@@ -571,9 +581,17 @@ function DashboardContent() {
         {/* Center Column: TBM Image */}
         <div className="flex items-center justify-center">
           <img
-            src="/assets/mtbm/tbm.png"
+            src={
+              controls.jetPump
+                ? "/assets/mtbm/component-jetpump.jpg"
+                : controls.driveMotor
+                  ? "/assets/mtbm/component-drivemotor.png"
+                  : controls.propulsion
+                    ? "/assets/mtbm/component-propulsion.png"
+                    : "/assets/mtbm/tbm.png"
+            }
             alt="Tunnel Boring Machine"
-            className="max-w-full max-h-[40vh] lg:max-h-[50vh] xl:max-h-[55vh] object-contain"
+            className="max-w-full max-h-[40vh] lg:max-h-[50vh] xl:max-h-[55vh] object-contain transition-all duration-500"
           />
         </div>
 

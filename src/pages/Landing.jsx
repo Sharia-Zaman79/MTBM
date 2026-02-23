@@ -48,6 +48,7 @@ const Landing = () => {
     name: "", email: "", phone: "", preferredDate: "", preferredTime: "", message: ""
   })
   const [rentalOpen, setRentalOpen] = useState(false)
+
   const [serviceChatOpen, setServiceChatOpen] = useState(false)
   const [serviceChatInput, setServiceChatInput] = useState("")
   const [serviceChatMessages, setServiceChatMessages] = useState([
