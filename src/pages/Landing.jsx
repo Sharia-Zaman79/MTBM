@@ -91,23 +91,115 @@ const Landing = () => {
   }
 
   const getServiceReply = (question) => {
-    const q = question.toLowerCase()
-    if (q.includes("price") || q.includes("cost") || q.includes("rate")) {
-      return "Rental starts from monthly packages. We’ll share a detailed quote based on project length and site conditions."
+    const normalized = question
+      .toLowerCase()
+      .replace(/[^a-z0-9\u0980-\u09ff\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+
+    const has = (...terms) => terms.some((t) => normalized.includes(t))
+    const hasBanglaScript = /[\u0980-\u09ff]/.test(question)
+    const banglishHints = [
+      "eta",
+      "kivabe",
+      "ki vabe",
+      "kaj kore",
+      "koto",
+      "dorkar",
+      "thakbe",
+      "ache",
+      "booking",
+      "price koto",
+      "rent koto",
+      "support hobe",
+    ]
+    const hasBanglish = banglishHints.some((t) => normalized.includes(t))
+    const isEnglishOnly = !hasBanglaScript && !hasBanglish
+
+    const reply = {
+      en: {
+        whatIs: "This is the MTBM (Micro Tunnel Boring Machine) rental/service system. It’s used for underground utility tunneling.",
+        howWorks:
+          "It cuts soil with a cutterhead, stays on track using navigation sensors, and removes muck via slurry/screw systems while installing pipe segments.",
+        greet: "Hello! How can I help you with MTBM rentals or service today?",
+        price: "Rental starts from monthly packages. We provide a detailed quote based on project length and site conditions.",
+        emi: "Yes, EMI is available for 3–12 months depending on the package.",
+        package: "We offer Starter (30 days), Growth (90 days), and Enterprise (custom) rental packages.",
+        support: "Onsite engineer support and operator training are included in Growth and Enterprise packages.",
+        maintenance: "Regular maintenance and priority support are included based on the package.",
+        delivery: "We can deliver and set up within 72 hours after confirmation.",
+        location: "We support projects across Bangladesh with nationwide delivery and setup.",
+        availability: "Availability depends on your dates and project scope. Share your timeline and we’ll confirm quickly.",
+        booking: "To book, please share your project location, duration, and preferred start date.",
+        contact: "Email: bored.tunnelers.bd@gmail.com — we respond quickly.",
+        mtbm: "MTBM stands for Micro Tunnel Boring Machine, used for underground utility tunnels with minimal surface disruption.",
+        fallback: "Thanks! Please share your project location and duration, and we’ll guide you further.",
+      },
+      bn: {
+        whatIs: "এটা MTBM (Micro Tunnel Boring Machine) সার্ভিস/রেন্টাল সিস্টেম। এটি ভূগর্ভে পাইপলাইন/টানেল বসাতে ব্যবহার হয়।",
+        howWorks:
+          "মেশিনটি কাটারহেড দিয়ে মাটি কাটে, নেভিগেশন সিস্টেম দিয়ে সোজা পথ ধরে, আর স্লারি/স্ক্রু সিস্টেমে মাটি বের করে। পাইপ সেকশন বসিয়ে টানেল সম্পন্ন হয়।",
+        greet: "হ্যালো! MTBM রেন্টাল/সার্ভিস বিষয়ে কী জানতে চান?",
+        price: "রেন্টাল শুরু হয় মাসিক প্যাকেজ থেকে। প্রজেক্টের সময়কাল ও সাইট কন্ডিশন অনুযায়ী বিস্তারিত কোট দেওয়া হয়।",
+        emi: "জি, প্যাকেজ অনুযায়ী ৩–১২ মাসের EMI/কিস্তি সুবিধা আছে।",
+        package: "আমাদের Starter (৩০ দিন), Growth (৯০ দিন), এবং Enterprise (কাস্টম) প্যাকেজ আছে।",
+        support: "Growth ও Enterprise প্যাকেজে onsite engineer support এবং operator training থাকে।",
+        maintenance: "রেগুলার মেইনটেনেন্স ও প্রাইওরিটি সাপোর্ট প্যাকেজ অনুযায়ী অন্তর্ভুক্ত থাকে।",
+        delivery: "কনফার্মেশন হলে ৭২ ঘণ্টার মধ্যে ডেলিভারি ও সেটআপ করা যায়।",
+        location: "বাংলাদেশের যেকোনো জায়গায় আমরা ডেলিভারি ও সেটআপ সাপোর্ট দিই।",
+        availability: "আপনার তারিখ ও প্রজেক্ট স্কোপ অনুযায়ী availability নিশ্চিত করা হয়। timeline দিলে দ্রুত জানিয়ে দেবো।",
+        booking: "Booking করতে হলে project location, duration, আর preferred start date জানান।",
+        contact: "Email: bored.tunnelers.bd@gmail.com — দ্রুত রিপ্লাই পাবেন।",
+        mtbm: "MTBM মানে Micro Tunnel Boring Machine — এটি ভূগর্ভে ইউটিলিটি টানেল বানাতে ব্যবহার হয়।",
+        fallback: "ধন্যবাদ! আপনার প্রজেক্ট লোকেশন ও ডিউরেশন জানালে আরও সাহায্য করতে পারবো।",
+      },
+      banglish: {
+        whatIs: "Eta MTBM (Micro Tunnel Boring Machine) rental/service system. Eta underground pipeline/tunnel er jonno use hoy.",
+        howWorks:
+          "Cutterhead diye mati kate, navigation system diye track follow kore, ar slurry/screw system diye muck ber kore. Pipe segment boshano hoy.",
+        greet: "Hi! MTBM rental/service niye ki jante chan?",
+        price: "Rental monthly package theke start. Project duration ar site condition onujayi detailed quote dey.",
+        emi: "Haan, package onujayi 3–12 maser EMI/kisti ache.",
+        package: "Starter (30 days), Growth (90 days), ar Enterprise (custom) package ache.",
+        support: "Growth ar Enterprise package e onsite engineer support ar operator training thake.",
+        maintenance: "Regular maintenance ar priority support package onujayi include thake.",
+        delivery: "Confirmation er por 72 ghontar moddhe delivery/setup kora jay.",
+        location: "Bangladesh er jekono jaygay delivery/setup support diye thaki.",
+        availability: "Apnar date ar project scope onujayi availability confirm kora hoy. Timeline dile quickly janabo.",
+        booking: "Booking er jonno project location, duration, ar preferred start date janan.",
+        contact: "Email: bored.tunnelers.bd@gmail.com — quickly reply paben.",
+        mtbm: "MTBM mane Micro Tunnel Boring Machine — underground utility tunnel er jonno use hoy.",
+        fallback: "Thanks! Project location ar duration janale better guide korte parbo.",
+      },
     }
-    if (q.includes("emi") || q.includes("installment")) {
-      return "Yes, EMI is available for 3-12 months depending on the package."
-    }
-    if (q.includes("support") || q.includes("engineer") || q.includes("training")) {
-      return "Onsite engineer support and operator training are included in Growth and Enterprise packages."
-    }
-    if (q.includes("delivery") || q.includes("setup") || q.includes("time")) {
-      return "We can deliver and set up within 72 hours after confirmation."
-    }
-    if (q.includes("location") || q.includes("site") || q.includes("dhaka")) {
-      return "We support projects across Bangladesh with nationwide delivery and setup."
-    }
-    return "Thanks for your question! Please share your project location and duration, and we’ll guide you further."
+
+    const lang = hasBanglaScript ? "bn" : hasBanglish ? "banglish" : "en"
+    const r = reply[lang]
+
+    if (has("eta ki", "what is this", "what is it", "ki eta", "what is", "ki?")) return r.whatIs
+    if (
+      has(
+        "kivabe kaj kore",
+        "ki vabe kaj kore",
+        "how does it work",
+        "how it works",
+        "work kore kivabe"
+      )
+    ) return r.howWorks
+    if (has("hello", "hi", "assalam", "salam", "হ্যালো", "হাই", "আসসালাম")) return r.greet
+    if (has("price", "cost", "rate", "rent", "ভাড়া", "দাম", "মূল্য")) return r.price
+    if (has("emi", "installment", "কিস্তি", "ইএমআই")) return r.emi
+    if (has("package", "plan", "প্যাকেজ", "প্ল্যান")) return r.package
+    if (has("support", "engineer", "training", "সাপোর্ট", "ইঞ্জিনিয়ার", "ট্রেনিং")) return r.support
+    if (has("maintenance", "service", "মেইনটেনেন্স", "সার্ভিস")) return r.maintenance
+    if (has("delivery", "setup", "time", "ডেলিভারি", "সেটআপ", "সময়")) return r.delivery
+    if (has("location", "site", "dhaka", "district", "লোকেশন", "সাইট", "ঢাকা", "জেলা")) return r.location
+    if (has("availability", "available", "slot", "পাওয়া যাবে")) return r.availability
+    if (has("book", "booking", "confirm", "বুকিং", "কনফার্ম")) return r.booking
+    if (has("contact", "email", "phone", "call", "যোগাযোগ", "ইমেইল", "ফোন")) return r.contact
+    if (has("what is mtbm", "mtbm", "এমটিবিএম")) return r.mtbm
+
+    return r.fallback
   }
 
   const handleServiceSend = (e) => {
