@@ -186,10 +186,38 @@ const Landing = () => {
         "work kore kivabe"
       )
     ) return r.howWorks
-    if (has("hello", "hi", "assalam", "salam", "হ্যালো", "হাই", "আসসালাম")) return r.greet
+    if (has("hello", "hi", "assalam", "salam", "hey", "yo", "হ্যালো", "হাই", "আসসালাম")) return r.greet
+    if (has("who are you", "who r u", "আপনি কে", "apni ke", "tumi ke", "who you")) {
+      return lang === "en"
+        ? "I’m the MTBM service assistant. I can help with rentals, pricing, EMI, and support."
+        : lang === "bn"
+          ? "আমি MTBM সার্ভিস অ্যাসিস্ট্যান্ট। রেন্টাল, প্রাইসিং, EMI ও সাপোর্ট বিষয়ে সাহায্য করি।"
+          : "Ami MTBM service assistant. Rental, pricing, EMI ar support niye help kori."
+    }
+    if (has("help", "support", "help me", "sahajjo", "সাহায্য", "help lagbe")) {
+      return lang === "en"
+        ? "Tell me what you need: rental price, EMI, booking, delivery, or support."
+        : lang === "bn"
+          ? "কী জানতে চান বলুন: রেন্টাল প্রাইস, EMI, বুকিং, ডেলিভারি, বা সাপোর্ট।"
+          : "Ki jante chan bolen: rental price, EMI, booking, delivery, ba support.";
+    }
+    if (has("working hours", "office time", "koto khon", "সময়", "office")) {
+      return lang === "en"
+        ? "We respond quickly during business hours. You can also email us anytime."
+        : lang === "bn"
+          ? "বিজনেস আওয়ারে দ্রুত রিপ্লাই পাওয়া যায়। যেকোনো সময় ইমেইল করতে পারেন।"
+          : "Business hour e quick reply pai. Jekono shomoy email korte paren.";
+    }
     if (has("price", "cost", "rate", "rent", "ভাড়া", "দাম", "মূল্য")) return r.price
     if (has("emi", "installment", "কিস্তি", "ইএমআই")) return r.emi
     if (has("package", "plan", "প্যাকেজ", "প্ল্যান")) return r.package
+    if (has("details", "detail", "information", "info", "বিস্তারিত", "ডিটেইলস", "detail chai", "details chai")) {
+      return lang === "en"
+        ? "Packages: Starter (30 days, remote monitoring, 2-day training), Growth (90 days, onsite engineer, spare kits, priority maintenance), Enterprise (custom, dedicated field team, 24/7 monitoring). Services: delivery & setup, safety compliance, maintenance, and EMI options."
+        : lang === "bn"
+          ? "প্যাকেজ ডিটেইলস: Starter (৩০ দিন, রিমোট মনিটরিং, ২ দিনের ট্রেনিং), Growth (৯০ দিন, onsite engineer, spare kits, priority maintenance), Enterprise (কাস্টম, ডেডিকেটেড টিম, 24/7 মনিটরিং)। সার্ভিস: ডেলিভারি ও সেটআপ, সেফটি কমপ্লায়েন্স, মেইনটেনেন্স, EMI অপশন।"
+          : "Package details: Starter (30 din, remote monitoring, 2-day training), Growth (90 din, onsite engineer, spare kits, priority maintenance), Enterprise (custom, dedicated team, 24/7 monitoring). Service: delivery/setup, safety compliance, maintenance, EMI option.";
+    }
     if (has("support", "engineer", "training", "সাপোর্ট", "ইঞ্জিনিয়ার", "ট্রেনিং")) return r.support
     if (has("maintenance", "service", "মেইনটেনেন্স", "সার্ভিস")) return r.maintenance
     if (has("delivery", "setup", "time", "ডেলিভারি", "সেটআপ", "সময়")) return r.delivery
