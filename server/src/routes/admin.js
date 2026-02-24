@@ -7,6 +7,35 @@ import { env } from '../lib/env.js'
 
 const router = express.Router()
 
+const RESPONSE_AVG_WINDOW_DAYS = 7
+
+const calculateAvgResponseMinutes = (alerts, windowDays) => {
+  const cutoff = windowDays
+    ? new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000)
+    : null
+  const acceptedAlerts = alerts.filter((alert) => {
+    if (!alert.acceptedAt || !alert.createdAt) return false
+    if (!cutoff) return true
+    return new Date(alert.createdAt) >= cutoff
+  })
+  if (acceptedAlerts.length === 0) return 0
+
+  let validCount = 0
+  const totalMs = acceptedAlerts.reduce((sum, alert) => {
+    const createdAt = new Date(alert.createdAt)
+    const acceptedAt = new Date(alert.acceptedAt)
+    const diff = acceptedAt.getTime() - createdAt.getTime()
+    if (diff >= 0) {
+      validCount += 1
+      return sum + diff
+    }
+    return sum
+  }, 0)
+
+  if (validCount === 0) return 0
+  return Math.round(totalMs / validCount / 60000)
+}
+
 // Middleware to verify JWT and ensure admin role
 const verifyAdmin = async (req, res, next) => {
   try {
@@ -87,14 +116,10 @@ router.get('/engineers', verifyAdmin, async (req, res) => {
         const resolvedIssues = alerts.filter(a => a.status === 'resolved').length
         
         // Calculate average response time (time from creation to acceptance)
-        const acceptedAlerts = alerts.filter(a => a.acceptedAt)
-        let avgResponseTime = 0
-        if (acceptedAlerts.length > 0) {
-          const totalResponseTime = acceptedAlerts.reduce((sum, a) => {
-            return sum + (new Date(a.acceptedAt) - new Date(a.createdAt))
-          }, 0)
-          avgResponseTime = Math.round(totalResponseTime / acceptedAlerts.length / 60000) // in minutes
-        }
+        const avgResponseTime = calculateAvgResponseMinutes(
+          alerts,
+          RESPONSE_AVG_WINDOW_DAYS
+        )
 
         return {
           ...engineer,
