@@ -16,6 +16,11 @@ import {
   ShieldCheck,
   Truck,
   Timer,
+  CreditCard,
+  Building2,
+  Lock,
+  ArrowLeft,
+  ChevronRight,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -48,6 +53,42 @@ const Landing = () => {
     name: "", email: "", phone: "", preferredDate: "", preferredTime: "", message: ""
   })
   const [rentalOpen, setRentalOpen] = useState(false)
+
+  // Payment modal
+  const [paymentOpen, setPaymentOpen] = useState(false)
+  const [paymentPackage, setPaymentPackage] = useState(null)
+  const [paymentMethod, setPaymentMethod] = useState(null)
+  const [paymentStep, setPaymentStep] = useState(1)
+  const [paymentForm, setPaymentForm] = useState({
+    name: "", email: "", phone: "", cardNumber: "", expiry: "", cvv: "", bkashNumber: "", nagadNumber: "", bankName: ""
+  })
+  const [paymentProcessing, setPaymentProcessing] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
+
+  const packagePrices = {
+    "Starter Lease": "৳ 7,50,000",
+    "Growth Lease": "৳ 5,90,000",
+    "Enterprise Lease": "Custom",
+  }
+
+  const openPayment = (packageName) => {
+    setPaymentPackage(packageName)
+    setPaymentMethod(null)
+    setPaymentStep(1)
+    setPaymentForm({ name: "", email: "", phone: "", cardNumber: "", expiry: "", cvv: "", bkashNumber: "", nagadNumber: "", bankName: "" })
+    setPaymentProcessing(false)
+    setPaymentSuccess(false)
+    setPaymentOpen(true)
+  }
+
+  const handlePaymentSubmit = (e) => {
+    e.preventDefault()
+    setPaymentProcessing(true)
+    setTimeout(() => {
+      setPaymentProcessing(false)
+      setPaymentSuccess(true)
+    }, 2500)
+  }
 
   const [serviceChatOpen, setServiceChatOpen] = useState(false)
   const [serviceChatInput, setServiceChatInput] = useState("")
@@ -84,11 +125,7 @@ const Landing = () => {
   }
 
   const handleRentalCta = (packageName) => {
-    setMeetingForm((prev) => ({
-      ...prev,
-      message: `Interested in ${packageName} rental package. Please share availability, pricing, and next steps.`
-    }))
-    setMeetingOpen(true)
+    openPayment(packageName)
   }
 
   const getServiceReply = (question) => {
@@ -447,7 +484,7 @@ const Landing = () => {
                       onClick={() => handleRentalCta("Starter Lease")}
                       className="mt-6 bg-orange-500 text-white hover:bg-orange-600"
                     >
-                      Booking Now
+                      Pay Now
                     </Button>
                   </div>
 
@@ -476,7 +513,7 @@ const Landing = () => {
                       onClick={() => handleRentalCta("Growth Lease")}
                       className="mt-6 bg-orange-500 text-white hover:bg-orange-600"
                     >
-                      Booking Now
+                      Pay Now
                     </Button>
                   </div>
 
@@ -497,7 +534,7 @@ const Landing = () => {
                       onClick={() => handleRentalCta("Enterprise Lease")}
                       className="mt-6 bg-neutral-100 text-neutral-900 hover:bg-white"
                     >
-                      Talk to Sales
+                      Pay Now
                     </Button>
                   </div>
                 </div>
@@ -912,6 +949,249 @@ const Landing = () => {
                 {meetingLoading ? "Sending..." : "Send Meeting Request"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* SSLCommerz-style Payment Modal */}
+      {paymentOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4" onClick={() => setPaymentOpen(false)}>
+          <div
+            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-neutral-900 border border-neutral-700 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-neutral-900 border-b border-neutral-800 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                {paymentStep > 1 && !paymentSuccess && (
+                  <button onClick={() => { setPaymentStep(1); setPaymentMethod(null); }} className="text-neutral-400 hover:text-white">
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                )}
+                <div>
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-green-400" /> Secure Payment
+                  </h2>
+                  <p className="text-xs text-neutral-400">Powered by SSLCommerz</p>
+                </div>
+              </div>
+              <button onClick={() => setPaymentOpen(false)} className="text-neutral-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Order Summary */}
+            <div className="mx-6 mt-4 rounded-xl bg-neutral-800/60 border border-neutral-700 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-neutral-400">Package</p>
+                  <p className="text-sm font-semibold text-white">{paymentPackage}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-neutral-400">Amount</p>
+                  <p className="text-lg font-bold text-orange-400">{packagePrices[paymentPackage]}<span className="text-xs text-neutral-400 font-normal">/month</span></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Success Screen */}
+            {paymentSuccess && (
+              <div className="px-6 py-10 flex flex-col items-center text-center">
+                <div className="h-16 w-16 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
+                  <Check className="h-8 w-8 text-green-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Payment Successful!</h3>
+                <p className="text-sm text-neutral-400 mt-2">Your {paymentPackage} rental has been confirmed. Check your email for details.</p>
+                <p className="text-xs text-neutral-500 mt-3">Transaction ID: MTBM-{Date.now().toString(36).toUpperCase()}</p>
+                <Button onClick={() => setPaymentOpen(false)} className="mt-6 bg-orange-500 text-white hover:bg-orange-600">Done</Button>
+              </div>
+            )}
+
+            {/* Processing Screen */}
+            {paymentProcessing && !paymentSuccess && (
+              <div className="px-6 py-10 flex flex-col items-center text-center">
+                <div className="h-12 w-12 rounded-full border-4 border-orange-500 border-t-transparent animate-spin mb-4" />
+                <h3 className="text-lg font-semibold text-white">Processing Payment...</h3>
+                <p className="text-sm text-neutral-400 mt-1">Please wait, do not close this window.</p>
+              </div>
+            )}
+
+            {/* Step 1: Choose Payment Method */}
+            {paymentStep === 1 && !paymentProcessing && !paymentSuccess && (
+              <div className="px-6 py-5 space-y-4">
+                <p className="text-sm font-semibold text-neutral-300">Select Payment Method</p>
+
+                {/* Cards */}
+                <div className="space-y-2">
+                  <p className="text-xs text-neutral-500 uppercase tracking-wide">Cards</p>
+                  <button
+                    onClick={() => { setPaymentMethod("visa"); setPaymentStep(2); }}
+                    className="w-full flex items-center gap-4 rounded-xl border border-neutral-700 bg-neutral-800/50 px-4 py-3 hover:border-orange-500/50 hover:bg-neutral-800 transition-all group"
+                  >
+                    <div className="h-10 w-14 rounded-lg bg-white flex items-center justify-center text-xs font-bold text-blue-700">VISA</div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium text-white">Visa Card</p>
+                      <p className="text-xs text-neutral-400">Credit / Debit</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-neutral-500 group-hover:text-orange-400" />
+                  </button>
+                  <button
+                    onClick={() => { setPaymentMethod("mastercard"); setPaymentStep(2); }}
+                    className="w-full flex items-center gap-4 rounded-xl border border-neutral-700 bg-neutral-800/50 px-4 py-3 hover:border-orange-500/50 hover:bg-neutral-800 transition-all group"
+                  >
+                    <div className="h-10 w-14 rounded-lg bg-white flex items-center justify-center">
+                      <div className="flex -space-x-2"><div className="h-6 w-6 rounded-full bg-red-500" /><div className="h-6 w-6 rounded-full bg-yellow-400 opacity-80" /></div>
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium text-white">Mastercard</p>
+                      <p className="text-xs text-neutral-400">Credit / Debit</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-neutral-500 group-hover:text-orange-400" />
+                  </button>
+                </div>
+
+                {/* Mobile Banking */}
+                <div className="space-y-2">
+                  <p className="text-xs text-neutral-500 uppercase tracking-wide">Mobile Banking</p>
+                  <button
+                    onClick={() => { setPaymentMethod("bkash"); setPaymentStep(2); }}
+                    className="w-full flex items-center gap-4 rounded-xl border border-neutral-700 bg-neutral-800/50 px-4 py-3 hover:border-orange-500/50 hover:bg-neutral-800 transition-all group"
+                  >
+                    <div className="h-10 w-14 rounded-lg bg-[#E2136E] flex items-center justify-center text-xs font-bold text-white">bKash</div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium text-white">bKash</p>
+                      <p className="text-xs text-neutral-400">Mobile wallet</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-neutral-500 group-hover:text-orange-400" />
+                  </button>
+                  <button
+                    onClick={() => { setPaymentMethod("nagad"); setPaymentStep(2); }}
+                    className="w-full flex items-center gap-4 rounded-xl border border-neutral-700 bg-neutral-800/50 px-4 py-3 hover:border-orange-500/50 hover:bg-neutral-800 transition-all group"
+                  >
+                    <div className="h-10 w-14 rounded-lg bg-[#F6921E] flex items-center justify-center text-xs font-bold text-white">Nagad</div>
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium text-white">Nagad</p>
+                      <p className="text-xs text-neutral-400">Mobile wallet</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-neutral-500 group-hover:text-orange-400" />
+                  </button>
+                </div>
+
+                {/* Internet Banking */}
+                <div className="space-y-2">
+                  <p className="text-xs text-neutral-500 uppercase tracking-wide">Internet Banking</p>
+                  {["Dutch-Bangla Bank", "BRAC Bank", "City Bank", "Eastern Bank"].map((bank) => (
+                    <button
+                      key={bank}
+                      onClick={() => { setPaymentMethod("bank"); setPaymentForm((p) => ({ ...p, bankName: bank })); setPaymentStep(2); }}
+                      className="w-full flex items-center gap-4 rounded-xl border border-neutral-700 bg-neutral-800/50 px-4 py-3 hover:border-orange-500/50 hover:bg-neutral-800 transition-all group"
+                    >
+                      <div className="h-10 w-14 rounded-lg bg-neutral-700 flex items-center justify-center">
+                        <Building2 className="h-5 w-5 text-neutral-300" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-white">{bank}</p>
+                        <p className="text-xs text-neutral-400">Internet Banking</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-neutral-500 group-hover:text-orange-400" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Payment Details Form */}
+            {paymentStep === 2 && !paymentProcessing && !paymentSuccess && (
+              <form onSubmit={handlePaymentSubmit} className="px-6 py-5 space-y-4">
+                <p className="text-sm font-semibold text-neutral-300">
+                  {paymentMethod === "bkash" ? "bKash Payment" : paymentMethod === "nagad" ? "Nagad Payment" : paymentMethod === "bank" ? `${paymentForm.bankName}` : paymentMethod === "visa" ? "Visa Card" : "Mastercard"}
+                </p>
+
+                {/* Common fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="relative col-span-2">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                    <input type="text" required placeholder="Full Name *" value={paymentForm.name}
+                      onChange={(e) => setPaymentForm((p) => ({ ...p, name: e.target.value }))}
+                      className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                  </div>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                    <input type="email" required placeholder="Email *" value={paymentForm.email}
+                      onChange={(e) => setPaymentForm((p) => ({ ...p, email: e.target.value }))}
+                      className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                  </div>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                    <input type="tel" required placeholder="Phone *" value={paymentForm.phone}
+                      onChange={(e) => setPaymentForm((p) => ({ ...p, phone: e.target.value }))}
+                      className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                  </div>
+                </div>
+
+                {/* Card fields */}
+                {(paymentMethod === "visa" || paymentMethod === "mastercard") && (
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
+                      <input type="text" required placeholder="Card Number *" maxLength={19} value={paymentForm.cardNumber}
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim()
+                          setPaymentForm((p) => ({ ...p, cardNumber: v }))
+                        }}
+                        className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 tracking-widest" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input type="text" required placeholder="MM/YY *" maxLength={5} value={paymentForm.expiry}
+                        onChange={(e) => {
+                          let v = e.target.value.replace(/\D/g, "")
+                          if (v.length > 2) v = v.slice(0, 2) + "/" + v.slice(2, 4)
+                          setPaymentForm((p) => ({ ...p, expiry: v }))
+                        }}
+                        className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 text-center tracking-widest" />
+                      <input type="text" required placeholder="CVV *" maxLength={4} value={paymentForm.cvv}
+                        onChange={(e) => setPaymentForm((p) => ({ ...p, cvv: e.target.value.replace(/\D/g, "") }))}
+                        className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 text-center tracking-widest" />
+                    </div>
+                  </div>
+                )}
+
+                {/* bKash field */}
+                {paymentMethod === "bkash" && (
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#E2136E]" />
+                    <input type="tel" required placeholder="bKash Number (01XXXXXXXXX) *" value={paymentForm.bkashNumber}
+                      onChange={(e) => setPaymentForm((p) => ({ ...p, bkashNumber: e.target.value }))}
+                      className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-[#E2136E] focus:outline-none focus:ring-1 focus:ring-[#E2136E]" />
+                  </div>
+                )}
+
+                {/* Nagad field */}
+                {paymentMethod === "nagad" && (
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#F6921E]" />
+                    <input type="tel" required placeholder="Nagad Number (01XXXXXXXXX) *" value={paymentForm.nagadNumber}
+                      onChange={(e) => setPaymentForm((p) => ({ ...p, nagadNumber: e.target.value }))}
+                      className="w-full rounded-lg bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-[#F6921E] focus:outline-none focus:ring-1 focus:ring-[#F6921E]" />
+                  </div>
+                )}
+
+                {/* Bank — no extra field, just submit */}
+
+                <button type="submit"
+                  className="w-full rounded-lg bg-orange-500 py-3 text-sm font-bold text-white hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Pay {packagePrices[paymentPackage]}
+                </button>
+
+                <div className="flex items-center justify-center gap-4 pt-2">
+                  <Lock className="h-3 w-3 text-green-400" />
+                  <span className="text-[10px] text-neutral-500">256-bit SSL Encrypted</span>
+                  <span className="text-[10px] text-neutral-500">•</span>
+                  <span className="text-[10px] text-neutral-500">PCI DSS Compliant</span>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
