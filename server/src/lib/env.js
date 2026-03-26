@@ -16,10 +16,13 @@ export const env = {
 
 export function requireEnv() {
   const missing = []
-  if (!env.mongoUri) missing.push('MONGODB_URI')
   if (!env.jwtSecret) missing.push('JWT_SECRET')
 
   if (missing.length) {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`)
+  }
+
+  if (!env.mongoUri) {
+    console.warn('MONGODB_URI is not set. API routes that use database will fail until it is configured.')
   }
 }

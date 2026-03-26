@@ -14,9 +14,23 @@ import meetingRoutes from './routes/meetings.js'
 import { env, requireEnv } from './lib/env.js'
 import { connectDb } from './lib/db.js'
 
+async function connectDbWithRetry() {
+  const retryDelayMs = 10_000
+
+  for (;;) {
+    try {
+      await connectDb()
+      console.log('MongoDB connected')
+      return
+    } catch (err) {
+      console.error('MongoDB connection failed. Retrying in 10s...', err?.message || err)
+      await new Promise((resolve) => setTimeout(resolve, retryDelayMs))
+    }
+  }
+}
+
 async function main() {
   requireEnv()
-  await connectDb()
 
   const app = express()
 
@@ -46,7 +60,7 @@ async function main() {
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true })
+    res.json({ ok: true, dbReady: Boolean(global.__mtbmDbReady) })
   })
 
   app.use('/api/auth', authRoutes)
@@ -79,38 +93,22 @@ async function main() {
     res.status(500).json({ message: 'Internal server error' })
   })
 
-  // Try to start on the configured port; if it's busy, fall back to the next port
-  const tryListen = (port) =>
-    new Promise((resolve, reject) => {
-      const srv = app
-        .listen(port, () => resolve({ server: srv, port }))
-        .on('error', reject)
+  // Render requires binding to the provided PORT; do not auto-switch ports in production.
+  const server = app.listen(env.port, () => {
+    console.log(`MTBM server listening on http://localhost:${env.port}`)
+  })
+
+  // Keep server reference alive so Node doesn't exit.
+  global.__mtbmServer = server
+  global.__mtbmDbReady = false
+
+  connectDbWithRetry()
+    .then(() => {
+      global.__mtbmDbReady = true
     })
-
-  let runningPort = env.port
-  try {
-    const result = await tryListen(env.port)
-    runningPort = result.port
-    // keep server reference alive so Node doesn't exit
-    global.__mtbmServer = result.server
-  } catch (err) {
-    if (err?.code === 'EADDRINUSE') {
-      console.warn(`Port ${env.port} is in use. Retrying on ${env.port + 1}...`)
-      const result = await tryListen(env.port + 1)
-      runningPort = result.port
-      global.__mtbmServer = result.server
-    } else {
-      throw err
-    }
-  }
-
-  console.log(`MTBM server listening on http://localhost:${runningPort}`)
-
-  if (runningPort !== env.port) {
-    console.warn(
-      `Update your client API base (e.g. VITE_API_URL) to http://localhost:${runningPort} if requests fail.`
-    )
-  }
+    .catch((err) => {
+      console.error('Unexpected DB retry loop failure', err)
+    })
 }
 
 main().catch((err) => {
