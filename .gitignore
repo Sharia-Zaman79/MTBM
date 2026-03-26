@@ -19,3 +19,8 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# temp empty folders (delete manually)
+MTBM frontend/
+MTBM backend/
+MTBM database/

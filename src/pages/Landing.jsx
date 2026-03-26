@@ -411,7 +411,7 @@ const Landing = () => {
 
                 <div className="flex justify-center md:justify-end group cursor-pointer">
                   <img
-                    src="/assets/mtbm/landing/overview-hero.png.jpeg"
+                    src="/assets/mtbm/landing/overview-hero.png"
                     alt="MTBM"
                     className="w-full max-w-xl transition-transform duration-300 md:group-hover:scale-110 origin-right"
                   />
@@ -680,7 +680,7 @@ const Landing = () => {
         {activeTab === "exploded" && (
           <section className="w-full">
             <img
-              src="/assets/mtbm/landing/exploded.png.jpeg"
+              src="/assets/mtbm/landing/exploded.png"
               alt="Exploded view"
               className="w-full"
             />
@@ -724,7 +724,7 @@ const Landing = () => {
                 <div className="flex justify-center">
                   <div className="w-full max-w-6xl overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40">
                     <img
-                      src="/assets/mtbm/landing/navigation.png.jpeg"
+                      src="/assets/mtbm/landing/navigation.png"
                       alt="Navigation system screen"
                       className="w-full h-auto object-contain"
                     />
@@ -790,7 +790,7 @@ const Landing = () => {
 
             <div className="flex items-center justify-end">
               <img
-                src="/assets/mtbm/landing/propulsion.png.jpeg"
+                src="/assets/mtbm/landing/propulsion.png"
                 alt="Propulsion system"
                 className="w-full h-auto object-contain"
               />
@@ -834,7 +834,7 @@ const Landing = () => {
 
             <div className="flex justify-end pt-8 lg:pt-10">
               <img
-                src="/assets/mtbm/landing/cutterhead.png.jpeg"
+                src="/assets/mtbm/landing/cutterhead.png"
                 alt="Cutterhead"
                 className="w-full max-w-md"
               />
@@ -880,7 +880,7 @@ const Landing = () => {
 
             <div className="pt-8 lg:pt-10 flex flex-col items-end">
               <img
-                src="/assets/mtbm/landing/muck-removal.png.jpeg"
+                src="/assets/mtbm/landing/muck-removal.png"
                 alt="Muck removal system"
                 className="w-full max-w-3xl"
               />
