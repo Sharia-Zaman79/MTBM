@@ -63,6 +63,15 @@ async function main() {
     res.json({ ok: true, dbReady: Boolean(global.__mtbmDbReady) })
   })
 
+  app.use('/api', (req, res, next) => {
+    if (req.path === '/health') return next()
+    if (global.__mtbmDbReady) return next()
+
+    return res.status(503).json({
+      message: 'Database not connected yet. Check MONGODB_URI on Render and try again.',
+    })
+  })
+
   app.use('/api/auth', authRoutes)
   app.use('/api/uploads', uploadRoutes)
   app.use('/api/logbook', logbookRoutes)
