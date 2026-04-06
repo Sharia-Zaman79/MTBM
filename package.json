@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "vite",
-    "dev:backend": "npm run dev --prefix server",
+    "free:backend-port": "node scripts/free-backend-port.mjs",
+    "dev:backend": "npm run free:backend-port && npm run dev --prefix server",
     "build": "node node_modules/vite/bin/vite.js build",
     "render-build": "npm install --include=dev && node node_modules/vite/bin/vite.js build && cd server && npm install",
     "lint": "eslint .",
@@ -52,6 +53,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "kill-port": "^2.0.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "vite": "^7.2.4"

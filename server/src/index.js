@@ -20,10 +20,12 @@ async function connectDbWithRetry() {
   for (;;) {
     try {
       await connectDb()
+      global.__mtbmLastDbError = null
       console.log('MongoDB connected')
       return
     } catch (err) {
-      console.error('MongoDB connection failed. Retrying in 10s...', err?.message || err)
+      global.__mtbmLastDbError = err?.message || String(err)
+      console.error('MongoDB connection failed. Retrying in 10s...', global.__mtbmLastDbError)
       await new Promise((resolve) => setTimeout(resolve, retryDelayMs))
     }
   }
@@ -34,19 +36,16 @@ async function main() {
 
   const app = express()
 
-  // Allow multiple CORS origins for development
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    env.corsOrigin,
-  ].filter(Boolean)
+  // Keep explicit allow list from env, but also allow localhost dev origins on any port.
+  const allowedOrigins = new Set([env.corsOrigin].filter(Boolean))
+  const isLocalDevOrigin = (origin) => /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)
 
   app.use(
     cors({
       origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true)
-        if (allowedOrigins.includes(origin)) {
+        if (allowedOrigins.has(origin) || isLocalDevOrigin(origin)) {
           return callback(null, true)
         }
         return callback(null, false)
@@ -60,7 +59,11 @@ async function main() {
   app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, dbReady: Boolean(global.__mtbmDbReady) })
+    res.json({
+      ok: true,
+      dbReady: Boolean(global.__mtbmDbReady),
+      dbError: global.__mtbmDbReady ? null : global.__mtbmLastDbError || null,
+    })
   })
 
   app.use('/api', (req, res, next) => {
@@ -68,7 +71,8 @@ async function main() {
     if (global.__mtbmDbReady) return next()
 
     return res.status(503).json({
-      message: 'Database not connected yet. Check MONGODB_URI on Render and try again.',
+      message:
+        'Database not connected yet. Check MONGODB_URI (or MONGO_URI / DATABASE_URL) on Render and try again.',
     })
   })
 
@@ -110,6 +114,7 @@ async function main() {
   // Keep server reference alive so Node doesn't exit.
   global.__mtbmServer = server
   global.__mtbmDbReady = false
+  global.__mtbmLastDbError = null
 
   connectDbWithRetry()
     .then(() => {
